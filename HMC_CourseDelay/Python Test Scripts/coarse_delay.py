@@ -21,20 +21,20 @@ class coarse_delay:
 
         print 'Grabbing System info'
         self.f = casperfpga.SkarabFpga('10.99.55.170')
-        self.f.get_system_information('/tmp/s_cd_ramp_2017-4-3_1226.fpg')
+        self.f.get_system_information('/tmp/s_cd_ramp_2017-4-5_1411.fpg')
+
 
         # Enable the dvalid
         self.f.registers.dvalid.write(reg=1)
-
 
     def setup_FPGA(self):
 
         # Specify skarab to use
         skarab_ip = '10.99.55.170'
+        #skarab_ip = '10.99.37.5'
 
         # Programming file
-        #prog_file = "/tmp/s_cd_hmc_reord_build_ramp.fpg"
-        prog_file = "/tmp/s_cd_ramp_2017-4-3_1226.fpg"
+        prog_file = "/tmp/s_cd_ramp_2017-4-5_1411.fpg"
 
         # Create FPGA Object
         self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -109,6 +109,7 @@ class coarse_delay:
 
         # Reset the plot counter
         plot_count = 0
+        disp_length = 20
 
         while True:
 
@@ -147,6 +148,42 @@ class coarse_delay:
                 cd_in.extend([d0[x], d1[x], d2[x], d3[x],
                                d4[x], d5[x], d6[x], d7[x]])
 
+            print 'Input Samples'
+            print '-------------'
+
+            print 'D0'
+            print '-------------'
+            print d0[0:disp_length]
+
+            print 'D1'
+            print '-------------'
+            print d1[0:disp_length]
+
+            print 'D2'
+            print '-------------'
+            print d2[0:disp_length]
+
+            print 'D3'
+            print '-------------'
+            print d3[0:disp_length]
+
+            print 'D4'
+            print '-------------'
+            print d4[0:disp_length]
+
+            print 'D5'
+            print '-------------'
+            print d5[0:disp_length]
+
+            print 'D6'
+            print '-------------'
+            print d6[0:disp_length]
+
+            print 'D7'
+            print '-------------'
+            print d7[0:disp_length]
+
+
             # Plot channel Time-series
             plt.figure(1)
             plt.ion()
@@ -161,14 +198,15 @@ class coarse_delay:
 
             plt.pause(0.01)
 
-    # Input of Coarse Delay
-    # ---------------------
+    # Input of HMC
+    # ------------
     def hmc_input(self, arm_mode, trig_mode, valid_mode, plot_count_max):
 
         self.skarab()
 
         # Reset the plot counter
         plot_count = 0
+        disp_length = 20
 
         while True:
 
@@ -182,61 +220,42 @@ class coarse_delay:
             # ------------------------
 
             print 'Arming Snapblocks'
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_din0_ss_ctrl.write(reg=1)
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_din1_ss_ctrl.write(reg=1)
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_din_m_ss_ctrl.write(reg=1)
             print 'Arming Snapblocks done'
 
             print "Grabbing HMC in SS"
-            hmc_in0 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_din0_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)[
-                'data']
-            d00 = hmc_in0['d0']
-            d01 = hmc_in0['d1']
-            d02 = hmc_in0['d2']
-            d03 = hmc_in0['d3']
-            d04 = hmc_in0['d4']
-            d05 = hmc_in0['d5']
-            d06 = hmc_in0['d6']
-            d07 = hmc_in0['d7']
-            print "D00-d07"
-            print d00[1:10]
-            #print d01
-            #print d02
-            #print d03
-            #print d04
-            #print d05
-            #print d06
-            #print d07
-
-            hmc_in1 = \
-            self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_din1_ss.read(arm=arm_mode, man_trig=trig_mode,
-                                                                                   man_valid=valid_mode)[
-                'data']
-            d10 = hmc_in1['d0']
-            d11 = hmc_in1['d1']
-            d12 = hmc_in1['d2']
-            d13 = hmc_in1['d3']
-            d14 = hmc_in1['d4']
-            d15 = hmc_in1['d5']
-            d16 = hmc_in1['d6']
-            d17 = hmc_in1['d7']
-
-            print "D10-d17"
-            print d10[1:10]
-            #print d11
-            #print d12
-            #print d13
-            #print d14
-            #print d15
-            #print d16
-            #print d17
+            hmc_in0 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_din_m_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
+            d00 = hmc_in0['d00']
+            d01 = hmc_in0['d01']
+            d02 = hmc_in0['d02']
+            d03 = hmc_in0['d03']
+            d04 = hmc_in0['d04']
+            d05 = hmc_in0['d05']
+            d06 = hmc_in0['d06']
+            d07 = hmc_in0['d07']
+            d10 = hmc_in0['d10']
+            d11 = hmc_in0['d11']
+            d12 = hmc_in0['d12']
+            d13 = hmc_in0['d13']
+            d14 = hmc_in0['d14']
+            d15 = hmc_in0['d15']
+            d16 = hmc_in0['d16']
+            d17 = hmc_in0['d17']
 
             print "SS HMC in grab complete"
 
+
             print 'Disarming Snapblocks'
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_din0_ss_ctrl.write(reg=0)
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_din1_ss_ctrl.write(reg=0)
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_din_m_ss_ctrl.write(reg=0)
 
             hmc_in = []
+
+            '''for x in range(0, len(d00)):
+                hmc_in.extend([d10[x], d11[x], d12[x], d13[x],
+                              d14[x], d15[x], d16[x], d17[x],
+                              d00[x], d01[x], d02[x], d03[x],
+                              d04[x], d05[x], d06[x], d07[x]])
+            '''
 
             for x in range(0, len(d00)):
                 hmc_in.extend([d10[x], d11[x], d12[x], d13[x],
@@ -244,8 +263,83 @@ class coarse_delay:
                               d00[x], d01[x], d02[x], d03[x],
                               d04[x], d05[x], d06[x], d07[x]])
 
-            print "hmc in"
-            print hmc_in[1:10]
+
+            print "HMC in"
+            print '-------------'
+            print hmc_in[0:disp_length]
+            print '                  '
+
+
+            print 'Input Samples: D00 - D07'
+            print '------------------------'
+            print 'D00'
+            print '-------------'
+            print d00[0:disp_length]
+
+            print 'D01'
+            print '-------------'
+            print d01[0:disp_length]
+
+            print 'D02'
+            print '-------------'
+            print d02[0:disp_length]
+
+            print 'D03'
+            print '-------------'
+            print d03[0:disp_length]
+
+            print 'D04'
+            print '-------------'
+            print d04[0:disp_length]
+
+            print 'D05'
+            print '-------------'
+            print d05[0:disp_length]
+
+            print 'D06'
+            print '-------------'
+            print d06[0:disp_length]
+
+            print 'D07'
+            print '-------------'
+            print d07[0:disp_length]
+            print '                  '
+
+            print 'Input Samples: D10 - D17'
+            print '------------------------'
+
+            print 'D10'
+            print '-------------'
+            print d10[0:disp_length]
+
+            print 'D11'
+            print '-------------'
+            print d11[0:disp_length]
+
+            print 'D12'
+            print '-------------'
+            print d12[0:disp_length]
+
+            print 'D13'
+            print '-------------'
+            print d13[0:disp_length]
+
+            print 'D14'
+            print '-------------'
+            print d14[0:disp_length]
+
+            print 'D15'
+            print '-------------'
+            print d15[0:disp_length]
+
+            print 'D16'
+            print '-------------'
+            print d16[0:disp_length]
+
+            print 'D17'
+            print '-------------'
+            print d17[0:disp_length]
+
 
             # Plot channel Time-series
             plt.figure(2)
@@ -261,12 +355,15 @@ class coarse_delay:
 
             plt.pause(0.01)
 
+    # Output of HMC
+    # -------------
     def hmc_output(self, arm_mode, trig_mode, valid_mode, plot_count_max):
 
         self.skarab()
 
         # Reset the plot counter
         plot_count = 0
+        disp_length = 20
 
         while True:
 
@@ -280,59 +377,33 @@ class coarse_delay:
             # ------------------------
 
             print 'Arming Snapblocks'
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_dout0_ss_ctrl.write(reg=1)
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_dout1_ss_ctrl.write(reg=1)
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_dout_m_ss_ctrl.write(reg=1)
             print 'Arming Snapblocks done'
 
             print "Grabbing HMC out SS"
-            hmc_out0 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_dout0_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)[
+            hmc_out = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_dout_m_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)[
                 'data']
-            d00 = hmc_out0['d0']
-            d01 = hmc_out0['d1']
-            d02 = hmc_out0['d2']
-            d03 = hmc_out0['d3']
-            d04 = hmc_out0['d4']
-            d05 = hmc_out0['d5']
-            d06 = hmc_out0['d6']
-            d07 = hmc_out0['d7']
-            print "D00-d07"
-            print d00[1:10]
-            #print d01
-            #print d02
-            #print d03
-            #print d04
-            #print d05
-            #print d06
-            #print d07
-
-            hmc_out1 = \
-            self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_dout1_ss.read(arm=arm_mode, man_trig=trig_mode,
-                                                                                   man_valid=valid_mode)[
-                'data']
-            d10 = hmc_out1['d0']
-            d11 = hmc_out1['d1']
-            d12 = hmc_out1['d2']
-            d13 = hmc_out1['d3']
-            d14 = hmc_out1['d4']
-            d15 = hmc_out1['d5']
-            d16 = hmc_out1['d6']
-            d17 = hmc_out1['d7']
-
-            print "D10-d17"
-            print d10[1:10]
-            #print d11
-            #print d12
-            #print d13
-            #print d14
-            #print d15
-            #print d16
-            #print d17
+            d00 = hmc_out['d00']
+            d01 = hmc_out['d01']
+            d02 = hmc_out['d02']
+            d03 = hmc_out['d03']
+            d04 = hmc_out['d04']
+            d05 = hmc_out['d05']
+            d06 = hmc_out['d06']
+            d07 = hmc_out['d07']
+            d10 = hmc_out['d10']
+            d11 = hmc_out['d11']
+            d12 = hmc_out['d12']
+            d13 = hmc_out['d13']
+            d14 = hmc_out['d14']
+            d15 = hmc_out['d15']
+            d16 = hmc_out['d16']
+            d17 = hmc_out['d17']
 
             print "SS HMC out grab complete"
 
             print 'Disarming Snapblocks'
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_din0_ss_ctrl.write(reg=0)
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_din1_ss_ctrl.write(reg=0)
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_dout_m_ss_ctrl.write(reg=0)
 
             hmc_out = []
 
@@ -342,8 +413,82 @@ class coarse_delay:
                               d00[x], d01[x], d02[x], d03[x],
                               d04[x], d05[x], d06[x], d07[x]])
 
-            print "hmc in"
-            print hmc_out[1:10]
+
+            print "hmc_out"
+            print '-------------'
+            print hmc_out[0:disp_length]
+            print '                  '
+
+
+            print 'Reord Samples: D00 - D07'
+            print '------------------------'
+            print 'D00'
+            print '-------------'
+            print d00[0:disp_length]
+
+            print 'D01'
+            print '-------------'
+            print d01[0:disp_length]
+
+            print 'D02'
+            print '-------------'
+            print d02[0:disp_length]
+
+            print 'D03'
+            print '-------------'
+            print d03[0:disp_length]
+
+            print 'D04'
+            print '-------------'
+            print d04[0:disp_length]
+
+            print 'D05'
+            print '-------------'
+            print d05[0:disp_length]
+
+            print 'D06'
+            print '-------------'
+            print d06[0:disp_length]
+
+            print 'D07'
+            print '-------------'
+            print d07[0:disp_length]
+            print '                  '
+
+            print 'Input Samples: D10 - D17'
+            print '------------------------'
+
+            print 'D10'
+            print '-------------'
+            print d10[0:disp_length]
+
+            print 'D11'
+            print '-------------'
+            print d11[0:disp_length]
+
+            print 'D12'
+            print '-------------'
+            print d12[0:disp_length]
+
+            print 'D13'
+            print '-------------'
+            print d13[0:disp_length]
+
+            print 'D14'
+            print '-------------'
+            print d14[0:disp_length]
+
+            print 'D15'
+            print '-------------'
+            print d15[0:disp_length]
+
+            print 'D16'
+            print '-------------'
+            print d16[0:disp_length]
+
+            print 'D17'
+            print '-------------'
+            print d17[0:disp_length]
 
             # Plot channel Time-series
             plt.figure(3)
@@ -359,6 +504,8 @@ class coarse_delay:
 
             plt.pause(0.01)
 
+    # HMC Re-order
+    # ------------
     def hmc_reord(self, arm_mode, trig_mode, valid_mode, plot_count_max):
 
         self.skarab()
@@ -366,7 +513,7 @@ class coarse_delay:
         # Reset the plot counter
         plot_count = 0
 
-        debug_length = 30
+        disp_length = 100
 
         while True:
 
@@ -380,62 +527,34 @@ class coarse_delay:
             # -----------------------
 
             print 'Arming Snapblocks'
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_reord0_ss_ctrl.write(reg=1)
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_reord1_ss_ctrl.write(reg=1)
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_reord_m_ss_ctrl.write(reg=1)
             self.f.registers.cd_compensation0_cd_hmc_hmc_delay_reord_addb_ss_ctrl.write(reg=1)
             print 'Arming Snapblocks done'
 
-            print "Grabbing HMC out SS"
-            hmc_reord0 = \
-            self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_reord0_ss.read(arm=arm_mode, man_trig=trig_mode,
-                                                                                 man_valid=valid_mode)[
-                'data']
-            d00 = hmc_reord0['d0']
-            d01 = hmc_reord0['d1']
-            d02 = hmc_reord0['d2']
-            d03 = hmc_reord0['d3']
-            d04 = hmc_reord0['d4']
-            d05 = hmc_reord0['d5']
-            d06 = hmc_reord0['d6']
-            d07 = hmc_reord0['d7']
-            print "reord D00-d07"
-            print d00[0:debug_length]
-            # print d01
-            # print d02
-            # print d03
-            # print d04
-            # print d05
-            # print d06
-            # print d07
+            print "Grabbing HMC reord SS"
+            hmc_reord = \
+            self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_reord_m_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
+            d00 = hmc_reord['d00']
+            d01 = hmc_reord['d01']
+            d02 = hmc_reord['d02']
+            d03 = hmc_reord['d03']
+            d04 = hmc_reord['d04']
+            d05 = hmc_reord['d05']
+            d06 = hmc_reord['d06']
+            d07 = hmc_reord['d07']
+            d10 = hmc_reord['d10']
+            d11 = hmc_reord['d11']
+            d12 = hmc_reord['d12']
+            d13 = hmc_reord['d13']
+            d14 = hmc_reord['d14']
+            d15 = hmc_reord['d15']
+            d16 = hmc_reord['d16']
+            d17 = hmc_reord['d17']
 
-            hmc_reord1 = \
-                self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_reord1_ss.read(arm=arm_mode, man_trig=trig_mode,
-                                                                                     man_valid=valid_mode)[
-                    'data']
-            d10 = hmc_reord1['d0']
-            d11 = hmc_reord1['d1']
-            d12 = hmc_reord1['d2']
-            d13 = hmc_reord1['d3']
-            d14 = hmc_reord1['d4']
-            d15 = hmc_reord1['d5']
-            d16 = hmc_reord1['d6']
-            d17 = hmc_reord1['d7']
-
-            print "reord D10-d17"
-            print d10[0:debug_length]
-            # print d11
-            # print d12
-            # print d13
-            # print d14
-            # print d15
-            # print d16
-            # print d17
-
-            print "SS HMC out grab complete"
+            print "SS HMC reord grab complete"
 
             print 'Disarming Snapblocks'
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_reord0_ss_ctrl.write(reg=0)
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_reord1_ss_ctrl.write(reg=0)
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_reord_m_ss_ctrl.write(reg=0)
             self.f.registers.cd_compensation0_cd_hmc_hmc_delay_reord_addb_ss_ctrl.write(reg=0)
 
             hmc_reord = []
@@ -446,8 +565,6 @@ class coarse_delay:
                                 d00[x], d01[x], d02[x], d03[x],
                                 d04[x], d05[x], d06[x], d07[x]])
 
-            print "reord data"
-            print hmc_reord[0:debug_length]
 
             hmc_reord_addb = \
                 self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_addb_ss.read(arm=arm_mode, man_trig=trig_mode,
@@ -456,8 +573,85 @@ class coarse_delay:
             reord_addb_dvalid = hmc_reord_addb['dvalid']
 
             print "reord addb"
-            print reord_addb[0:debug_length]
-            print reord_addb_dvalid[0:debug_length]
+            print reord_addb[0:disp_length]
+            print reord_addb_dvalid[0:disp_length]
+            print '                  '
+
+            print "hmc_reord"
+            print '-------------'
+            print hmc_reord[0:disp_length]
+            print '                  '
+
+
+            print 'Reord Samples: D00 - D07'
+            print '------------------------'
+            print 'D00'
+            print '-------------'
+            print d00[0:disp_length]
+
+            print 'D01'
+            print '-------------'
+            print d01[0:disp_length]
+
+            print 'D02'
+            print '-------------'
+            print d02[0:disp_length]
+
+            print 'D03'
+            print '-------------'
+            print d03[0:disp_length]
+
+            print 'D04'
+            print '-------------'
+            print d04[0:disp_length]
+
+            print 'D05'
+            print '-------------'
+            print d05[0:disp_length]
+
+            print 'D06'
+            print '-------------'
+            print d06[0:disp_length]
+
+            print 'D07'
+            print '-------------'
+            print d07[0:disp_length]
+            print '                  '
+
+            print 'Input Samples: D10 - D17'
+            print '------------------------'
+
+            print 'D10'
+            print '-------------'
+            print d10[0:disp_length]
+
+            print 'D11'
+            print '-------------'
+            print d11[0:disp_length]
+
+            print 'D12'
+            print '-------------'
+            print d12[0:disp_length]
+
+            print 'D13'
+            print '-------------'
+            print d13[0:disp_length]
+
+            print 'D14'
+            print '-------------'
+            print d14[0:disp_length]
+
+            print 'D15'
+            print '-------------'
+            print d15[0:disp_length]
+
+            print 'D16'
+            print '-------------'
+            print d16[0:disp_length]
+
+            print 'D17'
+            print '-------------'
+            print d17[0:disp_length]
 
             # Plot channel Time-series
             plt.figure(4)
@@ -465,16 +659,17 @@ class coarse_delay:
             plt.clf()
             plt.subplot(211)
             plt.plot(d00)
-            plt.title('Output of HMC d00')
+            plt.title('Output of hmc_reord d00')
 
             plt.subplot(212)
             plt.plot(hmc_reord)
-            plt.title('Output of HMC')
+            plt.title('Output of hmc_reord')
 
             plt.pause(0.01)
 
-
-    def read_tag_order(self,arm_mode,trig_mode,valid_mode,plot_count_max):
+    # Read Tag Order
+    # --------------
+    def read_tag_order(self,arm_mode,trig_mode,valid_mode,plot_count_max, disp_length):
 
         self.skarab()
 
@@ -505,8 +700,8 @@ class coarse_delay:
             rd_tag_in_dv = hmc_rd_tag_in['dvalid']
 
             print "rd_tag_in"
-            print rd_tag_in[0:20]
-            print rd_tag_in_dv[0:20]
+            print rd_tag_in[0:disp_length]
+            print rd_tag_in_dv[0:disp_length]
 
             hmc_rd_tag_out = \
                 self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_rd_tag_out_ss.read(arm=arm_mode, man_trig=trig_mode,
@@ -516,16 +711,14 @@ class coarse_delay:
 
 
             print "rd_tag_out"
-            print rd_tag_out[0:20]
-            print rd_tag_out_dv[0:20]
+            print rd_tag_out[0:disp_length]
+            print rd_tag_out_dv[0:disp_length]
 
             print "SS HMC rd_tag grab complete"
 
             print 'Disarming Snapblocks'
             self.f.registers.cd_compensation0_cd_hmc_hmc_delay_rd_tag_in_ss_ctrl.write(reg=0)
             self.f.registers.cd_compensation0_cd_hmc_hmc_delay_rd_tag_out_ss_ctrl.write(reg=0)
-
-
 
     # Output of Coarse Delay
     # ----------------------
@@ -588,6 +781,7 @@ class coarse_delay:
             plt.pause(0.01)
 
     # Output of HMC FIFO
+    # ------------------
     def cd_interal_data(self,arm_mode,trig_mode,valid_mode,plot_count_max):
 
         self.skarab()
