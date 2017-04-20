@@ -23,7 +23,7 @@ class coarse_delay:
         #self.f = casperfpga.SkarabFpga('10.99.55.170')
         self.f = casperfpga.SkarabFpga('10.99.39.170')
 
-        self.f.get_system_information('/tmp/s_cd_ramp_2017-4-19_1445.fpg')
+        self.f.get_system_information('/tmp/s_cd_ramp_2017-4-20_1114.fpg')
 
 
         # Enable the dvalid
@@ -36,7 +36,7 @@ class coarse_delay:
         skarab_ip = '10.99.39.170'
 
         # Programming file
-        prog_file = "/tmp/s_cd_ramp_2017-4-19_1445.fpg"
+        prog_file = "/tmp/s_cd_ramp_2017-4-20_1114.fpg"
 
         # Create FPGA Object
         self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -123,6 +123,16 @@ class coarse_delay:
         print "Post is %s" % post
         print "Init is %s" % init
 
+        # Set delay for test
+        self.f.registers.delay0.write(initial=0)
+
+        self.f.registers.sync_en_cd_in.write(reg=0)
+        self.f.registers.man_dvalid.write(reg=0)
+
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=1)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=1)
+
         while True:
 
             # Iterate through the bins
@@ -136,10 +146,6 @@ class coarse_delay:
 
             print 'Arming Snapblocks'
             self.f.registers.cd_in_ss_ctrl.write(reg=1)
-            self.f.registers.sync_en_cd_out.write(reg=0)
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=1)
-
             print 'Arming Snapblocks done'
 
             print "Grabbing CD in SS"
@@ -1184,73 +1190,6 @@ class coarse_delay:
             print '-------------'
             print d17[0:disp_length]
 
-
-
-    # Read Tag Order
-    # --------------
-    def read_tag_order(self,arm_mode,trig_mode,valid_mode,plot_count_max, disp_length):
-
-        self.skarab()
-
-        # Reset the plot counter
-        plot_count = 0
-
-        while True:
-
-            # Iterate through the bins
-            if plot_count == plot_count_max:
-                break
-
-            plot_count = plot_count + 1
-
-            # Arm the Snapshot Blocks
-            # -----------------------
-
-            print 'Arming Snapblocks'
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_rd_tag_in_ss_ctrl.write(reg=1)
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_rd_tag_out_ss_ctrl.write(reg=1)
-            print 'Arming Snapblocks done'
-
-            print "Grabbing HMC out SS"
-            hmc_rd_tag_in = \
-            self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_rd_tag_in_ss.read(arm=arm_mode, man_trig=trig_mode,
-                                                                                 man_valid=valid_mode)['data']
-            rd_tag_in = hmc_rd_tag_in['rd_tag']
-            rd_tag_in_dv = hmc_rd_tag_in['dvalid']
-
-            print "rd_tag_in"
-            print rd_tag_in[0:disp_length]
-            print rd_tag_in_dv[0:disp_length]
-
-            hmc_rd_tag_out = \
-                self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_rd_tag_out_ss.read(arm=arm_mode, man_trig=trig_mode,
-                                                                                     man_valid=valid_mode)['data']
-            rd_tag_out = hmc_rd_tag_out['rd_tag']
-            rd_tag_out_dv = hmc_rd_tag_out['dvalid']
-
-
-            print "rd_tag_out"
-            print rd_tag_out[0:disp_length]
-            print rd_tag_out_dv[0:disp_length]
-
-            print "SS HMC rd_tag grab complete"
-
-            print 'Disarming Snapblocks'
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_rd_tag_in_ss_ctrl.write(reg=0)
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_rd_tag_out_ss_ctrl.write(reg=0)
-
-        # Plot channel Time-series
-        plt.figure(5)
-        plt.ion()
-        plt.clf()
-        plt.subplot(211)
-        plt.plot(rd_tag_in)
-        plt.title('Tag in')
-
-        plt.subplot(212)
-        plt.plot(rd_tag_out)
-        plt.title('Tag out')
-
     # Output of Coarse Delay
     # ----------------------
     def output_data(self, arm_mode, trig_mode, valid_mode, plot_count_max, disp_length):
@@ -1260,18 +1199,22 @@ class coarse_delay:
         # Reset the plot counter
         plot_count = 0
 
-
         # Check if HMC post and init are ok
         post_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_post.read()
         init_reg  = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_init.read()
         post = post_reg['data']
         init = init_reg['data']
 
-
         print "Post is %s" % post
         print "Init is %s" % init
 
+        # Set delay for test
+        self.f.registers.delay0.write(initial=0)
+
         self.f.registers.sync_en_cd_out.write(reg=0)
+        self.f.registers.man_dvalid.write(reg=0)
+
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=1)
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=1)
 
@@ -1394,15 +1337,26 @@ class coarse_delay:
         print "Post is %s" % post
         print "Init is %s" % init
 
-        # Setup sync
-        self.f.registers.sync_en_cd_in.write(reg=1)
-        self.f.registers.sync_en_cd_out.write(reg=1)
-
-        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
-        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=0)
-
         # Set delay for test
         self.f.registers.delay0.write(initial=delay)
+        print "Delay is: %s" % self.f.registers.delay0.read()
+
+        #Arm and load
+        self.f.registers.tl_cd0_control0.write(arm=1)
+        self.f.registers.tl_cd0_control0.write(load_immediate=0)
+        self.f.registers.tl_cd0_control0.write(arm=0)
+        self.f.registers.tl_cd0_control0.write(load_immediate=0)
+
+        # Setup sync
+        self.f.registers.sync_en_cd_in.write(reg=1)
+        self.f.registers.sync_en_cd_out.write(reg=0)
+        self.f.registers.man_dvalid.write(reg=0)
+
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=1)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=1)
+
+
 
         while True:
 
@@ -1424,9 +1378,10 @@ class coarse_delay:
 
             print 'Arming Snapblocks done'
 
-            print "Grabbing CD in SS"
+            print "Grabbing CD in"
             data_in = self.f.snapshots.cd_in_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
 
+            print "Grabbing CD out"
             data_out = self.f.snapshots.cd_out_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
 
             din_00 = data_in['d00']
@@ -1538,20 +1493,41 @@ class coarse_delay:
             plt.figure(1)
             plt.ion()
             plt.clf()
-            plt.plot(cd_in)
-            plt.plot(cd_out)
+            plt.plot(cd_in[0:disp_length])
+            plt.plot(cd_out[0:disp_length])
             plt.title('CD Test')
 
             plt.pause(0.01)
 
+
+
     # Output of HMC FIFO
     # ------------------
-    def cd_interal_data(self,arm_mode,trig_mode,valid_mode,plot_count_max):
+    def qout(self,arm_mode,trig_mode,valid_mode,plot_count_max, disp_length):
 
         self.skarab()
 
         # Reset the plot counter
         plot_count = 0
+
+        # Check if HMC post and init are ok
+        post_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_post.read()
+        init_reg  = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_init.read()
+        post = post_reg['data']
+        init = init_reg['data']
+
+        print "Post is %s" % post
+        print "Init is %s" % init
+
+        # Set delay for test
+        self.f.registers.delay0.write(initial=0)
+
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_en_qout.write(reg=0)
+        self.f.registers.man_dvalid.write(reg=0)
+
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=1)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=1)
 
         while True:
 
@@ -1565,41 +1541,102 @@ class coarse_delay:
             # ------------------------
 
             print 'Arming Snapblocks'
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_ss_qout_ss_ctrl.write(reg=1)
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_qout_ss_ctrl.write(reg=1)
             print 'Arming Snapblocks done'
 
             print "Grabbing HMC FIFO SS"
-            rd_data = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_ss_qout_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
-            d0 = rd_data['d0']
-            d1 = rd_data['d1']
-            d2 = rd_data['d2']
-            d3 = rd_data['d3']
-            d4 = rd_data['d4']
-            d5 = rd_data['d5']
-            d6 = rd_data['d6']
-            d7 = rd_data['d7']
+            rd_data = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_qout_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
+            d0 = rd_data['d00']
+            d1 = rd_data['d01']
+            d2 = rd_data['d02']
+            d3 = rd_data['d03']
+            d4 = rd_data['d04']
+            d5 = rd_data['d05']
+            d6 = rd_data['d06']
+            d7 = rd_data['d07']
 
             print "SS HMC FIFO grab complete"
 
             print 'Disarming Snapblocks'
-            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_ss_qout_ss_ctrl.write(reg=0)
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_qout_ss_ctrl.write(reg=0)
 
-            hmc_fifo = []
+            qout = []
 
             for x in range(0, len(d0)):
-                hmc_fifo.extend([d0[x], d1[x], d2[x], d3[x],
+                qout.extend([d0[x], d1[x], d2[x], d3[x],
                                d4[x], d5[x], d6[x], d7[x]])
 
             # Plot channel Time-series
             plt.figure(1)
             plt.ion()
             plt.clf()
-            plt.subplot(211)
-            plt.plot(d0)
+            plt.plot(qout)
             plt.title('CD HMC FIFO d0')
 
-            plt.subplot(212)
-            plt.plot(hmc_fifo)
-            plt.title('hmc_fifo')
-
             plt.pause(0.01)
+
+    # Read Tag Order
+    # --------------
+    def read_tag_order(self, arm_mode, trig_mode, valid_mode, plot_count_max, disp_length):
+
+        self.skarab()
+
+        # Reset the plot counter
+        plot_count = 0
+
+        while True:
+
+            # Iterate through the bins
+            if plot_count == plot_count_max:
+                break
+
+                plot_count = plot_count + 1
+
+                # Arm the Snapshot Blocks
+                # -----------------------
+
+                print 'Arming Snapblocks'
+                self.f.registers.cd_compensation0_cd_hmc_hmc_delay_rd_tag_in_ss_ctrl.write(reg=1)
+                self.f.registers.cd_compensation0_cd_hmc_hmc_delay_rd_tag_out_ss_ctrl.write(reg=1)
+                print 'Arming Snapblocks done'
+
+                print "Grabbing HMC out SS"
+                hmc_rd_tag_in = \
+                self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_rd_tag_in_ss.read(arm=arm_mode,
+                                                                                             man_trig=trig_mode,
+                                                                                             man_valid=valid_mode)['data']
+                rd_tag_in = hmc_rd_tag_in['rd_tag']
+                rd_tag_in_dv = hmc_rd_tag_in['dvalid']
+
+                print "rd_tag_in"
+                print rd_tag_in[0:disp_length]
+                print rd_tag_in_dv[0:disp_length]
+
+                hmc_rd_tag_out = \
+                        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_rd_tag_out_ss.read(arm=arm_mode,
+                                                                                              man_trig=trig_mode,
+                                                                                              man_valid=valid_mode)['data']
+                rd_tag_out = hmc_rd_tag_out['rd_tag']
+                rd_tag_out_dv = hmc_rd_tag_out['dvalid']
+
+                print "rd_tag_out"
+                print rd_tag_out[0:disp_length]
+                print rd_tag_out_dv[0:disp_length]
+
+                print "SS HMC rd_tag grab complete"
+
+                print 'Disarming Snapblocks'
+                self.f.registers.cd_compensation0_cd_hmc_hmc_delay_rd_tag_in_ss_ctrl.write(reg=0)
+                self.f.registers.cd_compensation0_cd_hmc_hmc_delay_rd_tag_out_ss_ctrl.write(reg=0)
+
+                # Plot channel Time-series
+                plt.figure(5)
+                plt.ion()
+                plt.clf()
+                plt.subplot(211)
+                plt.plot(rd_tag_in)
+                plt.title('Tag in')
+
+                plt.subplot(212)
+                plt.plot(rd_tag_out)
+                plt.title('Tag out')
