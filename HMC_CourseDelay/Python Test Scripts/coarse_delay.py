@@ -23,7 +23,7 @@ class coarse_delay:
         #self.f = casperfpga.SkarabFpga('10.99.55.170')
         self.f = casperfpga.SkarabFpga('10.99.39.170')
 
-        self.f.get_system_information('/tmp/s_cd_ramp_2017-4-20_1114.fpg')
+        self.f.get_system_information('/tmp/s_cd_ramp_2017-4-21_1451.fpg')
 
 
         # Enable the dvalid
@@ -36,7 +36,7 @@ class coarse_delay:
         skarab_ip = '10.99.39.170'
 
         # Programming file
-        prog_file = "/tmp/s_cd_ramp_2017-4-20_1114.fpg"
+        prog_file = "/tmp/s_cd_ramp_2017-4-21_1451.fpg"
 
         # Create FPGA Object
         self.f = casperfpga.SkarabFpga(skarab_ip)
