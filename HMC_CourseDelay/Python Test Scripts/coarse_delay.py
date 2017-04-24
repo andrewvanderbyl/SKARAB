@@ -23,7 +23,7 @@ class coarse_delay:
         #self.f = casperfpga.SkarabFpga('10.99.55.170')
         self.f = casperfpga.SkarabFpga('10.99.39.170')
 
-        self.f.get_system_information('/tmp/s_cd_ramp_2017-4-21_1451.fpg')
+        self.f.get_system_information('/tmp/s_cd_ramp_2017-4-24_1337.fpg')
 
 
         # Enable the dvalid
@@ -36,7 +36,7 @@ class coarse_delay:
         skarab_ip = '10.99.39.170'
 
         # Programming file
-        prog_file = "/tmp/s_cd_ramp_2017-4-21_1451.fpg"
+        prog_file = "/tmp/s_cd_ramp_2017-4-24_1337.fpg"
 
         # Create FPGA Object
         self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -1348,9 +1348,11 @@ class coarse_delay:
         self.f.registers.tl_cd0_control0.write(load_immediate=0)
 
         # Setup sync
-        self.f.registers.sync_en_cd_in.write(reg=1)
+        self.f.registers.sync_en_cd_in.write(reg=0)
         self.f.registers.sync_en_cd_out.write(reg=0)
         self.f.registers.man_dvalid.write(reg=0)
+        self.f.registers.rst_tvg.write(reg=1)
+        self.f.registers.rst_tvg.write(reg=0)
 
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=1)
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
@@ -1406,6 +1408,9 @@ class coarse_delay:
             print 'Disarming Snapblocks'
             self.f.registers.cd_in_ss_ctrl.write(reg=0)
             self.f.registers.cd_out_ss_ctrl.write(reg=0)
+
+            # Read HMC delay
+            hmc_delay = self.f.registers.hmc_delay.read()
 
             cd_in = []
             cd_out = []
@@ -1488,6 +1493,23 @@ class coarse_delay:
             print 'D07'
             print '-------------'
             print dout_07[0:disp_length]
+            print ''
+
+            print '-------------'
+            print ' Sample Difference'
+
+            print ''
+
+
+            for i in range(0, disp_length):
+                print din_00[i] - dout_00[i]
+
+
+            print '-------------'
+            print ''
+            print 'Requested delay is %s' % delay
+            print 'Latency is %s' % hmc_delay
+
 
             # Plot channel Time-series
             plt.figure(1)
@@ -1500,6 +1522,7 @@ class coarse_delay:
             plt.pause(0.01)
 
 
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=0)
 
     # Output of HMC FIFO
     # ------------------
