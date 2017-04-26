@@ -23,11 +23,11 @@ class coarse_delay:
         #self.f = casperfpga.SkarabFpga('10.99.55.170')
         self.f = casperfpga.SkarabFpga('10.99.39.170')
 
-        self.f.get_system_information('/tmp/s_cd_ramp_2017-4-24_1337.fpg')
+        self.f.get_system_information('/tmp/s_cd_ramp_2017-4-26_1202.fpg')
 
 
         # Enable the dvalid
-        self.f.registers.dvalid.write(reg=1)
+        # self.f.registers.dvalid.write(reg=1)
 
     def setup_FPGA(self):
 
@@ -36,7 +36,7 @@ class coarse_delay:
         skarab_ip = '10.99.39.170'
 
         # Programming file
-        prog_file = "/tmp/s_cd_ramp_2017-4-24_1337.fpg"
+        prog_file = "/tmp/s_cd_ramp_2017-4-26_1202.fpg"
 
         # Create FPGA Object
         self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -1328,6 +1328,15 @@ class coarse_delay:
         # Reset the plot counter
         plot_count = 0
 
+        # Enable the dvalid
+        self.f.registers.dvalid.write(reg=0)
+        self.f.registers.rst_tvg.write(reg=0)
+        self.f.registers.dvalid.write(reg=1)
+
+        # Reset sync monitor
+        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=1)
+        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=0)
+
         # Check if HMC post and init are ok
         post_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_post.read()
         init_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_init.read()
@@ -1348,17 +1357,7 @@ class coarse_delay:
         self.f.registers.tl_cd0_control0.write(load_immediate=0)
 
         # Setup sync
-        self.f.registers.sync_en_cd_in.write(reg=0)
-        self.f.registers.sync_en_cd_out.write(reg=0)
         self.f.registers.man_dvalid.write(reg=0)
-        self.f.registers.rst_tvg.write(reg=1)
-        self.f.registers.rst_tvg.write(reg=0)
-
-        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=1)
-        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
-        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=1)
-
-
 
         while True:
 
@@ -1380,11 +1379,18 @@ class coarse_delay:
 
             print 'Arming Snapblocks done'
 
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=1)
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=1)
+
             print "Grabbing CD in"
             data_in = self.f.snapshots.cd_in_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
 
             print "Grabbing CD out"
             data_out = self.f.snapshots.cd_out_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+            sync_in = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_in.read()
+            sync_out = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_out.read()
 
             din_00 = data_in['d00']
             din_01 = data_in['d01']
@@ -1501,8 +1507,8 @@ class coarse_delay:
             print ''
 
 
-            for i in range(0, disp_length):
-                print din_00[i] - dout_00[i]
+            #for i in range(0, disp_length):
+            #    print din_00[i] - dout_00[i]
 
 
             print '-------------'
@@ -1510,6 +1516,8 @@ class coarse_delay:
             print 'Requested delay is %s' % delay
             print 'Latency is %s' % hmc_delay
 
+            print 'Sync In is %s' %sync_in
+            print 'Sync Out is %s' % sync_out
 
             # Plot channel Time-series
             plt.figure(1)
@@ -1523,6 +1531,8 @@ class coarse_delay:
 
 
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=0)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=1)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
 
     # Output of HMC FIFO
     # ------------------
