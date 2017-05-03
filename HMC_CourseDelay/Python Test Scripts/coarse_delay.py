@@ -10,6 +10,7 @@ from IPython import embed
 import casperfpga
 import logging
 import numpy as np
+import time
 
 class coarse_delay:
     def __init__(self):
@@ -23,11 +24,11 @@ class coarse_delay:
         #self.f = casperfpga.SkarabFpga('10.99.55.170')
         self.f = casperfpga.SkarabFpga('10.99.39.170')
 
-        self.f.get_system_information('/tmp/s_cd_ramp_2017-4-26_1202.fpg')
+        self.f.get_system_information('/tmp/s_cd_ramp_2017-5-3_1442.fpg')
 
 
         # Enable the dvalid
-        # self.f.registers.dvalid.write(reg=1)
+        self.f.registers.dvalid.write(reg=1)
 
     def setup_FPGA(self):
 
@@ -36,7 +37,7 @@ class coarse_delay:
         skarab_ip = '10.99.39.170'
 
         # Programming file
-        prog_file = "/tmp/s_cd_ramp_2017-4-26_1202.fpg"
+        prog_file = "/tmp/s_cd_ramp_2017-5-3_1442.fpg"
 
         # Create FPGA Object
         self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -1328,23 +1329,9 @@ class coarse_delay:
         # Reset the plot counter
         plot_count = 0
 
-        # Enable the dvalid
+        # Disable the dvalid
         self.f.registers.dvalid.write(reg=0)
         self.f.registers.rst_tvg.write(reg=0)
-        self.f.registers.dvalid.write(reg=1)
-
-        # Reset sync monitor
-        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=1)
-        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=0)
-
-        # Check if HMC post and init are ok
-        post_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_post.read()
-        init_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_init.read()
-        post = post_reg['data']
-        init = init_reg['data']
-
-        print "Post is %s" % post
-        print "Init is %s" % init
 
         # Set delay for test
         self.f.registers.delay0.write(initial=delay)
@@ -1356,8 +1343,27 @@ class coarse_delay:
         self.f.registers.tl_cd0_control0.write(arm=0)
         self.f.registers.tl_cd0_control0.write(load_immediate=0)
 
-        # Setup sync
+        # Reset sync monitor
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=1)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=0)
+
+
+        # Check if HMC post and init are ok
+        post_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_post.read()
+        init_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_init.read()
+        post = post_reg['data']
+        init = init_reg['data']
+
+        print "Post is %s" % post
+        print "Init is %s" % init
+
+        # man_dvalid controls which dvalid is used for the snapshots. man_dvalid = 0 sets the SS to use the system dvalid
         self.f.registers.man_dvalid.write(reg=0)
+
+        # Set the master dvalid. This resets the TVG as well.
+        self.f.registers.dvalid.write(reg=1)
+
+
 
         while True:
 
@@ -1374,11 +1380,13 @@ class coarse_delay:
             self.f.registers.cd_in_ss_ctrl.write(reg=1)
             self.f.registers.cd_out_ss_ctrl.write(reg=1)
 
+            # sync_en_cd_in and sync_en_cd_out controls which sync is used for the snapshots. sunc_en_* = 1 sets the SS to use the system sync. If 0, an artificial sync is generated.
             self.f.registers.sync_en_cd_in.write(reg=0)
             self.f.registers.sync_en_cd_out.write(reg=0)
 
             print 'Arming Snapblocks done'
 
+            # Setup artificial sync. Reset first, then enable.
             self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=1)
             self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
             self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=1)
@@ -1389,8 +1397,15 @@ class coarse_delay:
             print "Grabbing CD out"
             data_out = self.f.snapshots.cd_out_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
 
-            sync_in = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_in.read()
-            sync_out = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_out.read()
+            # Grab captured sync in and out of the HMC
+            hmc_sync_in = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_in.read()
+            hmc_sync_out = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_out.read()
+            hmc_reord_sync = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_reord_sync.read()
+            reord_sync = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_out.read()
+
+            hmc_sync_in_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_in_cnt.read()
+            hmc_sync_out_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_out_cnt.read()
+            reord_sync_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_cnt.read()
 
             din_00 = data_in['d00']
             din_01 = data_in['d01']
@@ -1415,8 +1430,24 @@ class coarse_delay:
             self.f.registers.cd_in_ss_ctrl.write(reg=0)
             self.f.registers.cd_out_ss_ctrl.write(reg=0)
 
+            # Toggle the capture control to allow a small window of capture time
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl_rst.write(reg=1)
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl_rst.write(reg=0)
+
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=1)
+            time.sleep(1)
+            self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=0)
+
+            # Read in the counters controlled by the capture
+            wr_req_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_wr_req_count.read()
+            rd_req_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_rd_req_count.read()
+            cd_rd_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_rd_count.read()
+
             # Read HMC delay
             hmc_delay = self.f.registers.hmc_delay.read()
+            cd_in_count_thresh = self.f.registers.cd_in_cnt_thresh.read()
+            cd_out_count_thresh = self.f.registers.cd_out_cnt_thresh.read()
+
 
             cd_in = []
             cd_out = []
@@ -1501,7 +1532,7 @@ class coarse_delay:
             print dout_07[0:disp_length]
             print ''
 
-            print '-------------'
+            print '--------------------------------------'
             print ' Sample Difference'
 
             print ''
@@ -1511,23 +1542,56 @@ class coarse_delay:
             #    print din_00[i] - dout_00[i]
 
 
-            print '-------------'
+            print '----------------------------------------------------------------------------'
             print ''
             print 'Requested delay is %s' % delay
+            print ''
             print 'Latency is %s' % hmc_delay
+            print ''
+            print 'cd_in_count_thresh is %s' % cd_in_count_thresh
+            print ''
+            print 'cd_out_count_thresh is %s' % cd_out_count_thresh
+            print ''
 
-            print 'Sync In is %s' %sync_in
-            print 'Sync Out is %s' % sync_out
+            print '----------------------------------------------------------------------------'
+            print ''
+            print 'hmc_sync_in is %s' %hmc_sync_in
+            print ''
+            print 'hmc_sync_in_count is %s' % hmc_sync_in_count
+            print ''
+            print 'hmc_sync_out is %s' % hmc_sync_out
+            print ''
+            print 'hmc_sync_out_count is %s' % hmc_sync_out_count
+            print ''
+
+            print '----------------------------------------------------------------------------'
+            print ''
+            print 'hmc_reord_sync is %s' %hmc_reord_sync
+            print ''
+            print 'reord_sync is %s' %reord_sync
+            print ''
+            print 'reord_sync_count is %s' %reord_sync_count
+            print ''
+
+            print '----------------------------------------------------------------------------'
+            print ''
+            print 'wr_req_count is %s' % wr_req_count
+            print ''
+            print 'rd_req_count is %s' % rd_req_count
+            print ''
+            print 'cd_rd_count is %s' % cd_rd_count
+            print ''
+
 
             # Plot channel Time-series
-            plt.figure(1)
-            plt.ion()
-            plt.clf()
-            plt.plot(cd_in[0:disp_length])
-            plt.plot(cd_out[0:disp_length])
-            plt.title('CD Test')
+            #plt.figure(1)
+            #plt.ion()
+            #plt.clf()
+            #plt.plot(cd_in[0:disp_length])
+            #plt.plot(cd_out[0:disp_length])
+            #plt.title('CD Test')
 
-            plt.pause(0.01)
+            #plt.pause(0.01)
 
 
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=0)
