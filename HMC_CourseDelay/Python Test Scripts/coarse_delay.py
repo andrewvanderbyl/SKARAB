@@ -25,8 +25,8 @@ class coarse_delay:
         #self.f = casperfpga.SkarabFpga('10.99.55.170')
         self.f = casperfpga.SkarabFpga('10.99.39.170')
 
-        #self.f.get_system_information('/tmp/s_cd_ramp_2017-5-8_1738.fpg')
-        self.f.get_system_information('/tmp/s_cd_ramp_2017-5-12_2133.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_tagext_2017-5-13_1938.fpg')
+        #self.f.get_system_information('/tmp/s_cd_ramp_2017-5-12_2133.fpg')
                 
         # Set the vault and bank 
         #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_vault.write(vault=8)
@@ -43,8 +43,8 @@ class coarse_delay:
         skarab_ip = '10.99.39.170'
         
         # Programming file
-        #prog_file = "/tmp/s_cd_ramp_2017-5-8_1738.fpg"
-        prog_file = "/tmp/s_cd_ramp_2017-5-12_2133.fpg"
+        prog_file = "/tmp/s_cd_hmc_tagext_2017-5-13_1938.fpg"
+        #prog_file = "/tmp/s_cd_ramp_2017-5-12_2133.fpg"
         
         
         # Create FPGA Object
