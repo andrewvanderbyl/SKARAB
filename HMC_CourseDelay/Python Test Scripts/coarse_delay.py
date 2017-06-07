@@ -25,7 +25,7 @@ class coarse_delay:
         self.f = casperfpga.SkarabFpga('10.99.55.170')
         #self.f = casperfpga.SkarabFpga('10.99.39.170')
 
-        self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-1_0953.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-7_1255.fpg')
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_dvalid_sync_2017-6-1_0733.fpg')
                 
     def setup_FPGA(self):
@@ -35,7 +35,7 @@ class coarse_delay:
         #skarab_ip = '10.99.39.170'
         
         # Programming file
-        prog_file = "/tmp/s_cd_hmc_v2_2017-6-1_0953.fpg"
+        prog_file = "/tmp/s_cd_hmc_v2_2017-6-7_1255.fpg"
         #prog_file = "/tmp/s_cd_hmc_v2_dvalid_sync_2017-6-1_0733.fpg"
         
         
@@ -1323,16 +1323,13 @@ class coarse_delay:
 
     # Delay compare
     # -------------
-    def delay_test(self, arm_mode, trig_mode, valid_mode, plot_count_max, disp_length, delay, hmc_bank, hmc_vault, sync_sel):
+    def delay_test(self, arm_mode, trig_mode, valid_mode, plot_count_max, disp_length, read_length,delay, hmc_bank, hmc_vault, sync_sel):
 
         self.skarab()
 
         self.f.registers.dvalid.write(reg=0)
         self.f.registers.sync_select.write(reg=sync_sel)
         self.f.registers.man_sync.write(reg=0)
-        self.f.registers.hmc_rd_en.write(en=1)
-
-        time.sleep(0.1)
 
         # Reset the plot counter
         plot_count = 0
@@ -1346,14 +1343,20 @@ class coarse_delay:
         # Disable the dvalid
         self.f.registers.dvalid.write(reg=0)
 
-
         # sync_en_cd_in and sync_en_cd_out controls which sync is used for the snapshots. sync_en_* = 1 sets the SS to use the system sync. If 0, an artificial sync is generated.
         #self.f.registers.sync_en_cd_in.write(reg=0)
         #self.f.registers.sync_en_cd_out.write(reg=0)
 
+        # Set the addressing scheme
+        self.f.registers.hmc_addr_sel_pol0.write(sel=2)
+        self.f.registers.hmc_addr_sel_pol1.write(sel=2)
+
         # Set the vault and bank 
-        self.f.registers.hmc_vault.write(vault=hmc_vault)
-        self.f.registers.hmc_bank.write(bank=hmc_bank)
+        self.f.registers.hmc_vault_pol0.write(vault=hmc_vault)
+        self.f.registers.hmc_vault_pol1.write(vault=hmc_vault)
+
+        self.f.registers.hmc_bank_pol0.write(bank=hmc_bank)
+        self.f.registers.hmc_bank_pol1.write(bank=hmc_bank)
 
 
         # Reset sync monitor
@@ -1378,19 +1381,17 @@ class coarse_delay:
 
 
         # Check if HMC bank and vault are ok
-        vault_reg = self.f.registers.hmc_vault.read()
-        bank_reg = self.f.registers.hmc_bank.read()
-        vault = vault_reg['data']
-        bank = bank_reg['data']
+        vault_pol0 = self.f.registers.hmc_vault_pol0.read()
+        bank_pol0 = self.f.registers.hmc_bank_pol0.read()
+        vault_pol1 = self.f.registers.hmc_vault_pol1.read()
+        bank_pol1 = self.f.registers.hmc_bank_pol1.read()
+        print "Pol 0 Vault is %s" % vault_pol0
+        print "Pol 0 Bank is %s" % bank_pol0
+        print "Pol 1 Vault is %s" % vault_pol1
+        print "Pol 1 Bank is %s" % bank_pol1
+        print "--------------------------------"
+        print " "
 
-        print "Vault is %s" % vault
-        print "Bank is %s" % bank
-
-        # man_dvalid controls which dvalid is used for the snapshots. man_dvalid = 0 sets the SS to use the system dvalid
-        #self.f.registers.man_dvalid.write(reg=0)
-
-        # Set the master dvalid. This resets the TVG as well.
-        #self.f.registers.dvalid.write(reg=1)
 
         print "Initial State"
         print "-------------"
@@ -1464,8 +1465,13 @@ class coarse_delay:
         print 'Arming Snapblocks'
         self.f.snapshots.cd_in_ss.arm()
         self.f.snapshots.cd_out_ss.arm()
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_debug_ss.arm()
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_ss_tag_out_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_debug0_p0_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_debug1_p0_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_din0_p0_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_din1_p0_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_dout0_p0_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_dout1_p0_ss.arm()
+
         print 'Arming Snapblocks done'
 
         # Manually set sync and dvalid
@@ -1497,23 +1503,25 @@ class coarse_delay:
         print 'wait'
         time.sleep(1)
 
-        print '-------------'
+        print '-----------------------------------------------------------------------------------------------'
         print "Grabbing CD in"
         data_in = self.f.snapshots.cd_in_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
-        print "Grabbing HMC data"
-        hmc_debug = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_debug_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        print "Grabbing HMC debug data"
+        hmc_debug0 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_debug0_p0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        hmc_debug1 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_debug1_p0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
-        print "Grabbing Tag out"
-        ss_tag_out = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_ss_tag_out_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        print "Grabbing HMC din"
+        hmc_din0 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_din0_p0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        hmc_din1 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_din1_p0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        print "Grabbing HMC dout"
+        hmc_dout0 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_dout0_p0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        hmc_dout1 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_dout1_p0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
         print "Grabbing CD out"
         data_out = self.f.snapshots.cd_out_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
-
-
-            
-
-
+        print '-----------------------------------------------------------------------------------------------'
 
         # Grab captured sync in and out of the HMC
         hmc_sync_in = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_in.read()
@@ -1525,6 +1533,7 @@ class coarse_delay:
         hmc_sync_out_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_out_cnt.read()
         reord_sync_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_cnt.read()
 
+        # CD Input data
         din_00 = data_in['d00']
         din_01 = data_in['d01']
         din_02 = data_in['d02']
@@ -1534,6 +1543,45 @@ class coarse_delay:
         din_06 = data_in['d06']
         din_07 = data_in['d07']
 
+        # HMC Input data
+        hmc_din0_00 = hmc_din0['d00']
+        hmc_din0_01 = hmc_din0['d01']
+        hmc_din0_02 = hmc_din0['d02']
+        hmc_din0_03 = hmc_din0['d03']
+        hmc_din0_04 = hmc_din0['d04']
+        hmc_din0_05 = hmc_din0['d05']
+        hmc_din0_06 = hmc_din0['d06']
+        hmc_din0_07 = hmc_din0['d07']
+
+        hmc_din1_00 = hmc_din1['d00']
+        hmc_din1_01 = hmc_din1['d01']
+        hmc_din1_02 = hmc_din1['d02']
+        hmc_din1_03 = hmc_din1['d03']
+        hmc_din1_04 = hmc_din1['d04']
+        hmc_din1_05 = hmc_din1['d05']
+        hmc_din1_06 = hmc_din1['d06']
+        hmc_din1_07 = hmc_din1['d07']
+
+        # HMC Output data
+        hmc_dout0_00 = hmc_din0['d00']
+        hmc_dout0_01 = hmc_din0['d01']
+        hmc_dout0_02 = hmc_din0['d02']
+        hmc_dout0_03 = hmc_din0['d03']
+        hmc_dout0_04 = hmc_din0['d04']
+        hmc_dout0_05 = hmc_din0['d05']
+        hmc_dout0_06 = hmc_din0['d06']
+        hmc_dout0_07 = hmc_din0['d07']
+
+        hmc_dout1_00 = hmc_din1['d00']
+        hmc_dout1_01 = hmc_din1['d01']
+        hmc_dout1_02 = hmc_din1['d02']
+        hmc_dout1_03 = hmc_din1['d03']
+        hmc_dout1_04 = hmc_din1['d04']
+        hmc_dout1_05 = hmc_din1['d05']
+        hmc_dout1_06 = hmc_din1['d06']
+        hmc_dout1_07 = hmc_din1['d07']
+
+        # CD Output data
         dout_00 = data_out['d00']
         dout_01 = data_out['d01']
         dout_02 = data_out['d02']
@@ -1543,25 +1591,20 @@ class coarse_delay:
         dout_06 = data_out['d06']
         dout_07 = data_out['d07']
 
-        win = hmc_debug['win']
-        wr_rdy = hmc_debug['wr_rdy']
-        waddr = hmc_debug['waddr']
-        rin = hmc_debug['rin']
-        rdaddr = hmc_debug['rdaddr']
-        tag_in = hmc_debug['tag_in']
-        dvalid = hmc_debug['dvalid']
-        rd_rdy = hmc_debug['rd_rdy']
-        tag_out = hmc_debug['tag_out']
 
-        ss_tag_out_dvalid = ss_tag_out['dvalid']
-        ss_tag_out_rd_rdy = ss_tag_out['rd_rdy']
-        ss_tag_out_tag_out = ss_tag_out['tag_out']
+        win = hmc_debug0['win']
+        wr_rdy = hmc_debug0['wr_rdy']
+        waddr = hmc_debug0['waddr']
+        rin = hmc_debug0['rin']
+        rdaddr = hmc_debug0['rdaddr']
+        tag_in = hmc_debug0['tag_in']
+        dvalid = hmc_debug0['dvalid']
+        rd_rdy = hmc_debug0['rd_rdy']
+        tag_out = hmc_debug0['tag_out']
 
-        #print 'Disarming Snapblocks'
-        #self.f.registers.cd_in_ss_ctrl.write(reg=0)
-        #self.f.registers.cd_out_ss_ctrl.write(reg=0)
-        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_debug_ss_ctrl.write(reg=0)
-        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_ss_tag_out_ss_ctrl.write(reg=0)
+        hmc_dvalid_p0 = hmc_debug1['dvalid']
+        hmc_rd_rdy_p0 = hmc_debug1['rd_rdy']
+        hmc_tag_out_p0 = hmc_debug1['tag_out']
 
         # Toggle the capture control to allow a small window of capture time
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=0)
@@ -1587,35 +1630,35 @@ class coarse_delay:
 
         print 'D00'
         print '-------------'
-        print din_00[0:disp_length]
+        print din_00[0:read_length]
 
         print 'D01'
         print '-------------'
-        print din_01[0:disp_length]
+        print din_01[0:read_length]
 
         print 'D02'
         print '-------------'
-        print din_02[0:disp_length]
+        print din_02[0:read_length]
 
         print 'D03'
         print '-------------'
-        print din_03[0:disp_length]
+        print din_03[0:read_length]
 
         print 'D04'
         print '-------------'
-        print din_04[0:disp_length]
+        print din_04[0:read_length]
 
         print 'D05'
         print '-------------'
-        print din_05[0:disp_length]
+        print din_05[0:read_length]
 
         print 'D06'
         print '-------------'
-        print din_06[0:disp_length]
+        print din_06[0:read_length]
 
         print 'D07'
         print '-------------'
-        print din_07[0:disp_length]
+        print din_07[0:read_length]
         print ''
 
         print 'Output Samples'
@@ -1623,40 +1666,35 @@ class coarse_delay:
 
         print 'D00'
         print '-------------'
-        print dout_00[0:disp_length]
+        print dout_00[disp_length:disp_length+read_length]
 
         print 'D01'
         print '-------------'
-        print dout_01[0:disp_length]
+        print dout_01[disp_length:disp_length+read_length]
 
         print 'D02'
         print '-------------'
-        print dout_02[0:disp_length]
+        print dout_02[disp_length:disp_length+read_length]
 
         print 'D03'
         print '-------------'
-        print dout_03[0:disp_length]
+        print dout_03[disp_length:disp_length+read_length]
 
         print 'D04'
         print '-------------'
-        print dout_04[0:disp_length]
+        print dout_04[disp_length:disp_length+read_length]
 
         print 'D05'
         print '-------------'
-        print dout_05[0:disp_length]
+        print dout_05[disp_length:disp_length+read_length]
 
         print 'D06'
         print '-------------'
-        print dout_06[0:disp_length]
+        print dout_06[disp_length:disp_length+read_length]
 
         print 'D07'
         print '-------------'
-        print dout_07[0:disp_length]
-        print ''
-
-        print '--------------------------------------'
-        print ' Sample Difference'
-
+        print dout_07[disp_length:disp_length+read_length]
         print ''
 
         print '----------------------------------------------------------------------------'
@@ -1707,40 +1745,177 @@ class coarse_delay:
 
         print '----------------------------------------------------------------------------'
         print ''
-        print 'win is %s' % win[0:disp_length]
+        print 'wr_rdy is %s' % wr_rdy[disp_length:disp_length+read_length]
         print ''
-        print 'wr_rdy is %s' % wr_rdy[0:disp_length]
+        print 'win is %s' % win[disp_length:disp_length+read_length]
         print ''
-        print 'waddr is %s' % waddr[0:disp_length]
+        print 'waddr is %s' % waddr[disp_length:disp_length+read_length]
         print ''
-        print 'rin is %s' % rin[0:disp_length]
+        print '----------------------------------------------------------------------------'
         print ''
-        print 'rdaddr is %s' % rdaddr[0:disp_length]
+        print 'rd_rdy is %s' % rd_rdy[disp_length:disp_length+read_length]
         print ''
-        print 'tag_in is %s' % tag_in[0:disp_length]
+        print 'rin is %s' % rin[disp_length:disp_length+read_length]
         print ''
-        print 'dvalid is %s' % dvalid[0:disp_length]
+        print 'rdaddr is %s' % rdaddr[disp_length:disp_length+read_length]
         print ''
-        print 'rd_rdy is %s' % rd_rdy[0:disp_length]
+        print 'tag_in is %s' % tag_in[disp_length:disp_length+read_length]
         print ''
-        print 'tag_out is %s' % tag_out[0:disp_length]
+        print 'dvalid is %s' % dvalid[disp_length:disp_length+read_length]
+        print ''
+        print 'tag_out is %s' % tag_out[disp_length:disp_length+read_length]
         print ''
 
         print '----------------------------------------------------------------------------'
         print ''
-        print 'dvalid is %s' % ss_tag_out_dvalid[0:disp_length]
+        print 'dvalid is %s' % hmc_dvalid_p0[disp_length:disp_length+read_length]
         print ''
-        print 'rd_rdy is %s' % ss_tag_out_rd_rdy[0:disp_length]
+        print 'rd_rdy is %s' % hmc_rd_rdy_p0[disp_length:disp_length+read_length]
         print ''
-        print 'tag_out is %s' % ss_tag_out_tag_out[0:disp_length]
+        print 'tag_out is %s' % hmc_tag_out_p0[disp_length:disp_length+read_length]
+        print ''
+        print '----------------------------------------------------------------------------'
         print ''
 
+        print 'HMC Input Samples'
+        print '-------------'
 
+        print 'D00'
+        print '-------------'
+        print hmc_din0_00[0:read_length]
 
+        print 'D01'
+        print '-------------'
+        print hmc_din0_01[0:read_length]
 
-            #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=0)
-            #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=1)
-            #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
+        print 'D02'
+        print '-------------'
+        print hmc_din0_02[0:read_length]
+
+        print 'D03'
+        print '-------------'
+        print hmc_din0_03[0:read_length]
+
+        print 'D04'
+        print '-------------'
+        print hmc_din0_04[0:read_length]
+
+        print 'D05'
+        print '-------------'
+        print hmc_din0_05[0:read_length]
+
+        print 'D06'
+        print '-------------'
+        print hmc_din0_06[0:read_length]
+
+        print 'D07'
+        print '-------------'
+        print hmc_din0_07[0:read_length]
+        print ''
+
+        print 'D08'
+        print '-------------'
+        print hmc_din1_00[0:read_length]
+
+        print 'D09'
+        print '-------------'
+        print hmc_din1_01[0:read_length]
+
+        print 'D10'
+        print '-------------'
+        print hmc_din1_02[0:read_length]
+
+        print 'D11'
+        print '-------------'
+        print hmc_din1_03[0:read_length]
+
+        print 'D12'
+        print '-------------'
+        print hmc_din1_04[0:read_length]
+
+        print 'D13'
+        print '-------------'
+        print hmc_din1_05[0:read_length]
+
+        print 'D14'
+        print '-------------'
+        print hmc_din1_06[0:read_length]
+
+        print 'D15'
+        print '-------------'
+        print hmc_din1_07[0:read_length]
+        print ''
+        print '----------------------------------------------------------------------------'
+
+        print 'HMC Output Samples'
+        print '-------------'
+
+        print 'D00'
+        print '-------------'
+        print hmc_dout0_00[0:read_length]
+
+        print 'D01'
+        print '-------------'
+        print hmc_dout0_01[0:read_length]
+
+        print 'D02'
+        print '-------------'
+        print hmc_dout0_02[0:read_length]
+
+        print 'D03'
+        print '-------------'
+        print hmc_dout0_03[0:read_length]
+
+        print 'D04'
+        print '-------------'
+        print hmc_dout0_04[0:read_length]
+
+        print 'D05'
+        print '-------------'
+        print hmc_dout0_05[0:read_length]
+
+        print 'D06'
+        print '-------------'
+        print hmc_dout0_06[0:read_length]
+
+        print 'D07'
+        print '-------------'
+        print hmc_dout0_07[0:read_length]
+        print ''
+
+        print 'D08'
+        print '-------------'
+        print hmc_dout1_00[0:read_length]
+
+        print 'D09'
+        print '-------------'
+        print hmc_dout1_01[0:read_length]
+
+        print 'D10'
+        print '-------------'
+        print hmc_dout1_02[0:read_length]
+
+        print 'D11'
+        print '-------------'
+        print hmc_dout1_03[0:read_length]
+
+        print 'D12'
+        print '-------------'
+        print hmc_dout1_04[0:read_length]
+
+        print 'D13'
+        print '-------------'
+        print hmc_dout1_05[0:read_length]
+
+        print 'D14'
+        print '-------------'
+        print hmc_dout1_06[0:read_length]
+
+        print 'D15'
+        print '-------------'
+        print hmc_dout1_07[0:read_length]
+        print ''
+        print '----------------------------------------------------------------------------'
 
     # Output of HMC FIFO
     # ------------------
