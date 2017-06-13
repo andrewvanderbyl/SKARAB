@@ -22,20 +22,20 @@ class coarse_delay:
 
         print 'Grabbing System info'
 
-        self.f = casperfpga.SkarabFpga('10.99.55.170')
+        self.f = casperfpga.SkarabFpga('10.99.39.171')
         #self.f = casperfpga.SkarabFpga('10.99.39.170')
 
-        self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-7_1255.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-13_1452.fpg')
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_dvalid_sync_2017-6-1_0733.fpg')
                 
     def setup_FPGA(self):
 
         # Specify skarab to use
-        skarab_ip = '10.99.55.170'
+        skarab_ip = '10.99.39.171'
         #skarab_ip = '10.99.39.170'
         
         # Programming file
-        prog_file = "/tmp/s_cd_hmc_v2_2017-6-7_1255.fpg"
+        prog_file = "/tmp/s_cd_hmc_v2_2017-6-13_1452.fpg"
         #prog_file = "/tmp/s_cd_hmc_v2_dvalid_sync_2017-6-1_0733.fpg"
         
         
@@ -1351,7 +1351,7 @@ class coarse_delay:
         self.f.registers.hmc_addr_sel_pol0.write(sel=2)
         self.f.registers.hmc_addr_sel_pol1.write(sel=2)
 
-        # Set the vault and bank 
+        # Set the vault and bank
         self.f.registers.hmc_vault_pol0.write(vault=hmc_vault)
         self.f.registers.hmc_vault_pol1.write(vault=hmc_vault)
 
@@ -1398,11 +1398,11 @@ class coarse_delay:
 
         hmc_sync_in = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_in.read()
         hmc_sync_out = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_out.read()
-        hmc_reord_sync = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_reord_sync.read()
-        reord_sync = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_out.read()
 
         hmc_sync_in_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_in_cnt.read()
         hmc_sync_out_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_out_cnt.read()
+
+        reord_sync = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_out.read()
         reord_sync_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_cnt.read()
 
 
@@ -1415,13 +1415,11 @@ class coarse_delay:
         print ''
         print 'hmc_sync_out_count is %s' % hmc_sync_out_count
         print ''
-        print 'hmc_reord_sync is %s' %hmc_reord_sync
-        print ''
         print 'reord_sync is %s' %reord_sync
         print ''
         print 'reord_sync_count is %s' %reord_sync_count
         print ''
-        print "-------------"
+        print "------------------------------------------------"
 
         # Setup artificial sync if needed. Reset first, then enable.
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=0)
@@ -1456,12 +1454,6 @@ class coarse_delay:
 
         # Arm the Snapshot Blocks
         # -----------------------
-        #print 'Arming Snapblocks'
-        #self.f.registers.cd_in_ss_ctrl.write(reg=1)
-        #self.f.registers.cd_out_ss_ctrl.write(reg=1)
-        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_debug_ss_ctrl.write(reg=1)
-        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_ss_tag_out_ss_ctrl.write(reg=1)
-
         print 'Arming Snapblocks'
         self.f.snapshots.cd_in_ss.arm()
         self.f.snapshots.cd_out_ss.arm()
@@ -1471,6 +1463,10 @@ class coarse_delay:
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_din1_p0_ss.arm()
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_dout0_p0_ss.arm()
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_dout1_p0_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_reord0_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_reord1_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_fifo0_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_fifo1_ss.arm()
 
         print 'Arming Snapblocks done'
 
@@ -1519,6 +1515,17 @@ class coarse_delay:
         hmc_dout0 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_dout0_p0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
         hmc_dout1 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_dout1_p0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
+        print "Grabbing Reorder"
+        hmc_reord0 = \
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_reord0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        hmc_reord1 = \
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_reord1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        print "Grabbing FIFO"
+        fifo0 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_fifo0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        fifo1 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_fifo1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
         print "Grabbing CD out"
         data_out = self.f.snapshots.cd_out_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
         print '-----------------------------------------------------------------------------------------------'
@@ -1526,11 +1533,11 @@ class coarse_delay:
         # Grab captured sync in and out of the HMC
         hmc_sync_in = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_in.read()
         hmc_sync_out = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_out.read()
-        hmc_reord_sync = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_reord_sync.read()
-        reord_sync = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_out.read()
 
         hmc_sync_in_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_in_cnt.read()
         hmc_sync_out_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_out_cnt.read()
+
+        reord_sync = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_out.read()
         reord_sync_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_cnt.read()
 
         # CD Input data
@@ -1563,23 +1570,79 @@ class coarse_delay:
         hmc_din1_07 = hmc_din1['d07']
 
         # HMC Output data
-        hmc_dout0_00 = hmc_din0['d00']
-        hmc_dout0_01 = hmc_din0['d01']
-        hmc_dout0_02 = hmc_din0['d02']
-        hmc_dout0_03 = hmc_din0['d03']
-        hmc_dout0_04 = hmc_din0['d04']
-        hmc_dout0_05 = hmc_din0['d05']
-        hmc_dout0_06 = hmc_din0['d06']
-        hmc_dout0_07 = hmc_din0['d07']
+        hmc_dout0_00 = hmc_dout0['d00']
+        hmc_dout0_01 = hmc_dout0['d01']
+        hmc_dout0_02 = hmc_dout0['d02']
+        hmc_dout0_03 = hmc_dout0['d03']
+        hmc_dout0_04 = hmc_dout0['d04']
+        hmc_dout0_05 = hmc_dout0['d05']
+        hmc_dout0_06 = hmc_dout0['d06']
+        hmc_dout0_07 = hmc_dout0['d07']
 
-        hmc_dout1_00 = hmc_din1['d00']
-        hmc_dout1_01 = hmc_din1['d01']
-        hmc_dout1_02 = hmc_din1['d02']
-        hmc_dout1_03 = hmc_din1['d03']
-        hmc_dout1_04 = hmc_din1['d04']
-        hmc_dout1_05 = hmc_din1['d05']
-        hmc_dout1_06 = hmc_din1['d06']
-        hmc_dout1_07 = hmc_din1['d07']
+        hmc_dout1_00 = hmc_dout1['d00']
+        hmc_dout1_01 = hmc_dout1['d01']
+        hmc_dout1_02 = hmc_dout1['d02']
+        hmc_dout1_03 = hmc_dout1['d03']
+        hmc_dout1_04 = hmc_dout1['d04']
+        hmc_dout1_05 = hmc_dout1['d05']
+        hmc_dout1_06 = hmc_dout1['d06']
+        hmc_dout1_07 = hmc_dout1['d07']
+
+        # Reorder data
+        r00 = hmc_reord0['d00']
+        r01 = hmc_reord0['d01']
+        r02 = hmc_reord0['d02']
+        r03 = hmc_reord0['d03']
+        r04 = hmc_reord0['d04']
+        r05 = hmc_reord0['d05']
+        r06 = hmc_reord0['d06']
+        r07 = hmc_reord0['d07']
+        r10 = hmc_reord1['d00']
+        r11 = hmc_reord1['d01']
+        r12 = hmc_reord1['d02']
+        r13 = hmc_reord1['d03']
+        r14 = hmc_reord1['d04']
+        r15 = hmc_reord1['d05']
+        r16 = hmc_reord1['d06']
+        r17 = hmc_reord1['d07']
+        reord_dvalid = hmc_reord0['dvalid']
+        reord_sync = hmc_reord0['sync']
+
+
+        # FIFO data
+        f00 = fifo0['d00']
+        f01 = fifo0['d01']
+        f02 = fifo0['d02']
+        f03 = fifo0['d03']
+        f04 = fifo0['d04']
+        f05 = fifo0['d05']
+        f06 = fifo0['d06']
+        f07 = fifo0['d07']
+        f10 = fifo1['d00']
+        f11 = fifo1['d01']
+        f12 = fifo1['d02']
+        f13 = fifo1['d03']
+        f14 = fifo1['d04']
+        f15 = fifo1['d05']
+        f16 = fifo1['d06']
+        f17 = fifo1['d07']
+
+        fifo0_empty = fifo0['empty']
+        fifo0_per_full = fifo0['per_full']
+        fifo0_full = fifo0['full']
+        fifo0_mux_sel = fifo0['mux_sel']
+
+        fifo1_empty = fifo1['empty']
+        fifo1_per_full = fifo1['per_full']
+        fifo1_full = fifo1['full']
+        fifo1_mux_sel = fifo1['mux_sel']
+
+        fifo0_dvalid = fifo0['dvalid']
+        fifo0_sync = fifo0['sync']
+
+        fifo1_dvalid = fifo1['dvalid']
+        fifo1_sync = fifo1['sync']
+
 
         # CD Output data
         dout_00 = data_out['d00']
@@ -1727,11 +1790,9 @@ class coarse_delay:
 
         print '----------------------------------------------------------------------------'
         print ''
-        print 'hmc_reord_sync is %s' % hmc_reord_sync
+        print 'reord_sync is %s' %reord_sync
         print ''
-        print 'reord_sync is %s' % reord_sync
-        print ''
-        print 'reord_sync_count is %s' % reord_sync_count
+        print 'reord_sync_count is %s' %reord_sync_count
         print ''
 
         print '----------------------------------------------------------------------------'
@@ -1753,28 +1814,17 @@ class coarse_delay:
         print ''
         print '----------------------------------------------------------------------------'
         print ''
-        print 'rd_rdy is %s' % rd_rdy[disp_length:disp_length+read_length]
+        print 'rd_rdy is %s' % rd_rdy[0:read_length]
         print ''
-        print 'rin is %s' % rin[disp_length:disp_length+read_length]
+        print 'rin is %s' % rin[0:read_length]
         print ''
-        print 'rdaddr is %s' % rdaddr[disp_length:disp_length+read_length]
+        print 'rdaddr is %s' % rdaddr[0:read_length]
         print ''
-        print 'tag_in is %s' % tag_in[disp_length:disp_length+read_length]
+        print 'tag_in is %s' % tag_in[0:read_length]
         print ''
-        print 'dvalid is %s' % dvalid[disp_length:disp_length+read_length]
+        print 'dvalid is %s' % dvalid[0:read_length]
         print ''
-        print 'tag_out is %s' % tag_out[disp_length:disp_length+read_length]
-        print ''
-
-        print '----------------------------------------------------------------------------'
-        print ''
-        print 'dvalid is %s' % hmc_dvalid_p0[disp_length:disp_length+read_length]
-        print ''
-        print 'rd_rdy is %s' % hmc_rd_rdy_p0[disp_length:disp_length+read_length]
-        print ''
-        print 'tag_out is %s' % hmc_tag_out_p0[disp_length:disp_length+read_length]
-        print ''
-        print '----------------------------------------------------------------------------'
+        print 'tag_out is %s' % tag_out[0:read_length]
         print ''
 
         print 'HMC Input Samples'
@@ -1847,6 +1897,17 @@ class coarse_delay:
         print ''
         print '----------------------------------------------------------------------------'
 
+        print '----------------------------------------------------------------------------'
+        print ''
+        print 'dvalid is %s' % hmc_dvalid_p0[0:read_length]
+        print ''
+        print 'rd_rdy is %s' % hmc_rd_rdy_p0[0:read_length]
+        print ''
+        print 'tag_out is %s' % hmc_tag_out_p0[0:read_length]
+        print ''
+        print '----------------------------------------------------------------------------'
+        print ''
+
         print 'HMC Output Samples'
         print '-------------'
 
@@ -1916,6 +1977,176 @@ class coarse_delay:
         print hmc_dout1_07[0:read_length]
         print ''
         print '----------------------------------------------------------------------------'
+
+
+
+        print 'Reorder Samples'
+        print '-------------'
+        print 'reord_sync is %s' % reord_sync[0:read_length]
+        print 'reord_dvalid is %s' % reord_dvalid[0:read_length]
+
+        print 'D00'
+        print '-------------'
+        print r00[0:read_length]
+
+        print 'D01'
+        print '-------------'
+        print r01[0:read_length]
+
+        print 'D02'
+        print '-------------'
+        print r02[0:read_length]
+
+        print 'D03'
+        print '-------------'
+        print r03[0:read_length]
+
+        print 'D04'
+        print '-------------'
+        print r04[0:read_length]
+
+        print 'D05'
+        print '-------------'
+        print r05[0:read_length]
+
+        print 'D06'
+        print '-------------'
+        print r06[0:read_length]
+
+        print 'D07'
+        print '-------------'
+        print r07[0:read_length]
+        print ''
+
+        print 'D08'
+        print '-------------'
+        print r10[0:read_length]
+
+        print 'D09'
+        print '-------------'
+        print r11[0:read_length]
+
+        print 'D10'
+        print '-------------'
+        print r12[0:read_length]
+
+        print 'D11'
+        print '-------------'
+        print r13[0:read_length]
+
+        print 'D12'
+        print '-------------'
+        print r14[0:read_length]
+
+        print 'D13'
+        print '-------------'
+        print r15[0:read_length]
+
+        print 'D14'
+        print '-------------'
+        print r16[0:read_length]
+
+        print 'D15'
+        print '-------------'
+        print r17[0:read_length]
+        print ''
+        print '----------------------------------------------------------------------------'
+
+
+        print 'FIFO'
+        print '----'
+        print 'fifo0_empty is %s' % fifo0_empty[0:read_length]
+        print 'fifo0_per_full is %s' % fifo0_per_full[0:read_length]
+        print 'fifo0_full is %s' % fifo0_full[0:read_length]
+        print 'fifo0_mux_sel is %s' % fifo0_mux_sel[0:read_length]
+        print ''
+        print 'fifo1_empty is %s' % fifo1_empty[0:read_length]
+        print 'fifo1_per_full is %s' % fifo1_per_full[0:read_length]
+        print 'fifo1_full is %s' % fifo1_full[0:read_length]
+        print 'fifo1_mux_sel is %s' % fifo1_mux_sel[0:read_length]
+        print ''
+
+        print 'fifo0_sync is %s' % fifo0_sync[0:read_length]
+        print 'fifo0_dvalid is %s' % fifo0_dvalid[0:read_length]
+        print ''
+        print 'fifo1_sync is %s' % fifo1_sync[0:read_length]
+        print 'fifo1_dvalid is %s' % fifo1_dvalid[0:read_length]
+        print ''
+
+        print 'FIFO Samples'
+        print '------------'
+        print ''
+        print 'D00'
+        print '-------------'
+        print f00[0:read_length]
+
+        print 'D01'
+        print '-------------'
+        print f01[0:read_length]
+
+        print 'D02'
+        print '-------------'
+        print f02[0:read_length]
+
+        print 'D03'
+        print '-------------'
+        print f03[0:read_length]
+
+        print 'D04'
+        print '-------------'
+        print f04[0:read_length]
+
+        print 'D05'
+        print '-------------'
+        print f05[0:read_length]
+
+        print 'D06'
+        print '-------------'
+        print f06[0:read_length]
+
+        print 'D07'
+        print '-------------'
+        print f07[0:read_length]
+        print ''
+
+        print 'D08'
+        print '-------------'
+        print f10[0:read_length]
+
+        print 'D09'
+        print '-------------'
+        print f11[0:read_length]
+
+        print 'D10'
+        print '-------------'
+        print f12[0:read_length]
+
+        print 'D11'
+        print '-------------'
+        print f13[0:read_length]
+
+        print 'D12'
+        print '-------------'
+        print f14[0:read_length]
+
+        print 'D13'
+        print '-------------'
+        print f15[0:read_length]
+
+        print 'D14'
+        print '-------------'
+        print f16[0:read_length]
+
+        print 'D15'
+        print '-------------'
+        print f17[0:read_length]
+        print ''
+        print '----------------------------------------------------------------------------'
+
+
+
+
+
 
     # Output of HMC FIFO
     # ------------------
