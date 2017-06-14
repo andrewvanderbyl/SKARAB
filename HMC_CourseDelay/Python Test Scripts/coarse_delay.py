@@ -25,7 +25,7 @@ class coarse_delay:
         self.f = casperfpga.SkarabFpga('10.99.39.171')
         #self.f = casperfpga.SkarabFpga('10.99.39.170')
 
-        self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-13_1452.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-14_1555.fpg')
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_dvalid_sync_2017-6-1_0733.fpg')
                 
     def setup_FPGA(self):
@@ -35,7 +35,7 @@ class coarse_delay:
         #skarab_ip = '10.99.39.170'
         
         # Programming file
-        prog_file = "/tmp/s_cd_hmc_v2_2017-6-13_1452.fpg"
+        prog_file = "/tmp/s_cd_hmc_v2_2017-6-14_1555.fpg"
         #prog_file = "/tmp/s_cd_hmc_v2_dvalid_sync_2017-6-1_0733.fpg"
         
         
@@ -1643,6 +1643,8 @@ class coarse_delay:
         fifo1_dvalid = fifo1['dvalid']
         fifo1_sync = fifo1['sync']
 
+        fifo0_re = fifo0['re']
+        fifo1_re = fifo1['re']
 
         # CD Output data
         dout_00 = data_out['d00']
@@ -2056,13 +2058,19 @@ class coarse_delay:
         print 'FIFO'
         print '----'
         print 'fifo0_empty is %s' % fifo0_empty[0:read_length]
+        print ''
         print 'fifo0_per_full is %s' % fifo0_per_full[0:read_length]
+        print ''
         print 'fifo0_full is %s' % fifo0_full[0:read_length]
+        print ''
         print 'fifo0_mux_sel is %s' % fifo0_mux_sel[0:read_length]
         print ''
         print 'fifo1_empty is %s' % fifo1_empty[0:read_length]
+        print ''
         print 'fifo1_per_full is %s' % fifo1_per_full[0:read_length]
+        print ''
         print 'fifo1_full is %s' % fifo1_full[0:read_length]
+        print ''
         print 'fifo1_mux_sel is %s' % fifo1_mux_sel[0:read_length]
         print ''
 
@@ -2071,6 +2079,11 @@ class coarse_delay:
         print ''
         print 'fifo1_sync is %s' % fifo1_sync[0:read_length]
         print 'fifo1_dvalid is %s' % fifo1_dvalid[0:read_length]
+        print ''
+
+        print 'fifo0_re is %s' % fifo0_re[0:read_length]
+        print ''
+        print 'fifo1_re is %s' % fifo1_re[0:read_length]
         print ''
 
         print 'FIFO Samples'
