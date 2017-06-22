@@ -22,25 +22,26 @@ class coarse_delay:
 
         print 'Grabbing System info'
 
-        self.f = casperfpga.SkarabFpga('10.99.39.171')
-        #self.f = casperfpga.SkarabFpga('10.99.39.170')
+        #self.f = casperfpga.SkarabFpga('10.100.203.202') #skarab0304-01
+        self.f = casperfpga.CasperFpga('10.100.203.202')
+        #self.f = casperfpga.CasperFpga('skarab0304-01')
 
-        self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-14_1555.fpg')
+        #self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-15_1816.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v2_pol0_2017-6-22_1411.fpg')
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_dvalid_sync_2017-6-1_0733.fpg')
                 
     def setup_FPGA(self):
 
         # Specify skarab to use
-        skarab_ip = '10.99.39.171'
-        #skarab_ip = '10.99.39.170'
-        
+        skarab_ip = '10.100.203.202'
+
         # Programming file
-        prog_file = "/tmp/s_cd_hmc_v2_2017-6-14_1555.fpg"
-        #prog_file = "/tmp/s_cd_hmc_v2_dvalid_sync_2017-6-1_0733.fpg"
-        
-        
+        prog_file = "/tmp/s_cd_hmc_v2_pol0_2017-6-22_1411.fpg"
+
         # Create FPGA Object
-        self.f = casperfpga.SkarabFpga(skarab_ip)
+        #self.f = casperfpga.SkarabFpga(skarab_ip)
+        self.f = casperfpga.CasperFpga(skarab_ip)
+        #self.f = casperfpga.CasperFpga('skarab0304-01')
 
         print 'FPGA Object Created'
 
@@ -1327,6 +1328,12 @@ class coarse_delay:
 
         self.skarab()
 
+        self.f.registers.man_sys_rst.write(reg=1)
+        self.f.registers.man_sys_rst.write(reg=0)
+
+
+
+        self.f.registers.addr_map_sel.write(reg=2)
         self.f.registers.dvalid.write(reg=0)
         self.f.registers.sync_select.write(reg=sync_sel)
         self.f.registers.man_sync.write(reg=0)
@@ -1348,15 +1355,15 @@ class coarse_delay:
         #self.f.registers.sync_en_cd_out.write(reg=0)
 
         # Set the addressing scheme
-        self.f.registers.hmc_addr_sel_pol0.write(sel=2)
-        self.f.registers.hmc_addr_sel_pol1.write(sel=2)
+        #self.f.registers.hmc_addr_sel_pol0.write(sel=2)
+        #self.f.registers.hmc_addr_sel_pol1.write(sel=2)
 
         # Set the vault and bank
-        self.f.registers.hmc_vault_pol0.write(vault=hmc_vault)
-        self.f.registers.hmc_vault_pol1.write(vault=hmc_vault)
+        #self.f.registers.hmc_vault_pol0.write(vault=hmc_vault)
+        #self.f.registers.hmc_vault_pol1.write(vault=hmc_vault)
 
-        self.f.registers.hmc_bank_pol0.write(bank=hmc_bank)
-        self.f.registers.hmc_bank_pol1.write(bank=hmc_bank)
+        #self.f.registers.hmc_bank_pol0.write(bank=hmc_bank)
+        #self.f.registers.hmc_bank_pol1.write(bank=hmc_bank)
 
 
         # Reset sync monitor
@@ -1381,14 +1388,14 @@ class coarse_delay:
 
 
         # Check if HMC bank and vault are ok
-        vault_pol0 = self.f.registers.hmc_vault_pol0.read()
-        bank_pol0 = self.f.registers.hmc_bank_pol0.read()
-        vault_pol1 = self.f.registers.hmc_vault_pol1.read()
-        bank_pol1 = self.f.registers.hmc_bank_pol1.read()
-        print "Pol 0 Vault is %s" % vault_pol0
-        print "Pol 0 Bank is %s" % bank_pol0
-        print "Pol 1 Vault is %s" % vault_pol1
-        print "Pol 1 Bank is %s" % bank_pol1
+        #vault_pol0 = self.f.registers.hmc_vault_pol0.read()
+        #bank_pol0 = self.f.registers.hmc_bank_pol0.read()
+        #vault_pol1 = self.f.registers.hmc_vault_pol1.read()
+        #bank_pol1 = self.f.registers.hmc_bank_pol1.read()
+        #print "Pol 0 Vault is %s" % vault_pol0
+        #print "Pol 0 Bank is %s" % bank_pol0
+        #print "Pol 1 Vault is %s" % vault_pol1
+        #print "Pol 1 Bank is %s" % bank_pol1
         print "--------------------------------"
         print " "
 
@@ -1422,21 +1429,20 @@ class coarse_delay:
         print "------------------------------------------------"
 
         # Setup artificial sync if needed. Reset first, then enable.
-        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=0)
-        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
-        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
-        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=0)
+        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=0)
+        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
+        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_rst.write(reg=0)
+        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_counter_en.write(reg=0)
 
         # Reset sync monitor
-        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=1)
-        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=0)
+        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=1)
+        #self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=0)
 
         print 'Resetting Sync and Dvalid registers'
-
         self.f.registers.man_sys_rst.write(reg=1)
-        print 'wait'
-        time.sleep(0.5)
+        time.sleep(0.2)
         self.f.registers.man_sys_rst.write(reg=0)
+        time.sleep(0.2)
 
         print 'Checking Initial Sync and Dvalid'
 
@@ -1466,38 +1472,30 @@ class coarse_delay:
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_reord0_ss.arm()
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_reord1_ss.arm()
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_fifo0_ss.arm()
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_fifo1_ss.arm()
+        #self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_fifo1_ss.arm()
 
         print 'Arming Snapblocks done'
 
         # Manually set sync and dvalid
         self.f.registers.man_sync.write(reg=1)
-        print 'wait'
-        time.sleep(0.5)
         self.f.registers.man_sync.write(reg=0)
-        time.sleep(0.5)
         self.f.registers.dvalid.write(reg=1)
-        print 'wait'
-        time.sleep(0.5)
-
 
         print 'Checking Post-set Sync and Dvalid'
 
-        sync_cnt = self.f.registers.sync_cnt.read()
-        sync = self.f.registers.sync.read()
+        #sync_cnt = self.f.registers.sync_cnt.read()
+        #sync = self.f.registers.sync.read()
 
-        dvalid_cnt = self.f.registers.valid80_cnt.read()
-        dvalid = self.f.registers.valid80.read()
+        #dvalid_cnt = self.f.registers.valid80_cnt.read()
+        #dvalid = self.f.registers.valid80.read()
 
-        print 'Sync is %s' %sync
+        print 'Sync is %s' %self.f.registers.sync.read()
 
-        print 'Sync Count is %s' %sync_cnt
+        print 'Sync Count is %s' %self.f.registers.sync_cnt.read()
 
-        print 'dvalid is %s' %dvalid
+        print 'dvalid is %s' %self.f.registers.valid80_cnt.read()
 
-        print 'dvalid Count is %s' %dvalid_cnt
-        print 'wait'
-        time.sleep(1)
+        print 'dvalid Count is %s' %self.f.registers.valid80_cnt.read()
 
         print '-----------------------------------------------------------------------------------------------'
         print "Grabbing CD in"
@@ -1524,7 +1522,7 @@ class coarse_delay:
         print "Grabbing FIFO"
         fifo0 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_fifo0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
-        fifo1 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_fifo1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        #fifo1 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_fifo1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
         print "Grabbing CD out"
         data_out = self.f.snapshots.cd_out_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
@@ -1549,6 +1547,9 @@ class coarse_delay:
         din_05 = data_in['d05']
         din_06 = data_in['d06']
         din_07 = data_in['d07']
+        
+        cd_in_sync = data_in['sync']
+        cd_in_dvalid = data_in['dvalid']
 
         # HMC Input data
         hmc_din0_00 = hmc_din0['d00']
@@ -1605,8 +1606,8 @@ class coarse_delay:
         r15 = hmc_reord1['d05']
         r16 = hmc_reord1['d06']
         r17 = hmc_reord1['d07']
-        reord_dvalid = hmc_reord0['dvalid']
-        reord_sync = hmc_reord0['sync']
+        ss_reord_dvalid = hmc_reord0['dvalid']
+        ss_reord_sync = hmc_reord0['sync']
 
 
         # FIFO data
@@ -1618,33 +1619,33 @@ class coarse_delay:
         f05 = fifo0['d05']
         f06 = fifo0['d06']
         f07 = fifo0['d07']
-        f10 = fifo1['d00']
-        f11 = fifo1['d01']
-        f12 = fifo1['d02']
-        f13 = fifo1['d03']
-        f14 = fifo1['d04']
-        f15 = fifo1['d05']
-        f16 = fifo1['d06']
-        f17 = fifo1['d07']
+        #f10 = fifo1['d00']
+        #f11 = fifo1['d01']
+        #f12 = fifo1['d02']
+        #f13 = fifo1['d03']
+        #f14 = fifo1['d04']
+        #f15 = fifo1['d05']
+        #f16 = fifo1['d06']
+        #f17 = fifo1['d07']
 
-        fifo0_empty = fifo0['empty']
-        fifo0_per_full = fifo0['per_full']
-        fifo0_full = fifo0['full']
+        #fifo0_empty = fifo0['empty']
+        #fifo0_per_full = fifo0['per_full']
+        #fifo0_full = fifo0['full']
         fifo0_mux_sel = fifo0['mux_sel']
 
-        fifo1_empty = fifo1['empty']
-        fifo1_per_full = fifo1['per_full']
-        fifo1_full = fifo1['full']
-        fifo1_mux_sel = fifo1['mux_sel']
+        #fifo1_empty = fifo1['empty']
+        #fifo1_per_full = fifo1['per_full']
+        #fifo1_full = fifo1['full']
+        #fifo1_mux_sel = fifo1['mux_sel']
 
         fifo0_dvalid = fifo0['dvalid']
         fifo0_sync = fifo0['sync']
 
-        fifo1_dvalid = fifo1['dvalid']
-        fifo1_sync = fifo1['sync']
+        #fifo1_dvalid = fifo1['dvalid']
+        #fifo1_sync = fifo1['sync']
 
-        fifo0_re = fifo0['re']
-        fifo1_re = fifo1['re']
+        #fifo0_re = fifo0['re']
+        #fifo1_re = fifo1['re']
 
         # CD Output data
         dout_00 = data_out['d00']
@@ -1656,20 +1657,23 @@ class coarse_delay:
         dout_06 = data_out['d06']
         dout_07 = data_out['d07']
 
+        cd_out_sync = data_out['sync']
+        cd_out_dvalid = data_out['dvalid']
 
-        win = hmc_debug0['win']
-        wr_rdy = hmc_debug0['wr_rdy']
-        waddr = hmc_debug0['waddr']
-        rin = hmc_debug0['rin']
-        rdaddr = hmc_debug0['rdaddr']
-        tag_in = hmc_debug0['tag_in']
-        dvalid = hmc_debug0['dvalid']
-        rd_rdy = hmc_debug0['rd_rdy']
-        tag_out = hmc_debug0['tag_out']
+        hmc_debug0_win = hmc_debug0['win']
+        hmc_debug0_wr_rdy = hmc_debug0['wr_rdy']
+        hmc_debug0_waddr = hmc_debug0['waddr']
+        hmc_debug0_rin = hmc_debug0['rin']
+        hmc_debug0_rdaddr = hmc_debug0['rdaddr']
+        hmc_debug0_tag_in = hmc_debug0['tag_in']
+        #dvalid = hmc_debug0['dvalid']
+        hmc_debug0_rd_rdy = hmc_debug0['rd_rdy']
+        hmc_debug0_tag_out = hmc_debug0['tag_out']
 
-        hmc_dvalid_p0 = hmc_debug1['dvalid']
-        hmc_rd_rdy_p0 = hmc_debug1['rd_rdy']
-        hmc_tag_out_p0 = hmc_debug1['tag_out']
+        hmc_debug1_dvalid_p0 = hmc_debug1['dvalid']
+        hmc_debug1_wr_rdy_p0 = hmc_debug1['wr_rdy']
+        hmc_debug1_rd_rdy_p0 = hmc_debug1['rd_rdy']
+        hmc_debug1_tag_out_p0 = hmc_debug1['tag_out']
 
         # Toggle the capture control to allow a small window of capture time
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=0)
@@ -1677,7 +1681,6 @@ class coarse_delay:
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl_rst.write(reg=0)
 
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=1)
-        time.sleep(0.1)
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=0)
 
         # Read in the counters controlled by the capture
@@ -1693,6 +1696,9 @@ class coarse_delay:
         print 'Input Samples'
         print '-------------'
 
+        print 'sync is %s' % cd_in_sync[0:read_length]
+        print 'dvalid is %s' % cd_in_dvalid[0:read_length]
+        
         print 'D00'
         print '-------------'
         print din_00[0:read_length]
@@ -1729,6 +1735,9 @@ class coarse_delay:
         print 'Output Samples'
         print '-------------'
 
+        print 'sync is %s' % cd_out_sync[0:read_length]
+        print 'dvalid is %s' % cd_out_dvalid[0:read_length]
+        
         print 'D00'
         print '-------------'
         print dout_00[disp_length:disp_length+read_length]
@@ -1792,13 +1801,6 @@ class coarse_delay:
 
         print '----------------------------------------------------------------------------'
         print ''
-        print 'reord_sync is %s' %reord_sync
-        print ''
-        print 'reord_sync_count is %s' %reord_sync_count
-        print ''
-
-        print '----------------------------------------------------------------------------'
-        print ''
         print 'wr_req_count is %s' % wr_req_count
         print ''
         print 'rd_req_count is %s' % rd_req_count
@@ -1808,29 +1810,28 @@ class coarse_delay:
 
         print '----------------------------------------------------------------------------'
         print ''
-        print 'wr_rdy is %s' % wr_rdy[disp_length:disp_length+read_length]
+        print 'rd_rdy is %s' % hmc_debug0_rd_rdy[0:read_length]
         print ''
-        print 'win is %s' % win[disp_length:disp_length+read_length]
+        print 'rin is %s' % hmc_debug0_rin[0:read_length]
         print ''
-        print 'waddr is %s' % waddr[disp_length:disp_length+read_length]
+        print 'rdaddr is %s' % hmc_debug0_rdaddr[0:read_length]
+        print ''
+        print 'tag_in is %s' % hmc_debug0_tag_in[0:read_length]
+        print ''
+        print 'tag_out is %s' % hmc_debug0_tag_out[0:read_length]
         print ''
         print '----------------------------------------------------------------------------'
-        print ''
-        print 'rd_rdy is %s' % rd_rdy[0:read_length]
-        print ''
-        print 'rin is %s' % rin[0:read_length]
-        print ''
-        print 'rdaddr is %s' % rdaddr[0:read_length]
-        print ''
-        print 'tag_in is %s' % tag_in[0:read_length]
-        print ''
-        print 'dvalid is %s' % dvalid[0:read_length]
-        print ''
-        print 'tag_out is %s' % tag_out[0:read_length]
-        print ''
 
         print 'HMC Input Samples'
-        print '-------------'
+        print '-----------------'
+
+        print ''
+        print 'wr_rdy is %s' % hmc_debug0_wr_rdy[0:read_length]
+        print ''
+        print 'win is %s' % hmc_debug0_win[0:read_length]
+        print ''
+        print 'waddr is %s' % hmc_debug0_waddr[0:read_length]
+        print ''
 
         print 'D00'
         print '-------------'
@@ -1901,11 +1902,13 @@ class coarse_delay:
 
         print '----------------------------------------------------------------------------'
         print ''
-        print 'dvalid is %s' % hmc_dvalid_p0[0:read_length]
+        print 'dvalid is %s' % hmc_debug1_dvalid_p0[0:read_length]
         print ''
-        print 'rd_rdy is %s' % hmc_rd_rdy_p0[0:read_length]
+        print 'wr_rdy is %s' % hmc_debug1_wr_rdy_p0[0:read_length]
         print ''
-        print 'tag_out is %s' % hmc_tag_out_p0[0:read_length]
+        print 'rd_rdy is %s' % hmc_debug1_rd_rdy_p0[0:read_length]
+        print ''
+        print 'tag_out is %s' % hmc_debug1_tag_out_p0[0:read_length]
         print ''
         print '----------------------------------------------------------------------------'
         print ''
@@ -1981,11 +1984,19 @@ class coarse_delay:
         print '----------------------------------------------------------------------------'
 
 
+        print 'Reorder '
+        print '----------'
+        print ''
+        print 'reord_sync is %s' %reord_sync
+        print ''
+        print 'reord_sync_count is %s' %reord_sync_count
+        print ''
 
-        print 'Reorder Samples'
-        print '-------------'
-        print 'reord_sync is %s' % reord_sync[0:read_length]
-        print 'reord_dvalid is %s' % reord_dvalid[0:read_length]
+
+        print 'Reorder SS'
+        print '----------'
+        print 'reord_sync is %s' % ss_reord_sync[0:read_length]
+        print 'reord_dvalid is %s' % ss_reord_dvalid[0:read_length]
 
         print 'D00'
         print '-------------'
@@ -2057,34 +2068,34 @@ class coarse_delay:
 
         print 'FIFO'
         print '----'
-        print 'fifo0_empty is %s' % fifo0_empty[0:read_length]
-        print ''
-        print 'fifo0_per_full is %s' % fifo0_per_full[0:read_length]
-        print ''
-        print 'fifo0_full is %s' % fifo0_full[0:read_length]
+        #print 'fifo0_empty is %s' % fifo0_empty[0:read_length]
+        #print ''
+        #print 'fifo0_per_full is %s' % fifo0_per_full[0:read_length]
+        #print ''
+        #print 'fifo0_full is %s' % fifo0_full[0:read_length]
         print ''
         print 'fifo0_mux_sel is %s' % fifo0_mux_sel[0:read_length]
         print ''
-        print 'fifo1_empty is %s' % fifo1_empty[0:read_length]
-        print ''
-        print 'fifo1_per_full is %s' % fifo1_per_full[0:read_length]
-        print ''
-        print 'fifo1_full is %s' % fifo1_full[0:read_length]
-        print ''
-        print 'fifo1_mux_sel is %s' % fifo1_mux_sel[0:read_length]
-        print ''
+        #print 'fifo1_empty is %s' % fifo1_empty[0:read_length]
+        #print ''
+        #print 'fifo1_per_full is %s' % fifo1_per_full[0:read_length]
+        #print ''
+        #print 'fifo1_full is %s' % fifo1_full[0:read_length]
+        #print ''
+        #print 'fifo1_mux_sel is %s' % fifo1_mux_sel[0:read_length]
+        #print ''
 
         print 'fifo0_sync is %s' % fifo0_sync[0:read_length]
         print 'fifo0_dvalid is %s' % fifo0_dvalid[0:read_length]
         print ''
-        print 'fifo1_sync is %s' % fifo1_sync[0:read_length]
-        print 'fifo1_dvalid is %s' % fifo1_dvalid[0:read_length]
-        print ''
+        #print 'fifo1_sync is %s' % fifo1_sync[0:read_length]
+        #print 'fifo1_dvalid is %s' % fifo1_dvalid[0:read_length]
+        #print ''
 
-        print 'fifo0_re is %s' % fifo0_re[0:read_length]
-        print ''
-        print 'fifo1_re is %s' % fifo1_re[0:read_length]
-        print ''
+        #print 'fifo0_re is %s' % fifo0_re[0:read_length]
+        #print ''
+        #print 'fifo1_re is %s' % fifo1_re[0:read_length]
+        #print ''
 
         print 'FIFO Samples'
         print '------------'
@@ -2122,38 +2133,38 @@ class coarse_delay:
         print f07[0:read_length]
         print ''
 
-        print 'D08'
-        print '-------------'
-        print f10[0:read_length]
+        #print 'D08'
+        #print '-------------'
+        #print f10[0:read_length]
 
-        print 'D09'
-        print '-------------'
-        print f11[0:read_length]
+        #print 'D09'
+        #print '-------------'
+        #print f11[0:read_length]
 
-        print 'D10'
-        print '-------------'
-        print f12[0:read_length]
+        #print 'D10'
+        #print '-------------'
+        #print f12[0:read_length]
 
-        print 'D11'
-        print '-------------'
-        print f13[0:read_length]
+        #print 'D11'
+        #print '-------------'
+        #print f13[0:read_length]
 
-        print 'D12'
-        print '-------------'
-        print f14[0:read_length]
+        #print 'D12'
+        #print '-------------'
+        #print f14[0:read_length]
 
-        print 'D13'
-        print '-------------'
-        print f15[0:read_length]
+        #print 'D13'
+        #print '-------------'
+        #print f15[0:read_length]
 
-        print 'D14'
-        print '-------------'
-        print f16[0:read_length]
+        #print 'D14'
+        #print '-------------'
+        #print f16[0:read_length]
 
-        print 'D15'
-        print '-------------'
-        print f17[0:read_length]
-        print ''
+        #print 'D15'
+        #print '-------------'
+        #print f17[0:read_length]
+        #print ''
         print '----------------------------------------------------------------------------'
 
 
