@@ -29,7 +29,7 @@ class coarse_delay:
 
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_pol0_2017-6-28_1459.fpg')
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-29_1217.fpg')
-        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-4_1510.fpg')
+        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-7_1258.fpg')
 
         print 'Grabbing System info: Done'
         print ''
@@ -91,7 +91,8 @@ class coarse_delay:
         skarab_ip = '10.100.203.202'
 
         # Programming file
-        prog_file = "/tmp/s_c856m4k_cd_2017-7-4_1510.fpg"
+        #prog_file = "/tmp/s_c856m4k_cd_2017-7-5_0954.fpg"
+        prog_file = "/tmp/s_c856m4k_cd_2017-7-7_1258.fpg"
 
         # Create FPGA Object
         self.f = casperfpga.CasperFpga(skarab_ip)
@@ -129,8 +130,8 @@ class coarse_delay:
         self.d = casperfpga.CasperFpga('192.168.65.195')
         self.d.get_system_information()
 
-        self.d.registers.control.write(tvg_select0=0)
-        self.d.registers.control.write(tvg_select1=0)
+        self.d.registers.control.write(tvg_select0=1)
+        self.d.registers.control.write(tvg_select1=1)
 
         self.d.registers.src_sel_cntrl.write(src_sel_0=0)
         self.d.registers.src_sel_cntrl.write(src_sel_1=0)
@@ -140,9 +141,9 @@ class coarse_delay:
         self.d.registers.stop_load_time_msw.write(reg=0)
         self.d.registers.stop_load_time_lsw.write(reg=0)
 
-        self.d.registers.scale_cwg0.write(scale=0.25)
+        self.d.registers.scale_cwg0.write(scale=0.5)
         self.d.registers.scale_out0.write(scale=1)
-        self.d.registers.freq_cwg0.write(frequency=10000)
+        self.d.registers.freq_cwg0.write(frequency=100000)
 
         self.d.registers.pol_tx_always_on.write(pol0_tx_always_on=1)
         self.d.registers.pol_tx_always_on.write(pol1_tx_always_on=1)
@@ -2533,15 +2534,40 @@ class coarse_delay:
 
     # Test: FEng front-end with CD
     # ----------------------------
-    def feng_cd(self, arm_mode, trig_mode, valid_mode, read_length, delay):
+    def feng_cd(self, arm_mode, trig_mode, valid_mode, read_length, delay, offset):
 
         self.skarab()
 
-        # Disable the TVG
-        self.f.registers.control.write(tvg_adc=0)
+        # Set the trig_arm
+        self.f.registers.control.write(adc_snap_arm=0)
 
-        self.f.registers.control.write(sys_rst=1)
-        self.f.registers.control.write(sys_rst=0)
+        # Set Impulse values
+        self.f.registers.impulse0.write(offset=0)
+        self.f.registers.impulse0.write(amplitude=1)
+
+        self.f.registers.impulse1.write(offset=0)
+        self.f.registers.impulse1.write(amplitude=1)
+
+
+
+        # Set delay for test
+        self.f.registers.delay0.write(initial=delay)
+        self.f.registers.delay1.write(initial=delay)
+
+        # Arm and load
+        self.f.registers.tl_cd0_control0.write(arm=1)
+        self.f.registers.tl_cd0_control0.write(load_immediate=1)
+        self.f.registers.tl_cd0_control0.write(arm=0)
+
+        self.f.registers.tl_cd1_control0.write(arm=1)
+        self.f.registers.tl_cd1_control0.write(load_immediate=1)
+        self.f.registers.tl_cd1_control0.write(arm=0)
+
+
+
+
+        # Enable the TVG
+        self.f.registers.control.write(tvg_adc=1)
 
         # Reset sync monitor
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=1)
@@ -2551,29 +2577,8 @@ class coarse_delay:
         self.f.registers.trig_time_msw.write(msw=0)
         self.f.registers.trig_time_lsw.write(lsw=0)
 
-
         # Set the Snap trig source
         self.f.registers.control.write(adc_snap_trig_select=1)
-
-        # Set Impulse values
-        self.f.registers.impulse0.write(offset=0)
-        self.f.registers.impulse0.write(amplitude=1)
-
-        self.f.registers.impulse1.write(offset=0)
-        self.f.registers.impulse1.write(amplitude=1)
-
-        # Set delay for test
-        self.f.registers.delay0.write(initial=delay)
-        self.f.registers.delay1.write(initial=delay)
-
-        # Arm and load
-        self.f.registers.tl_cd0_control0.write(arm=1)
-        self.f.registers.tl_cd0_control0.write(load_immediate=0)
-        self.f.registers.tl_cd0_control0.write(arm=0)
-
-        self.f.registers.tl_cd1_control0.write(arm=1)
-        self.f.registers.tl_cd1_control0.write(load_immediate=0)
-        self.f.registers.tl_cd1_control0.write(arm=0)
 
         # Check if HMC post and init are ok
         post_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_post.read()
@@ -2585,6 +2590,7 @@ class coarse_delay:
         print "------------------"
         print 'Requested delay is %s' % delay
         print "Actual Delay is: %s" % self.f.registers.delay0.read()
+        print "Loaded value is: %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_delay.read()
         print " "
 
         print "HMC Status"
@@ -2606,6 +2612,11 @@ class coarse_delay:
         print 'reord_sync is %s' % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_out.read()
         print 'reord_sync_count is %s' % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_cnt.read()
         print ''
+
+        # Set trig offsets
+        self.f.registers.cd_out_ss_trig_offset.write(reg=offset)
+        self.f.registers.cd_out1_ss_trig_offset.write(reg=offset)
+
 
         # Arm the Snapshot Blocks
         # -----------------------
@@ -2632,15 +2643,32 @@ class coarse_delay:
 
         print 'Starting TVG'
         print "------------"
-        # Enable the TVG
-        self.f.registers.control.write(tvg_adc=1)
 
+        # Force a relock
+        self.f.registers.control.write(sys_rst=1)
+        self.f.registers.control.write(sys_rst=0)
+
+        # Set the trig_arm
+        self.f.registers.control.write(adc_snap_arm=1)
+
+        print 'Grabbing Debug data'
+        print "-------------------"
+        print "db_trig is %s" % self.f.registers.db_trig.read()
+        print "db_dvalid is %s" % self.f.registers.db_dvalid.read()
+        print "db_sync is %s" % self.f.registers.db_sync.read()
+        print "db_unpack_sync is %s" % self.f.registers.db_unpack_sync.read()
+        print "db_unpack_dvalid is %s" % self.f.registers.db_unpack_dvalid.read()
+        print " "
+        
+        
+                                
         print 'Grabbing Snapshot Data'
         print "----------------------"
-        '''
-        print "Grabbing CD in"
+        
+        print "Grabbing snap_adc0"
         data_in = self.f.snapshots.snap_adc0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
-
+        
+        '''
         print "Grabbing HMC debug data"
         hmc_debug0 = \
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_debug0_p0_ss.read(arm=False, man_trig=trig_mode,
@@ -2654,11 +2682,14 @@ class coarse_delay:
                                                                                           man_valid=valid_mode)['data']
         hmc_din1 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_din1_p0_ss.read(arm=False, man_trig=trig_mode,
                                                                                           man_valid=valid_mode)['data']
+                                                                                          
+        '''
 
+                                                                                          
         print "Grabbing CD out"
-        #data_out_pol0 = self.f.snapshots.cd_out_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        data_out_pol0 = self.f.snapshots.cd_out_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
-        #data_out_pol1 = self.f.snapshots.cd_out1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        data_out_pol1 = self.f.snapshots.cd_out1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
         # Grab captured sync in and out of the HMC
         hmc_sync_in = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_in.read()
@@ -2668,17 +2699,14 @@ class coarse_delay:
         hmc_sync_out_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_out_cnt.read()
 
         # CD Input data
-        din_00 = data_in['d00']
-        din_01 = data_in['d01']
-        din_02 = data_in['d02']
-        din_03 = data_in['d03']
-        din_04 = data_in['d04']
-        din_05 = data_in['d05']
-        din_06 = data_in['d06']
-        din_07 = data_in['d07']
-
-        cd_in_sync = data_in['sync']
-        cd_in_dvalid = data_in['dvalid']
+        din_00 = data_in['d0']
+        din_01 = data_in['d1']
+        din_02 = data_in['d2']
+        din_03 = data_in['d3']
+        din_04 = data_in['d4']
+        din_05 = data_in['d5']
+        din_06 = data_in['d6']
+        din_07 = data_in['d7']
 
         # CD Output data
         dout_00 = data_out_pol0['d00']
@@ -2702,6 +2730,7 @@ class coarse_delay:
         cd_out_sync = data_out_pol0['sync']
         cd_out_dvalid = data_out_pol0['dvalid']
 
+        '''
         hmc_debug0_win = hmc_debug0['win']
         hmc_debug0_wr_rdy = hmc_debug0['wr_rdy']
         hmc_debug0_waddr = hmc_debug0['waddr']
@@ -2715,8 +2744,8 @@ class coarse_delay:
         hmc_debug1_wr_rdy_p0 = hmc_debug1['wr_rdy']
         hmc_debug1_rd_rdy_p0 = hmc_debug1['rd_rdy']
         hmc_debug1_tag_out_p0 = hmc_debug1['tag_out']
-
         '''
+
 
         # Toggle the capture control to allow a small window of capture time
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=0)
@@ -2745,7 +2774,7 @@ class coarse_delay:
         #print 'sync in is %s' % cd_in_sync[0:read_length]
         #print 'dvalid in is %s' % cd_in_dvalid[0:read_length]
         #print ' '
-        '''
+        
         print 'D00'
         print '---'
         print din_00[0:read_length]
@@ -2778,7 +2807,7 @@ class coarse_delay:
         print '---'
         print din_07[0:read_length]
         print ''
-        '''
+    
         print 'Output Samples: Pol0'
         print '--------------------'
 
@@ -2786,7 +2815,7 @@ class coarse_delay:
         #print 'dvalid out is %s' % cd_out_dvalid[0:read_length]
         #print ' '
 
-        '''
+        
         print 'D00'
         print '---'
         print dout_00[0:read_length]
@@ -2855,6 +2884,7 @@ class coarse_delay:
         print dout_17[0:read_length]
         print ''
 
+        '''
         print 'HMC Debug'
         print '---------'
         print 'hmc_sync_in is %s' % hmc_sync_in
@@ -2879,6 +2909,136 @@ class coarse_delay:
         print ''
 
         '''
+        # Plot lin_plot results
+        #plt.figure(1)
+        #plt.ion()
+        #plt.clf()
+
+        #plt.plot(din_00[0:read_length])
+        #plt.show()
+
+    def change_delay(self, arm_mode, trig_mode, valid_mode, read_length, delay):
+
+        self.skarab()
+
+        # Set delay for test
+        self.f.registers.delay0.write(initial=delay)
+        self.f.registers.delay1.write(initial=delay)
+
+        # Arm and load
+        self.f.registers.tl_cd0_control0.write(arm=1)
+        self.f.registers.tl_cd0_control0.write(load_immediate=0)
+        self.f.registers.tl_cd0_control0.write(arm=0)
+
+        self.f.registers.tl_cd1_control0.write(arm=1)
+        self.f.registers.tl_cd1_control0.write(load_immediate=0)
+        self.f.registers.tl_cd1_control0.write(arm=0)
+
+        #self.f.snapshots.snap_adc0_ss.arm()
+        #self.f.snapshots.snap_adc1_ss.arm()
+
+        self.f.snapshots.cd_out_ss.arm()
+        self.f.snapshots.cd_out1_ss.arm()
+
+        print "Grabbing CD out"
+        data_out_pol0 = self.f.snapshots.cd_out_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        data_out_pol1 = self.f.snapshots.cd_out1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        # CD Output data
+        dout_00 = data_out_pol0['d00']
+        dout_01 = data_out_pol0['d01']
+        dout_02 = data_out_pol0['d02']
+        dout_03 = data_out_pol0['d03']
+        dout_04 = data_out_pol0['d04']
+        dout_05 = data_out_pol0['d05']
+        dout_06 = data_out_pol0['d06']
+        dout_07 = data_out_pol0['d07']
+
+        dout_10 = data_out_pol1['d00']
+        dout_11 = data_out_pol1['d01']
+        dout_12 = data_out_pol1['d02']
+        dout_13 = data_out_pol1['d03']
+        dout_14 = data_out_pol1['d04']
+        dout_15 = data_out_pol1['d05']
+        dout_16 = data_out_pol1['d06']
+        dout_17 = data_out_pol1['d07']
+
+        print 'Output Samples: Pol0'
+        print '--------------------'
+
+        # print 'sync out is %s' % cd_out_sync[0:read_length]
+        # print 'dvalid out is %s' % cd_out_dvalid[0:read_length]
+        # print ' '
+
+
+        print 'D00'
+        print '---'
+        print dout_00[0:read_length]
+
+        print 'D01'
+        print '---'
+        print dout_01[0:read_length]
+
+        print 'D02'
+        print '---'
+        print dout_02[0:read_length]
+
+        print 'D03'
+        print '---'
+        print dout_03[0:read_length]
+
+        print 'D04'
+        print '---'
+        print dout_04[0:read_length]
+
+        print 'D05'
+        print '---'
+        print dout_05[0:read_length]
+
+        print 'D06'
+        print '---'
+        print dout_06[0:read_length]
+
+        print 'D07'
+        print '---'
+        print dout_07[0:read_length]
+        print ''
+
+        print 'Output Samples: Pol1'
+        print '--------------------'
+        print 'D00'
+        print '---'
+        print dout_10[0:read_length]
+
+        print 'D01'
+        print '---'
+        print dout_11[0:read_length]
+
+        print 'D02'
+        print '---'
+        print dout_12[0:read_length]
+
+        print 'D03'
+        print '---'
+        print dout_13[0:read_length]
+
+        print 'D04'
+        print '---'
+        print dout_14[0:read_length]
+
+        print 'D05'
+        print '---'
+        print dout_15[0:read_length]
+
+        print 'D06'
+        print '---'
+        print dout_16[0:read_length]
+
+        print 'D07'
+        print '---'
+        print dout_17[0:read_length]
+        print ''
 
 
 
