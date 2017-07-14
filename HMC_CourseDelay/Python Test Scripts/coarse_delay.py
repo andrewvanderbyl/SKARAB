@@ -29,7 +29,7 @@ class coarse_delay:
 
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_pol0_2017-6-28_1459.fpg')
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-29_1217.fpg')
-        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-13_1544.fpg')
+        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-14_1524.fpg')
 
         print 'Grabbing System info: Done'
         print ''
@@ -92,7 +92,7 @@ class coarse_delay:
 
         # Programming file
         #prog_file = "/tmp/s_c856m4k_cd_2017-7-5_0954.fpg"
-        prog_file = "/tmp/s_c856m4k_cd_2017-7-13_1544.fpg"
+        prog_file = "/tmp/s_c856m4k_cd_2017-7-14_1524.fpg"
 
         # Create FPGA Object
         self.f = casperfpga.CasperFpga(skarab_ip)
@@ -2960,8 +2960,8 @@ class coarse_delay:
         print ''
         print "Check if the input impulse counter is spinning %s" % self.f.registers.d80_pol0_count.read()
         print "Check if the Spectrum edge counter is spinning %s" % self.f.registers.spec_edge_count.read()
-        print "Check if the output impulse counter is spinning %s" % self.f.registers.spec_edge_count.read()
-        print "Check if the output impulse counter is spinning %s" % self.f.registers.spec_edge_count.read()
+        print "Check if the output impulse (Pol0) counter is spinning %s" % self.f.registers.cd_out_pol0_count.read()
+        print "Check if the output impulse (Pol1) counter is spinning %s" % self.f.registers.cd_out_pol1_count.read()
         print ''
 
         #self.f.snapshots.snap_adc0_ss.arm()
