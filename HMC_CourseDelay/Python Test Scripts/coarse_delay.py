@@ -23,13 +23,22 @@ class coarse_delay:
         print 'Grabbing System info'
         print "--------------------"
 
-        #self.f = casperfpga.SkarabFpga('10.100.203.202') #skarab0304-01
-        self.f = casperfpga.CasperFpga('10.100.203.202')
+        # Specify skarab to use
+        # Spare SKARAB
+        skarab_ip = '10.100.203.202'
+
+        # Correlator SKARAB
+        #skarab_ip = '10.100.215.134'
+
+        print "Communicating to SKARAB: %s" % skarab_ip
+
+        self.f = casperfpga.CasperFpga(skarab_ip)
+
         #self.f = casperfpga.CasperFpga('skarab0304-01')
 
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_pol0_2017-6-28_1459.fpg')
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-29_1217.fpg')
-        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-14_1524.fpg')
+        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-19_1430.fpg')
 
         print 'Grabbing System info: Done'
         print ''
@@ -88,11 +97,16 @@ class coarse_delay:
     def setup_FPGA_feng(self):
 
         # Specify skarab to use
+        # Spare SKARAB
         skarab_ip = '10.100.203.202'
+
+        # Correlator SKARAB
+        #skarab_ip = '10.100.215.134'
+
 
         # Programming file
         #prog_file = "/tmp/s_c856m4k_cd_2017-7-5_0954.fpg"
-        prog_file = "/tmp/s_c856m4k_cd_2017-7-14_1524.fpg"
+        prog_file = "/tmp/s_c856m4k_cd_2017-7-19_1430.fpg"
 
         # Create FPGA Object
         self.f = casperfpga.CasperFpga(skarab_ip)
@@ -100,6 +114,7 @@ class coarse_delay:
         print 'FPGA Object Created'
 
         try:
+            print "Programming SKARAB: %s" % skarab_ip
             self.f.upload_to_ram_and_program(prog_file)
             print "Programming FPGA done"
 
@@ -2956,12 +2971,14 @@ class coarse_delay:
         # Read the delay
         print "d80_data_delay is %s" % self.f.registers.d80_data_delay.read()
         print "cd_data_delay Pol0 is %s" % self.f.registers.cd_data_pol0_delay.read()
-        print "cd_data_delay Pol1 is %s" % self.f.registers.cd_data_pol1_delay.read()
+        print "cd_data_delay Pol1 (p0 sync) is %s" % self.f.registers.cd_data_pol1_delay.read()
+        print "cd_data_delay Pol1 is %s" % self.f.registers.cd_data_pol1_delay1.read()
         print ''
         print "Check if the input impulse counter is spinning %s" % self.f.registers.d80_pol0_count.read()
         print "Check if the Spectrum edge counter is spinning %s" % self.f.registers.spec_edge_count.read()
         print "Check if the output impulse (Pol0) counter is spinning %s" % self.f.registers.cd_out_pol0_count.read()
         print "Check if the output impulse (Pol1) counter is spinning %s" % self.f.registers.cd_out_pol1_count.read()
+        print "Check if the output impulse (Pol1) counter1 is spinning %s" % self.f.registers.cd_out_pol1_count1.read()
         print ''
 
         #self.f.snapshots.snap_adc0_ss.arm()
