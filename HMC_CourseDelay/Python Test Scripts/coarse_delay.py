@@ -38,7 +38,7 @@ class coarse_delay:
 
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_pol0_2017-6-28_1459.fpg')
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-29_1217.fpg')
-        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-19_1430.fpg')
+        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-20_0913.fpg')
 
         print 'Grabbing System info: Done'
         print ''
@@ -106,7 +106,7 @@ class coarse_delay:
 
         # Programming file
         #prog_file = "/tmp/s_c856m4k_cd_2017-7-5_0954.fpg"
-        prog_file = "/tmp/s_c856m4k_cd_2017-7-19_1430.fpg"
+        prog_file = "/tmp/s_c856m4k_cd_2017-7-20_0913.fpg"
 
         # Create FPGA Object
         self.f = casperfpga.CasperFpga(skarab_ip)
@@ -2558,7 +2558,7 @@ class coarse_delay:
 
         # Set Impulse values
         self.f.registers.impulse0.write(offset=0)
-        self.f.registers.impulse0.write(amplitude=1)
+        self.f.registers.impulse0.write(amplitude=0)
 
         self.f.registers.impulse1.write(offset=0)
         self.f.registers.impulse1.write(amplitude=1)
@@ -2607,6 +2607,9 @@ class coarse_delay:
         print "Actual Delay is: %s" % self.f.registers.delay0.read()
         print "Loaded value is: %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_delay.read()
         print " "
+        print "Amplitude and Offset P0 is %s" % self.f.registers.impulse0.read()
+        print "Amplitude and Offset P1 is %s" % self.f.registers.impulse1.read()
+        print " "
 
         print "HMC Status"
         print "----------"
@@ -2643,6 +2646,8 @@ class coarse_delay:
         self.f.snapshots.cd_out_ss.arm()
         self.f.snapshots.cd_out1_ss.arm()
 
+        self.f.snapshots.reord_addr_db_ss.arm()
+
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_debug0_p0_ss.arm()
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_debug1_p0_ss.arm()
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_din0_p0_ss.arm()
@@ -2652,6 +2657,7 @@ class coarse_delay:
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_reord0_ss.arm()
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_hmc_reord1_ss.arm()
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_fifo0_ss.arm()
+
 
         print 'Arming Snapblocks done'
         print "----------------------"
@@ -2774,6 +2780,29 @@ class coarse_delay:
         wr_req_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_wr_req_count.read()
         rd_req_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_rd_req_count.read()
         cd_rd_dvalid_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_rd_dvalid_count.read()
+
+        print ''
+        print 'Reord Readout Add Check'
+        print "-----------------------"
+        print "Grabbing Reord Debug"
+        reord_addr = self.f.snapshots.reord_addr_db_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        print 'P0 Addr'
+        print '-------'
+        print reord_addr['p0_addr'][0:read_length]
+
+        print 'P0 bram_en'
+        print '----------'
+        print reord_addr['p0_bram_en'][0:read_length]
+
+        print 'P1 Addr'
+        print '-------'
+        print reord_addr['p1_addr'][0:read_length]
+
+        print 'P1 bram_en'
+        print '----------'
+        print reord_addr['p1_bram_en'][0:read_length]
+
 
         print ''
         print 'Latency Check'
@@ -2935,6 +2964,13 @@ class coarse_delay:
     def change_delay(self, arm_mode, trig_mode, valid_mode, read_length, delay):
 
         self.skarab()
+
+        print "System Information"
+        print "------------------"
+
+        print "Amplitude and Offset P0 is %s" % self.f.registers.impulse0.read()
+        print "Amplitude and Offset P1 is %s" % self.f.registers.impulse1.read()
+        print " "
 
         print "Last set Delay Pol0 is %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_delay.read()
         print "Last set Delay Pol1 is %s" % self.f.registers.cd_compensation1_cd_hmc_hmc_delay_hmc_delay.read()
