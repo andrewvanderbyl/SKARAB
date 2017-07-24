@@ -38,7 +38,7 @@ class coarse_delay:
 
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_pol0_2017-6-28_1459.fpg')
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-29_1217.fpg')
-        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-20_0913.fpg')
+        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-24_1127.fpg')
 
         print 'Grabbing System info: Done'
         print ''
@@ -106,7 +106,7 @@ class coarse_delay:
 
         # Programming file
         #prog_file = "/tmp/s_c856m4k_cd_2017-7-5_0954.fpg"
-        prog_file = "/tmp/s_c856m4k_cd_2017-7-20_0913.fpg"
+        prog_file = "/tmp/s_c856m4k_cd_2017-7-24_1127.fpg"
 
         # Create FPGA Object
         self.f = casperfpga.CasperFpga(skarab_ip)
@@ -2558,7 +2558,7 @@ class coarse_delay:
 
         # Set Impulse values
         self.f.registers.impulse0.write(offset=0)
-        self.f.registers.impulse0.write(amplitude=0)
+        self.f.registers.impulse0.write(amplitude=1)
 
         self.f.registers.impulse1.write(offset=0)
         self.f.registers.impulse1.write(amplitude=1)
@@ -2570,16 +2570,21 @@ class coarse_delay:
         self.f.registers.delay1.write(initial=delay)
 
         # Arm and load
-        self.f.registers.tl_cd0_control0.write(arm=1)
-        self.f.registers.tl_cd0_control0.write(load_immediate=1)
-        self.f.registers.tl_cd0_control0.write(arm=0)
+        #self.f.registers.tl_cd0_control0.write(arm=1)
+        #self.f.registers.tl_cd0_control0.write(load_immediate=1)
+        #self.f.registers.tl_cd0_control0.write(arm=0)
 
-        self.f.registers.tl_cd1_control0.write(arm=1)
-        self.f.registers.tl_cd1_control0.write(load_immediate=1)
-        self.f.registers.tl_cd1_control0.write(arm=0)
+        #self.f.registers.tl_cd1_control0.write(arm=1)
+        #self.f.registers.tl_cd1_control0.write(load_immediate=1)
+        #self.f.registers.tl_cd1_control0.write(arm=0)
 
+        self.f.registers.tl_cd0_control.write(arm=1)
+        self.f.registers.tl_cd0_control.write(load_immediate=1)
+        self.f.registers.tl_cd0_control.write(arm=0)
 
-
+        self.f.registers.tl_cd1_control.write(arm=1)
+        self.f.registers.tl_cd1_control.write(load_immediate=1)
+        self.f.registers.tl_cd1_control.write(arm=0)
 
         # Enable the TVG
         self.f.registers.control.write(tvg_adc=1)
@@ -2972,11 +2977,17 @@ class coarse_delay:
         print "Amplitude and Offset P1 is %s" % self.f.registers.impulse1.read()
         print " "
 
-        print "Last set Delay Pol0 is %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_delay.read()
-        print "Last set Delay Pol1 is %s" % self.f.registers.cd_compensation1_cd_hmc_hmc_delay_hmc_delay.read()
+        print "Last set HMC Delay Pol0 is %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_delay.read()
+        print "Last set HMC Delay Pol1 is %s" % self.f.registers.cd_compensation1_cd_hmc_hmc_delay_hmc_delay.read()
         print ''
 
+        print "Last set Barrel Shift Delay Pol0 is %s" % self.f.registers.wb_prog_delay_bs_delay0.read()
+        print "Last set Barrel Shift Delay Pol1 is %s" % self.f.registers.wb_prog_delay1_bs_delay1.read()
+        print ''
+
+        print "-------------"
         print "Setting Delay"
+        print "-------------"
         print ''
 
         # Set delay for test
@@ -2984,6 +2995,7 @@ class coarse_delay:
         self.f.registers.delay1.write(initial=delay)
 
         # Arm and load
+        '''
         self.f.registers.tl_cd0_control0.write(arm=1)
         self.f.registers.tl_cd0_control0.write(load_immediate=1)
         self.f.registers.tl_cd0_control0.write(arm=0)
@@ -2992,6 +3004,25 @@ class coarse_delay:
         self.f.registers.tl_cd1_control0.write(load_immediate=1)
         self.f.registers.tl_cd1_control0.write(arm=0)
 
+        self.f.registers.tl_cd_bs0_control0.write(arm=1)
+        self.f.registers.tl_cd_bs0_control0.write(load_immediate=1)
+        self.f.registers.tl_cd_bs0_control0.write(arm=0)
+
+        self.f.registers.tl_cd_bs1_control0.write(arm=1)
+        self.f.registers.tl_cd_bs1_control0.write(load_immediate=1)
+        self.f.registers.tl_cd_bs1_control0.write(arm=0)
+        '''
+
+        self.f.registers.tl_cd0_control.write(arm=1)
+        self.f.registers.tl_cd0_control.write(load_immediate=1)
+        self.f.registers.tl_cd0_control.write(arm=0)
+
+        self.f.registers.tl_cd1_control.write(arm=1)
+        self.f.registers.tl_cd1_control.write(load_immediate=1)
+        self.f.registers.tl_cd1_control.write(arm=0)
+
+
+
         print "Delay 0 is %s" % self.f.registers.delay0.read()
         print "Delay 1 is %s" % self.f.registers.delay1.read()
         print ''
@@ -2999,6 +3030,11 @@ class coarse_delay:
         print "HMC delay Pol0 set as: %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_delay.read()
         print "HMC delay Pol1 set as: %s" % self.f.registers.cd_compensation1_cd_hmc_hmc_delay_hmc_delay.read()
         print ''
+
+        print "Barrel Shift Delay Pol0 is %s" % self.f.registers.wb_prog_delay_bs_delay0.read()
+        print "Barrel Shift Delay Pol1 is %s" % self.f.registers.wb_prog_delay1_bs_delay1.read()
+        print ''
+        print "------------------"
 
         # Reset the Counters
         self.f.registers.count_rst.write(rst=1)
