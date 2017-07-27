@@ -38,7 +38,7 @@ class coarse_delay:
 
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_pol0_2017-6-28_1459.fpg')
         #self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-29_1217.fpg')
-        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-24_1127.fpg')
+        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-26_1427.fpg')
 
         print 'Grabbing System info: Done'
         print ''
@@ -106,7 +106,7 @@ class coarse_delay:
 
         # Programming file
         #prog_file = "/tmp/s_c856m4k_cd_2017-7-5_0954.fpg"
-        prog_file = "/tmp/s_c856m4k_cd_2017-7-24_1127.fpg"
+        prog_file = "/tmp/s_c856m4k_cd_2017-7-26_1427.fpg"
 
         # Create FPGA Object
         self.f = casperfpga.CasperFpga(skarab_ip)
@@ -2686,7 +2686,16 @@ class coarse_delay:
         print "db_unpack_dvalid is %s" % self.f.registers.db_unpack_dvalid.read()
         print " "
         
-        
+        # Check if any clashes exist
+        print "Pol0 HMC write clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_err_p0.read()
+        print "Pol0 HMC read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_rd_err_p0.read()
+        print "Pol0 HMC write/read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_rd_rdy_clash_p0.read()
+        print "Pol1 HMC write clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_err_p1.read()
+        print "Pol1 HMC read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_rd_err_p1.read()
+        print "Pol1 HMC write/read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_rd_rdy_clash_p1.read()
+        print ''
+        print "--------------------------------------------------------------------------------------------------------"
+
                                 
         print 'Grabbing Snapshot Data'
         print "----------------------"
@@ -3034,11 +3043,22 @@ class coarse_delay:
         print "Barrel Shift Delay Pol0 is %s" % self.f.registers.wb_prog_delay_bs_delay0.read()
         print "Barrel Shift Delay Pol1 is %s" % self.f.registers.wb_prog_delay1_bs_delay1.read()
         print ''
-        print "------------------"
+        print "--------------------------------------------------------------------------------------------------------"
 
         # Reset the Counters
         self.f.registers.count_rst.write(rst=1)
         self.f.registers.count_rst.write(rst=0)
+
+        # Check if any clashes exist
+        print "Pol0 HMC write clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_err_p0.read()
+        print "Pol0 HMC read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_rd_err_p0.read()
+        print "Pol0 HMC write/read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_rd_rdy_clash_p0.read()
+        print "Pol1 HMC write clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_err_p1.read()
+        print "Pol1 HMC read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_rd_err_p1.read()
+        print "Pol1 HMC write/read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_rd_rdy_clash_p1.read()
+        print ''
+        print "--------------------------------------------------------------------------------------------------------"
+
 
         # Read the delay
         print "d80_data_delay is %s" % self.f.registers.d80_data_delay.read()
