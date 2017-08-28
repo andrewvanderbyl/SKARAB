@@ -36,9 +36,9 @@ class coarse_delay:
 
         #self.f = casperfpga.CasperFpga('skarab0304-01')
 
-        #self.f.get_system_information('/tmp/s_cd_hmc_v2_pol0_2017-6-28_1459.fpg')
-        #self.f.get_system_information('/tmp/s_cd_hmc_v2_2017-6-29_1217.fpg')
-        self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-26_1427.fpg')
+        #self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-26_1427.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v3_2017-8-28_1218.fpg')
+
 
         print 'Grabbing System info: Done'
         print ''
@@ -74,12 +74,13 @@ class coarse_delay:
     def setup_FPGA(self):
 
         # Specify skarab to use
-        skarab_ip = '10.100.203.202'
+        # Spare SKARAB: skarab020304-01
+        skarab_ip = '10.100.205.202'
 
         # Programming file
         #prog_file = "/tmp/s_cd_hmc_v2_pol0_2017-6-28_1459.fpg"
 
-        prog_file = "/tmp/s_cd_hmc_v2_2017-7-3_0854.fpg"
+        prog_file = "/tmp/s_cd_hmc_v3_2017-8-28_1218.fpg"
 
         # Create FPGA Object
         #self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -97,8 +98,8 @@ class coarse_delay:
     def setup_FPGA_feng(self):
 
         # Specify skarab to use
-        # Spare SKARAB
-        skarab_ip = '10.100.203.202'
+        # Spare SKARAB: skarab020304-01
+        skarab_ip = '10.100.205.202'
 
         # Correlator SKARAB
         #skarab_ip = '10.100.215.134'
@@ -3607,7 +3608,7 @@ class coarse_delay:
 
     # PFB
     # ---
-    def pfb(self, arm_mode, trig_mode, valid_mode, plot_count_max, disp_length, delay):
+    def pfb(self, arm_mode, trig_mode, valid_mode, plot_count_max, disp_length, delay, read_length):
 
         self.skarab()
 
@@ -3635,7 +3636,10 @@ class coarse_delay:
         self.f.registers.tl_cd1_control.write(arm=0)
 
         # Enable the TVG
-        self.f.registers.control.write(tvg_adc=1)
+        self.f.registers.control.write(tvg_adc=0)
+
+        self.f.registers.adc_en0.write(en=0)
+        self.f.registers.adc_en1.write(en=0)
 
         # Reset sync monitor
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=1)
@@ -3649,16 +3653,16 @@ class coarse_delay:
         self.f.registers.control.write(adc_snap_trig_select=1)
 
         # Check if HMC post and init are ok
-        post_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_post.read()
-        init_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_init.read()
-        post = post_reg['data']
-        init = init_reg['data']
+        #post_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_post.read()
+        #init_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_init.read()
+        #post = post_reg['data']
+        #init = init_reg['data']
 
         print "System Information"
         print "------------------"
         print 'Requested delay is %s' % delay
         print "Actual Delay is: %s" % self.f.registers.delay0.read()
-        print "Loaded value is: %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_delay.read()
+        #print "Loaded value is: %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_delay.read()
         print " "
         print "Amplitude and Offset P0 is %s" % self.f.registers.impulse0.read()
         print "Amplitude and Offset P1 is %s" % self.f.registers.impulse1.read()
@@ -3666,24 +3670,12 @@ class coarse_delay:
 
         print "HMC Status"
         print "----------"
-        print "Post is %s" % post
-        print "Init is %s" % init
+        #print "Post is %s" % post
+        #print "Init is %s" % init
         print " "
 
         print 'Checking Initial Sync and Dvalid states'
         print "---------------------------------------"
-
-        print ''
-        print 'hmc_sync_in is %s' % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_in.read()
-        print 'hmc_sync_in_count is %s' % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_in_cnt.read()
-        print ''
-        print 'hmc_sync_out is %s' % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_out.read()
-        print 'hmc_sync_out_count is %s' % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_sync_out_cnt.read()
-        print ''
-        print 'reord_sync is %s' % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_out.read()
-        print 'reord_sync_count is %s' % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_reord_sync_cnt.read()
-        print ''
-
 
         # Arm the Snapshot Blocks
         # -----------------------
@@ -3692,11 +3684,11 @@ class coarse_delay:
         self.f.snapshots.snap_adc0_ss.arm()
         self.f.snapshots.snap_adc1_ss.arm()
 
-        self.f.snapshots.snap_pre_pfb0.arm()
-        self.f.snapshots.snap_pre_pfb1.arm()
+        self.f.snapshots.snap_pre_pfb0_ss.arm()
+        self.f.snapshots.snap_pre_pfb1_ss.arm()
 
-        self.f.snapshots.snap_pfb0.arm()
-        self.f.snapshots.snap_pfb1.arm()
+        self.f.snapshots.snap_pfb0_ss.arm()
+        self.f.snapshots.snap_pfb1_ss.arm()
         print " "
 
 
@@ -3725,23 +3717,46 @@ class coarse_delay:
         print "----------------------"
 
         print "Grabbing snap_adc0"
-        data_in = self.f.snapshots.snap_adc0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        data_in0 = self.f.snapshots.snap_adc0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        print "Grabbing snap_adc1"
+        data_in1 = self.f.snapshots.snap_adc1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
 
         print "Grabbing snap_pre_pfb0"
         pre_pfb0 = self.f.snapshots.snap_pre_pfb0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
+        print "Grabbing snap_pre_pfb1"
+        pre_pfb1 = self.f.snapshots.snap_pre_pfb1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+
         print "Grabbing snap_pfb0"
         pfb0 = self.f.snapshots.snap_pfb0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
+        print "Grabbing snap_pfb0"
+        pfb1 = self.f.snapshots.snap_pfb1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+
         # CD Input data
-        din_00 = data_in['d0']
-        din_01 = data_in['d1']
-        din_02 = data_in['d2']
-        din_03 = data_in['d3']
-        din_04 = data_in['d4']
-        din_05 = data_in['d5']
-        din_06 = data_in['d6']
-        din_07 = data_in['d7']
+        din_00 = data_in0['d0']
+        din_01 = data_in0['d1']
+        din_02 = data_in0['d2']
+        din_03 = data_in0['d3']
+        din_04 = data_in0['d4']
+        din_05 = data_in0['d5']
+        din_06 = data_in0['d6']
+        din_07 = data_in0['d7']
+
+        # CD Input data
+        din_10 = data_in1['d0']
+        din_11 = data_in1['d1']
+        din_12 = data_in1['d2']
+        din_13 = data_in1['d3']
+        din_14 = data_in1['d4']
+        din_15 = data_in1['d5']
+        din_16 = data_in1['d6']
+        din_17 = data_in1['d7']
+
 
         # CD Output data
         pre_pfb0_0 = pre_pfb0['d0']
@@ -3753,21 +3768,32 @@ class coarse_delay:
         pre_pfb0_6 = pre_pfb0['d6']
         pre_pfb0_7 = pre_pfb0['d7']
 
-        pfb0_0 = pfb0['d0']
-        pfb0_1 = pfb0['d1']
-        pfb0_2 = pfb0['d2']
-        pfb0_3 = pfb0['d3']
-        pfb0_4 = pfb0['d4']
-        pfb0_5 = pfb0['d5']
-        pfb0_6 = pfb0['d6']
-        pfb0_7 = pfb0['d7']
+        pre_pfb1_0 = pre_pfb1['d0']
+        pre_pfb1_1 = pre_pfb1['d1']
+        pre_pfb1_2 = pre_pfb1['d2']
+        pre_pfb1_3 = pre_pfb1['d3']
+        pre_pfb1_4 = pre_pfb1['d4']
+        pre_pfb1_5 = pre_pfb1['d5']
+        pre_pfb1_6 = pre_pfb1['d6']
+        pre_pfb1_7 = pre_pfb1['d7']
 
+        pfb0_r0 = pfb0['r0']
+        pfb0_r1 = pfb0['r1']
+        pfb0_r2 = pfb0['r2']
+        pfb0_r3 = pfb0['r3']
+        pfb0_i0 = pfb0['i0']
+        pfb0_i1 = pfb0['i1']
+        pfb0_i2 = pfb0['i2']
+        pfb0_i3 = pfb0['i3']
 
-        Continue editing from here
-
-
-        cd_out_sync = data_out_pol0['sync']
-        cd_out_dvalid = data_out_pol0['dvalid']
+        pfb1_r0 = pfb1['r0']
+        pfb1_r1 = pfb1['r1']
+        pfb1_r2 = pfb1['r2']
+        pfb1_r3 = pfb1['r3']
+        pfb1_i0 = pfb1['i0']
+        pfb1_i1 = pfb1['i1']
+        pfb1_i2 = pfb1['i2']
+        pfb1_i3 = pfb1['i3']
 
         # Toggle the capture control to allow a small window of capture time
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=0)
@@ -3777,47 +3803,9 @@ class coarse_delay:
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=1)
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=0)
 
-        # Read in the counters controlled by the capture
-        wr_req_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_wr_req_count.read()
-        rd_req_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_rd_req_count.read()
-        cd_rd_dvalid_count = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_rd_dvalid_count.read()
-
         print ''
-        print 'Reord Readout Add Check'
-        print "-----------------------"
-        print "Grabbing Reord Debug"
-        reord_addr = self.f.snapshots.reord_addr_db_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
-
-        print 'P0 Addr'
-        print '-------'
-        print reord_addr['p0_addr'][0:read_length]
-
-        print 'P0 bram_en'
-        print '----------'
-        print reord_addr['p0_bram_en'][0:read_length]
-
-        print 'P1 Addr'
-        print '-------'
-        print reord_addr['p1_addr'][0:read_length]
-
-        print 'P1 bram_en'
-        print '----------'
-        print reord_addr['p1_bram_en'][0:read_length]
-
+        print 'Pol 0'
         print ''
-        print 'Latency Check'
-        print "-------------"
-        # print 'cd_in_count_thresh is %s' % self.f.registers.cd_in_cnt_thresh.read()
-        # print ''
-        # print 'cd_out_count_thresh is %s' % self.f.registers.cd_out_cnt_thresh.read()
-        # print ''
-
-        print 'Input Samples'
-        print '-------------'
-
-        # print 'sync in is %s' % cd_in_sync[0:read_length]
-        # print 'dvalid in is %s' % cd_in_dvalid[0:read_length]
-        # print ' '
 
         print 'D00'
         print '---'
@@ -3851,117 +3839,224 @@ class coarse_delay:
         print '---'
         print din_07[0:read_length]
         print ''
+        print "--------------------------------------------------------------------------------------------------------"
 
-        print 'Output Samples: Pol0'
-        print '--------------------'
-
-        # print 'sync out is %s' % cd_out_sync[0:read_length]
-        # print 'dvalid out is %s' % cd_out_dvalid[0:read_length]
-        # print ' '
-
+        print ''
+        print 'Pol 1'
+        print ''
 
         print 'D00'
         print '---'
-        print dout_00[0:read_length]
+        print din_10[0:read_length]
 
         print 'D01'
         print '---'
-        print dout_01[0:read_length]
+        print din_11[0:read_length]
 
         print 'D02'
         print '---'
-        print dout_02[0:read_length]
+        print din_12[0:read_length]
 
         print 'D03'
         print '---'
-        print dout_03[0:read_length]
+        print din_13[0:read_length]
 
         print 'D04'
         print '---'
-        print dout_04[0:read_length]
+        print din_14[0:read_length]
 
         print 'D05'
         print '---'
-        print dout_05[0:read_length]
+        print din_15[0:read_length]
 
         print 'D06'
         print '---'
-        print dout_06[0:read_length]
+        print din_16[0:read_length]
 
         print 'D07'
         print '---'
-        print dout_07[0:read_length]
+        print din_17[0:read_length]
         print ''
+        print "--------------------------------------------------------------------------------------------------------"
 
-        print 'Output Samples: Pol1'
-        print '--------------------'
+
+        print 'pre_pfb0'
+        print '--------'
+
         print 'D00'
         print '---'
-        print dout_10[0:read_length]
+        print pre_pfb0_0[0:read_length]
 
         print 'D01'
         print '---'
-        print dout_11[0:read_length]
+        print pre_pfb0_1[0:read_length]
 
         print 'D02'
         print '---'
-        print dout_12[0:read_length]
+        print pre_pfb0_2[0:read_length]
 
         print 'D03'
         print '---'
-        print dout_13[0:read_length]
+        print pre_pfb0_3[0:read_length]
 
         print 'D04'
         print '---'
-        print dout_14[0:read_length]
+        print pre_pfb0_4[0:read_length]
 
         print 'D05'
         print '---'
-        print dout_15[0:read_length]
+        print pre_pfb0_5[0:read_length]
 
         print 'D06'
         print '---'
-        print dout_16[0:read_length]
+        print pre_pfb0_6[0:read_length]
 
         print 'D07'
         print '---'
-        print dout_17[0:read_length]
+        print pre_pfb0_7[0:read_length]
+        print ''
+        print "--------------------------------------------------------------------------------------------------------"
+
+        print 'pre_pfb1'
+        print '--------'
+
+        print 'D00'
+        print '---'
+        print pre_pfb1_0[0:read_length]
+
+        print 'D01'
+        print '---'
+        print pre_pfb1_1[0:read_length]
+
+        print 'D02'
+        print '---'
+        print pre_pfb1_2[0:read_length]
+
+        print 'D03'
+        print '---'
+        print pre_pfb1_3[0:read_length]
+
+        print 'D04'
+        print '---'
+        print pre_pfb1_4[0:read_length]
+
+        print 'D05'
+        print '---'
+        print pre_pfb1_5[0:read_length]
+
+        print 'D06'
+        print '---'
+        print pre_pfb1_6[0:read_length]
+
+        print 'D07'
+        print '---'
+        print pre_pfb1_7[0:read_length]
+        print ''
+        print "--------------------------------------------------------------------------------------------------------"
         print ''
 
-        '''
-        print 'HMC Debug'
-        print '---------'
-        print 'hmc_sync_in is %s' % hmc_sync_in
-        print ''
-        print 'hmc_sync_in_count is %s' % hmc_sync_in_count
-        print ''
-        print 'hmc_sync_out is %s' % hmc_sync_out
-        print ''
-        print 'hmc_sync_out_count is %s' % hmc_sync_out_count
-        print ''
-        print 'hmc_wr_err is %s' % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_err.read()
-        print ''
-        print 'hmc_rd_err is %s' % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_rd_err.read()
-        print ''
-        print 'hmc_wr_rd_clash is %s' % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_rd_rdy_clash.read()
-        print ''
-        print 'wr_req_count is %s' % wr_req_count
-        print ''
-        print 'rd_req_count is %s' % rd_req_count
-        print ''
-        print 'cd_rd_dvalid_count is %s' % cd_rd_dvalid_count
-        print ''
 
-        '''
+        print 'Pack the PFB output correctly'
+        print '-----------------------------'
+
+
+        # Plot Outputs
+        plt.figure(1)
+        plt.ion()
+        plt.clf()
+        plt.subplot(811)
+        plt.plot(din_00[0:read_length])
+        plt.subplot(812)
+        plt.plot(din_01[0:read_length])
+        plt.subplot(813)
+        plt.plot(din_02[0:read_length])
+        plt.subplot(814)
+        plt.plot(din_03[0:read_length])
+        plt.subplot(815)
+        plt.plot(din_04[0:read_length])
+        plt.subplot(816)
+        plt.plot(din_05[0:read_length])
+        plt.subplot(817)
+        plt.plot(din_06[0:read_length])
+        plt.subplot(818)
+        plt.plot(din_07[0:read_length])
+
+
+
+        plt.figure(2)
+        plt.ion()
+        plt.clf()
+        plt.subplot(811)
+        plt.plot(din_10[0:read_length])
+        plt.subplot(812)
+        plt.plot(din_11[0:read_length])
+        plt.subplot(813)
+        plt.plot(din_12[0:read_length])
+        plt.subplot(814)
+        plt.plot(din_13[0:read_length])
+        plt.subplot(815)
+        plt.plot(din_14[0:read_length])
+        plt.subplot(816)
+        plt.plot(din_15[0:read_length])
+        plt.subplot(817)
+        plt.plot(din_16[0:read_length])
+        plt.subplot(818)
+        plt.plot(din_17[0:read_length])
+
+
         # Plot lin_plot results
-        # plt.figure(1)
-        # plt.ion()
-        # plt.clf()
 
-        # plt.plot(din_00[0:read_length])
-        # plt.show()
+        log_pfb0_r0 = 20*np.log10(np.power(pfb0_r0[0:1023],2))
+        log_pfb0_i0 = 20*np.log10(np.power(pfb0_i0[0:1023],2))
+
+        log_pfb0_r1 = 20 * np.log10(np.power(pfb0_r1[0:1023], 2))
+        log_pfb0_i1 = 20 * np.log10(np.power(pfb0_i1[0:1023], 2))
+
+        log_pfb0_r2 = 20 * np.log10(np.power(pfb0_r2[0:1023], 2))
+        log_pfb0_i2 = 20 * np.log10(np.power(pfb0_i2[0:1023], 2))
+
+        log_pfb0_r3 = 20 * np.log10(np.power(pfb0_r3[0:1023], 2))
+        log_pfb0_i3 = 20 * np.log10(np.power(pfb0_i3[0:1023], 2))
+
+        plt.figure(3)
+        plt.ion()
+        plt.clf()
+        plt.subplot(411)
+        plt.plot(log_pfb0_r0)
+        plt.plot(log_pfb0_i0)
+
+        plt.subplot(412)
+        plt.plot(log_pfb0_r1)
+        plt.plot(log_pfb0_i1)
+
+        plt.subplot(413)
+        plt.plot(log_pfb0_r2)
+        plt.plot(log_pfb0_i2)
+
+        plt.subplot(414)
+        plt.plot(log_pfb0_r3)
+        plt.plot(log_pfb0_i3)
 
 
+        plt.figure(4)
+        plt.ion()
+        plt.clf()
+        plt.subplot(411)
+        plt.plot(pfb1_r0[0:1023])
+        plt.plot(pfb1_i0[0:1023])
+
+        plt.subplot(412)
+        plt.plot(pfb1_r1[0:1023])
+        plt.plot(pfb1_i1[0:1023])
+
+        plt.subplot(413)
+        plt.plot(pfb1_r2[0:1023])
+        plt.plot(pfb1_i2[0:1023])
+
+        plt.subplot(414)
+        plt.plot(pfb1_r3[0:1023])
+        plt.plot(pfb1_i3[0:1023])
+        plt.show()
 
 
 
