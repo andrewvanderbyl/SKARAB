@@ -37,7 +37,7 @@ class coarse_delay:
         #self.f = casperfpga.CasperFpga('skarab0304-01')
 
         #self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-26_1427.fpg')
-        self.f.get_system_information('/tmp/s_cd_hmc_v3_2017-8-29_0726.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v3_2017-8-30_1316.fpg')
 
 
         print 'Grabbing System info: Done'
@@ -80,7 +80,7 @@ class coarse_delay:
         # Programming file
         #prog_file = "/tmp/s_cd_hmc_v2_pol0_2017-6-28_1459.fpg"
 
-        prog_file = "/tmp/s_cd_hmc_v3_2017-8-29_0726.fpg"
+        prog_file = "/tmp/s_cd_hmc_v3_2017-8-30_1316.fpg"
 
         # Create FPGA Object
         #self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -3685,12 +3685,16 @@ class coarse_delay:
         self.f.snapshots.snap_adc1_ss.arm()
 
         self.f.snapshots.snap_pre_pfb0_ss.arm()
-        self.f.snapshots.snap_pre_pfb1_ss.arm()
-        self.f.snapshots.snap_pre_pfb2_ss.arm()
+        #self.f.snapshots.snap_pre_pfb1_ss.arm()
+        #self.f.snapshots.snap_pre_pfb2_ss.arm()
 
 
         self.f.snapshots.snap_pfb0_ss.arm()
-        self.f.snapshots.snap_pfb1_ss.arm()
+        #self.f.snapshots.snap_pfb1_ss.arm()
+
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_datain_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_dataout_ss.arm()
 
         print " "
 
@@ -3737,22 +3741,31 @@ class coarse_delay:
         print "Grabbing snap_adc1"
         data_in1 = self.f.snapshots.snap_adc1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
-
         print "Grabbing snap_pre_pfb0"
         pre_pfb0 = self.f.snapshots.snap_pre_pfb0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
-        print "Grabbing snap_pre_pfb1"
-        pre_pfb1 = self.f.snapshots.snap_pre_pfb1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        #print "Grabbing snap_pre_pfb1"
+        #pre_pfb1 = self.f.snapshots.snap_pre_pfb1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
-        print "Grabbing snap_pre_pfb1"
-        pre_pfb2 = self.f.snapshots.snap_pre_pfb2_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        #print "Grabbing snap_pre_pfb1"
+        #pre_pfb2 = self.f.snapshots.snap_pre_pfb2_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
 
         print "Grabbing snap_pfb0"
         pfb0 = self.f.snapshots.snap_pfb0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
-        print "Grabbing snap_pfb0"
-        pfb1 = self.f.snapshots.snap_pfb1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        #print "Grabbing snap_pfb0"
+        #pfb1 = self.f.snapshots.snap_pfb1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        print "Grabbing snap_reord"
+        reord = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        print "Grabbing snap_reord_datain"
+        reord_datain = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_datain_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        print "Grabbing snap_reord_dataout"
+        reord_dataout = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_dataout_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
 
 
         # CD Input data pol0
@@ -3792,6 +3805,7 @@ class coarse_delay:
         pre_pfb0_6 = pre_pfb0['d6']
         pre_pfb0_7 = pre_pfb0['d7']
 
+        '''
         pre_pfb1_0 = pre_pfb1['d0']
         pre_pfb1_1 = pre_pfb1['d1']
         pre_pfb1_2 = pre_pfb1['d2']
@@ -3809,6 +3823,7 @@ class coarse_delay:
         pre_pfb2_5 = pre_pfb2['d5']
         pre_pfb2_6 = pre_pfb2['d6']
         pre_pfb2_7 = pre_pfb2['d7']
+        '''
 
         sync_pfb = pfb0['sync']
         dv_pfb = pfb0['dv']
@@ -3822,6 +3837,7 @@ class coarse_delay:
         pfb0_i2 = pfb0['i2']
         pfb0_i3 = pfb0['i3']
 
+        '''
         pfb1_r0 = pfb1['r0']
         pfb1_r1 = pfb1['r1']
         pfb1_r2 = pfb1['r2']
@@ -3830,6 +3846,35 @@ class coarse_delay:
         pfb1_i1 = pfb1['i1']
         pfb1_i2 = pfb1['i2']
         pfb1_i3 = pfb1['i3']
+        '''
+
+        reord_addra = reord['addra']
+        reord_addrb = reord['addrb']
+        reord_ena = reord['ena']
+        reord_enb = reord['enb']
+        reord_p0_ph1_rdy = reord['p0_ph1_rdy']
+        reord_p0_ph2_rdy = reord['p0_ph2_rdy']
+        reord_p1_ph1_rdy = reord['p1_ph1_rdy']
+        reord_p1_ph2_rdy = reord['p1_ph2_rdy']
+
+        reord_datain_0 = reord_datain['d0']
+        reord_datain_1 = reord_datain['d1']
+        reord_datain_2 = reord_datain['d2']
+        reord_datain_3 = reord_datain['d3']
+        reord_datain_4 = reord_datain['d4']
+        reord_datain_5 = reord_datain['d5']
+        reord_datain_6 = reord_datain['d6']
+        reord_datain_7 = reord_datain['d7']
+
+        reord_dataout_0 = reord_dataout['d0']
+        reord_dataout_1 = reord_dataout['d1']
+        reord_dataout_2 = reord_dataout['d2']
+        reord_dataout_3 = reord_dataout['d3']
+        reord_dataout_4 = reord_dataout['d4']
+        reord_dataout_5 = reord_dataout['d5']
+        reord_dataout_6 = reord_dataout['d6']
+        reord_dataout_7 = reord_dataout['d7']
+
 
         # Toggle the capture control to allow a small window of capture time
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=0)
@@ -4012,8 +4057,8 @@ class coarse_delay:
             cd_output.extend([pre_pfb0_0[x], pre_pfb0_1[x], pre_pfb0_2[x], pre_pfb0_3[x], pre_pfb0_4[x], pre_pfb0_5[x], pre_pfb0_6[x], pre_pfb0_7[x]])
 
 
-        for x in range(0, len(pre_pfb2_0)):
-            cd_output2.extend([pre_pfb2_0[x], pre_pfb2_1[x], pre_pfb2_2[x], pre_pfb2_3[x], pre_pfb2_4[x], pre_pfb2_5[x], pre_pfb2_6[x], pre_pfb2_7[x]])
+        #for x in range(0, len(pre_pfb2_0)):
+        #    cd_output2.extend([pre_pfb2_0[x], pre_pfb2_1[x], pre_pfb2_2[x], pre_pfb2_3[x], pre_pfb2_4[x], pre_pfb2_5[x], pre_pfb2_6[x], pre_pfb2_7[x]])
 
 
         print ''
@@ -4029,22 +4074,59 @@ class coarse_delay:
             pfb_pol0_real.extend([pfb0_r0[x], pfb0_r1[x], pfb0_r2[x], pfb0_r3[x]])
             pfb_pol0_imag.extend([pfb0_i0[x], pfb0_i1[x], pfb0_i2[x], pfb0_i3[x]])
 
-            pfb_pol1_real.extend([pfb1_r0[x], pfb1_r1[x], pfb1_r2[x], pfb1_r3[x]])
-            pfb_pol1_imag.extend([pfb1_i0[x], pfb1_i1[x], pfb1_i2[x], pfb1_i3[x]])
+            #pfb_pol1_real.extend([pfb1_r0[x], pfb1_r1[x], pfb1_r2[x], pfb1_r3[x]])
+            #pfb_pol1_imag.extend([pfb1_i0[x], pfb1_i1[x], pfb1_i2[x], pfb1_i3[x]])
 
         print ''
         print 'Repack Done'
         print '-----------'
 
+
+
         print ''
         print 'Plotting figures'
         print '----------------'
 
+
+        plt.figure(1)
+        plt.ion()
+        plt.clf()
+        plt.subplot(211)
+        plt.plot(reord_addra)
+        plt.subplot(212)
+        plt.plot(reord_ena)
+
+        plt.figure(2)
+        plt.ion()
+        plt.clf()
+        plt.subplot(211)
+        plt.plot(reord_addrb)
+        plt.subplot(212)
+        plt.plot(reord_enb)
+
+        plt.figure(3)
+        plt.ion()
+        plt.clf()
+        plt.subplot(411)
+        plt.plot(reord_p0_ph1_rdy)
+        plt.subplot(412)
+        plt.plot(reord_p0_ph2_rdy)
+        plt.subplot(413)
+        plt.plot(reord_p1_ph1_rdy)
+        plt.subplot(414)
+        plt.plot(reord_p1_ph2_rdy)
+
+
+
+
+        '''
         # Time Domain of input
         plt.figure(1)
         plt.ion()
         plt.clf()
-        plt.plot(input[0:read_length])
+        #plt.plot(input[0:read_length])
+        plt.plot(input)
+
 
         # Freq Domain of input
         fft_input = np.fft.fft(input[0:read_length])
@@ -4058,7 +4140,8 @@ class coarse_delay:
         plt.figure(3)
         plt.ion()
         plt.clf()
-        plt.plot(cd_output[0:read_length])
+        #plt.plot(cd_output[0:read_length])
+        plt.plot(cd_output)
 
         # Freq Domain of CD output
         fft_cd_output = np.fft.fft(cd_output[0:read_length])
@@ -4067,10 +4150,56 @@ class coarse_delay:
         plt.clf()
         plt.plot(20 * np.log10(np.power(fft_cd_output[0:read_length], 2)))
 
+
+        pfb_pol0_cmplx = pfb_pol0_real + ([i * 1j for i in pfb_pol0_imag])
+
+        pfb_pol1_cmplx = pfb_pol1_real + ([i * 1j for i in pfb_pol1_imag])
+
+        log_pfb_pol0 = 20 * np.log10(np.power(pfb_pol0_cmplx, 2))
+
+
         plt.figure(5)
         plt.ion()
         plt.clf()
-        plt.plot(cd_output2)
+        plt.subplot(311)
+        plt.plot(log_pfb_pol0)
+
+        plt.subplot(312)
+        plt.plot(sync_pfb)
+
+        plt.subplot(313)
+        plt.plot(dv_pfb)
+
+
+        plt.figure(6)
+        plt.ion()
+        plt.clf()
+        plt.subplot(811)
+        plt.plot(reord_addra)
+        plt.subplot(812)
+        plt.plot(reord_addrb)
+        plt.subplot(813)
+        plt.plot(reord_ena)
+        plt.subplot(814)
+        plt.plot(reord_enb)
+        plt.subplot(815)
+        plt.plot(reord_p0_ph1_rdy)
+        plt.subplot(816)
+        plt.plot(reord_p0_ph2_rdy)
+        plt.subplot(817)
+        plt.plot(reord_p1_ph1_rdy)
+        plt.subplot(818)
+        plt.plot(reord_p1_ph2_rdy)
+
+        '''
+
+
+
+        plt.show()
+
+
+
+        # Spare
 
         '''
         # Plot Outputs
@@ -4138,29 +4267,6 @@ class coarse_delay:
         plt.plot(dv_pre_pfb[0:read_length])
         '''
 
-
-        pfb_pol0_cmplx = pfb_pol0_real + ([i * 1j for i in pfb_pol0_imag])
-
-        pfb_pol1_cmplx = pfb_pol1_real + ([i * 1j for i in pfb_pol1_imag])
-
-        log_pfb_pol0 = 20 * np.log10(np.power(pfb_pol0_cmplx, 2))
-
-
-        plt.figure(6)
-        plt.ion()
-        plt.clf()
-        plt.subplot(311)
-        plt.plot(log_pfb_pol0)
-        #plt.plot(log_pfb_pol0_imag)
-
-        plt.subplot(312)
-        plt.plot(sync_pfb)
-
-        plt.subplot(313)
-        plt.plot(dv_pfb)
-
-
-
         '''
         plt.figure(4)
         plt.ion()
@@ -4209,9 +4315,3 @@ class coarse_delay:
         plt.subplot(616)
         plt.plot(dv_pfb)
         '''
-
-
-        plt.show()
-
-
-
