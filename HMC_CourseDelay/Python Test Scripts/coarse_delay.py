@@ -18,6 +18,26 @@ class coarse_delay:
         #casperfpga.skarab_fpga.logging.getLogger().setLevel(casperfpga.skarab_fpga.logging.DEBUG)
         print "Test course delay on SKARAB"
 
+    def skarab_info(self):
+        print 'Grabbing System info'
+        print "--------------------"
+
+        # Specify skarab to use
+        # Spare SKARAB: skarab020304-01
+        skarab_ip = '10.100.205.202'
+
+        print "Communicating to SKARAB: %s" % skarab_ip
+
+        self.f = casperfpga.CasperFpga(skarab_ip)
+
+        self.f.get_system_information('/tmp/s_cd_hmc_v3_pol0_2017-8-31_1217.fpg')
+
+
+        print 'Grabbing System info: Done'
+        print "--------------------"
+        print ''
+
+
     def skarab(self):
 
         print 'Grabbing System info'
@@ -36,8 +56,8 @@ class coarse_delay:
 
         #self.f = casperfpga.CasperFpga('skarab0304-01')
 
-        #self.f.get_system_information('/tmp/s_c856m4k_cd_2017-7-26_1427.fpg')
-        self.f.get_system_information('/tmp/s_cd_hmc_v3_2017-8-30_1316.fpg')
+        #self.f.get_system_information('/tmp/s_cd_hmc_v3_2017-8-31_0722.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v3_pol0_2017-8-31_1217.fpg')
 
 
         print 'Grabbing System info: Done'
@@ -80,7 +100,8 @@ class coarse_delay:
         # Programming file
         #prog_file = "/tmp/s_cd_hmc_v2_pol0_2017-6-28_1459.fpg"
 
-        prog_file = "/tmp/s_cd_hmc_v3_2017-8-30_1316.fpg"
+        #prog_file = "/tmp/s_cd_hmc_v3_2017-8-31_0722.fpg"
+        prog_file = "/tmp/s_cd_hmc_v3_pol0_2017-8-31_1217.fpg"
 
         # Create FPGA Object
         #self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -3606,6 +3627,285 @@ class coarse_delay:
             print ''
 
 
+
+
+
+    def reorder(self, arm_mode, trig_mode, valid_mode, plot_count_max, disp_length, delay, read_length, sync_sel):
+        self.skarab_info()
+
+
+        # Disable the dvalid
+        self.f.registers.dvalid.write(reg=0)
+
+        self.f.registers.control.write(sys_rst=1)
+        self.f.registers.control.write(sys_rst=0)
+
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_clear_hmc.write(reg=1)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_clear_hmc.write(reg=0)
+
+        self.f.registers.sync_select.write(reg=sync_sel)
+        self.f.registers.man_sync.write(reg=0)
+
+        # Reset the plot counter
+        plot_count = 0
+
+        # Set delay for test
+        self.f.registers.delay0.write(initial=delay)
+
+        # Reset sync monitor
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=1)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=0)
+
+        #Arm and load
+        self.f.registers.tl_cd0_control.write(arm=1)
+        self.f.registers.tl_cd0_control.write(load_immediate=0)
+        self.f.registers.tl_cd0_control.write(arm=0)
+
+
+        # Set the trig_arm
+        self.f.registers.control.write(adc_snap_arm=0)
+
+        # Enable the TVG
+        self.f.registers.control.write(tvg_adc=0)
+
+        # Reset sync monitor
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=1)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=0)
+
+
+        print "System Information"
+        print "------------------"
+        print 'Requested delay is %s' % delay
+        print "Actual Delay is: %s" % self.f.registers.delay0.read()
+        # print "Loaded value is: %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_delay.read()
+        print " "
+        #print "Amplitude and Offset P0 is %s" % self.f.registers.impulse0.read()
+        #print "Amplitude and Offset P1 is %s" % self.f.registers.impulse1.read()
+        print " "
+
+        print 'Checking Initial Sync and Dvalid states'
+        print "---------------------------------------"
+
+        # Arm the Snapshot Blocks
+        # -----------------------
+        print 'Arming Snapblocks'
+        print "-----------------"
+
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reorda_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reordb_ss.arm()
+
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_din_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.arm()
+
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_Reorder_cntrl_reord_int_ss.arm()
+
+        print " "
+
+
+        print 'Starting TVG'
+        print "------------"
+
+        # Check if any clashes exist
+        print "Pol0 HMC write clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_err_p0.read()
+        print "Pol0 HMC read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_rd_err_p0.read()
+        print "Pol0 HMC write/read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_rd_rdy_clash_p0.read()
+        print "Pol1 HMC write clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_err_p1.read()
+        print "Pol1 HMC read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_rd_err_p1.read()
+        print "Pol1 HMC write/read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_rd_rdy_clash_p1.read()
+        print ''
+        print "--------------------------------------------------------------------------------------------------------"
+
+        # Force a relock
+        self.f.registers.control.write(sys_rst=1)
+        self.f.registers.control.write(sys_rst=0)
+
+        # Set the trig_arm
+        #self.f.registers.control.write(adc_snap_arm=1)
+        #print " "
+
+        # Manually set sync and dvalid
+        self.f.registers.man_sync.write(reg=1)
+        self.f.registers.man_sync.write(reg=0)
+        self.f.registers.dvalid.write(reg=1)
+
+        print 'Grabbing Snapshot Data'
+        print "----------------------"
+
+        print "Grabbing snap_reorda"
+        reorda = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reorda_ss.read(arm=False, man_trig=trig_mode,
+                                                                                        man_valid=valid_mode)['data']
+        print "Grabbing snap_reordb"
+        reordb = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reordb_ss.read(arm=False, man_trig=trig_mode,
+                                                                                        man_valid=valid_mode)['data']
+
+        print "Grabbing snap_reordb"
+        reord_int = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_Reorder_cntrl_reord_int_ss.read(arm=False, man_trig=trig_mode,
+                                                                                        man_valid=valid_mode)['data']
+
+        print "Grabbing snap_reord_datain"
+        reord_datain = \
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_din_ss.read(arm=False, man_trig=trig_mode,
+                                                                                     man_valid=valid_mode)['data']
+
+        print "Grabbing snap_reord_dataout"
+        reord_dataout = \
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.read(arm=False, man_trig=trig_mode,
+                                                                                      man_valid=valid_mode)['data']
+
+        reord_addra_s1 = reorda['addra']
+        reord_addrb_s1 = reorda['addrb']
+        reord_ena_s1 = reorda['ena']
+        reord_enb_s1 = reorda['enb']
+        reord_p0_ph1_rdy_s1 = reorda['p0_ph1_rdy']
+        reord_p0_ph2_rdy_s1 = reorda['p0_ph2_rdy']
+        reord_p1_ph1_rdy_s1 = reorda['p1_ph1_rdy']
+        reord_p1_ph2_rdy_s1 = reorda['p1_ph2_rdy']
+
+        reord_addrb_s2 = reordb['addrb']
+        reord_enb_s2 = reordb['enb']
+        reord_p0_ph1_rdy_s2 = reordb['p0_ph1_rdy']
+        reord_p0_ph2_rdy_s2 = reordb['p0_ph2_rdy']
+        reord_p1_ph1_rdy_s2 = reordb['p1_ph1_rdy']
+        reord_p1_ph2_rdy_s2 = reordb['p1_ph2_rdy']
+
+        reord_int_rd_addr_en = reord_int['rd_addr_en']
+        reord_int_bram_rd_en = reord_int['bram_rd_en']
+        reord_int_bram_rd_addr_full = reord_int['bram_rd_addr_full']
+        reord_int_bram_rd_addr = reord_int['bram_rd_addr']
+        reord_int_rst = reord_int['rst']
+        reord_int_rst_reg = reord_int['reg_rst']
+        reord_int_wr_en = reord_int['wr_en']
+        reord_int_wr_cnt = reord_int['wr_cnt']
+        reord_int_reord_p0_ph1_rdy_s2 = reord_int['p0_ph1_rdy']
+        reord_int_reord_p0_ph2_rdy_s2 = reord_int['p0_ph2_rdy']
+        reord_int_reord_p1_ph1_rdy_s2 = reord_int['p1_ph1_rdy']
+        reord_int_reord_p1_ph2_rdy_s2 = reord_int['p1_ph2_rdy']
+
+
+        reord_datain_0 = reord_datain['d0']
+        reord_datain_1 = reord_datain['d1']
+        reord_datain_2 = reord_datain['d2']
+        reord_datain_3 = reord_datain['d3']
+        reord_datain_4 = reord_datain['d4']
+        reord_datain_5 = reord_datain['d5']
+        reord_datain_6 = reord_datain['d6']
+        reord_datain_7 = reord_datain['d7']
+
+        reord_dataout_0 = reord_dataout['d0']
+        reord_dataout_1 = reord_dataout['d1']
+        reord_dataout_2 = reord_dataout['d2']
+        reord_dataout_3 = reord_dataout['d3']
+        reord_dataout_4 = reord_dataout['d4']
+        reord_dataout_5 = reord_dataout['d5']
+        reord_dataout_6 = reord_dataout['d6']
+        reord_dataout_7 = reord_dataout['d7']
+
+        # Toggle the capture control to allow a small window of capture time
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=0)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl_rst.write(reg=1)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl_rst.write(reg=0)
+
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=1)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=0)
+
+
+
+        print ''
+        print 'Pack the input correctly'
+        print '------------------------'
+        input = []
+
+        for x in range(0, len(reord_datain_0)):
+            input.extend([reord_datain_0[x], reord_datain_1[x], reord_datain_2[x], reord_datain_3[x], reord_datain_4[x], reord_datain_5[x], reord_datain_6[x], reord_datain_7[x]])
+
+        print ''
+        print 'Pack the CD output'
+        print '------------------'
+        output = []
+
+
+        for x in range(0, len(reord_dataout_0)):
+            output.extend([reord_dataout_0[x], reord_dataout_1[x], reord_dataout_2[x], reord_dataout_3[x], reord_dataout_4[x], reord_dataout_5[x],
+                              reord_dataout_6[x], reord_dataout_7[x]])
+
+
+        print ''
+        print 'Repack Done'
+        print '-----------'
+
+        print ''
+        print 'Plotting figures'
+        print '----------------'
+
+        plt.figure(1)
+        plt.ion()
+        plt.clf()
+        plt.subplot(211)
+        plt.plot(reord_addra_s1)
+        plt.subplot(212)
+        plt.plot(reord_ena_s1)
+
+        plt.figure(2)
+        plt.ion()
+        plt.clf()
+        plt.subplot(211)
+        plt.plot(reord_addrb_s1)
+        plt.subplot(212)
+        plt.plot(reord_enb_s1)
+
+        plt.figure(3)
+        plt.ion()
+        plt.clf()
+        plt.subplot(411)
+        plt.plot(reord_p0_ph1_rdy_s1)
+        plt.subplot(412)
+        plt.plot(reord_p0_ph2_rdy_s1)
+        plt.subplot(413)
+        plt.plot(reord_p1_ph1_rdy_s1)
+        plt.subplot(414)
+        plt.plot(reord_p1_ph2_rdy_s1)
+
+        plt.figure(4)
+        plt.ion()
+        plt.clf()
+        plt.subplot(211)
+        plt.plot(reord_addrb_s2)
+        plt.subplot(212)
+        plt.plot(reord_enb_s2)
+
+        plt.figure(5)
+        plt.ion()
+        plt.clf()
+        plt.subplot(411)
+        plt.plot(reord_p0_ph1_rdy_s2)
+        plt.subplot(412)
+        plt.plot(reord_p0_ph2_rdy_s2)
+        plt.subplot(413)
+        plt.plot(reord_p1_ph1_rdy_s2)
+        plt.subplot(414)
+        plt.plot(reord_p1_ph2_rdy_s2)
+
+
+        plt.figure(6)
+        plt.ion()
+        plt.clf()
+        plt.plot(input[0:read_length])
+
+        plt.figure(7)
+        plt.ion()
+        plt.clf()
+        plt.plot(output[0:read_length])
+
+
+
+        plt.show()
+
+        # Spare
+
+
+
+
+
     # PFB
     # ---
     def pfb(self, arm_mode, trig_mode, valid_mode, plot_count_max, disp_length, delay, read_length):
@@ -3692,7 +3992,9 @@ class coarse_delay:
         self.f.snapshots.snap_pfb0_ss.arm()
         #self.f.snapshots.snap_pfb1_ss.arm()
 
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reorda_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reordb_ss.arm()
+
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_datain_ss.arm()
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_dataout_ss.arm()
 
@@ -3757,8 +4059,12 @@ class coarse_delay:
         #print "Grabbing snap_pfb0"
         #pfb1 = self.f.snapshots.snap_pfb1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
-        print "Grabbing snap_reord"
-        reord = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        print "Grabbing snap_reorda"
+        reorda = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reorda_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        print "Grabbing snap_reordb"
+        reordb = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reordb_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+
 
         print "Grabbing snap_reord_datain"
         reord_datain = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_datain_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
@@ -3848,14 +4154,21 @@ class coarse_delay:
         pfb1_i3 = pfb1['i3']
         '''
 
-        reord_addra = reord['addra']
-        reord_addrb = reord['addrb']
-        reord_ena = reord['ena']
-        reord_enb = reord['enb']
-        reord_p0_ph1_rdy = reord['p0_ph1_rdy']
-        reord_p0_ph2_rdy = reord['p0_ph2_rdy']
-        reord_p1_ph1_rdy = reord['p1_ph1_rdy']
-        reord_p1_ph2_rdy = reord['p1_ph2_rdy']
+        reord_addra = reorda['addra']
+        reord_addrb = reorda['addrb']
+        reord_ena = reorda['ena']
+        reord_enb = reorda['enb']
+        reord_p0_ph1_rdy = reorda['p0_ph1_rdy']
+        reord_p0_ph2_rdy = reorda['p0_ph2_rdy']
+        reord_p1_ph1_rdy = reorda['p1_ph1_rdy']
+        reord_p1_ph2_rdy = reorda['p1_ph2_rdy']
+
+        reord_addrb = reorda['addrb']
+        reord_enb = reorda['enb']
+        reord_p0_ph1_rdy = reorda['p0_ph1_rdy']
+        reord_p0_ph2_rdy = reorda['p0_ph2_rdy']
+        reord_p1_ph1_rdy = reorda['p1_ph1_rdy']
+        reord_p1_ph2_rdy = reorda['p1_ph2_rdy']
 
         reord_datain_0 = reord_datain['d0']
         reord_datain_1 = reord_datain['d1']
