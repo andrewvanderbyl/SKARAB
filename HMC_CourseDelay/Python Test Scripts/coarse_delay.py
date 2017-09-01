@@ -56,9 +56,7 @@ class coarse_delay:
 
         #self.f = casperfpga.CasperFpga('skarab0304-01')
 
-        #self.f.get_system_information('/tmp/s_cd_hmc_v3_2017-8-31_0722.fpg')
-        self.f.get_system_information('/tmp/s_cd_hmc_v3_pol0_2017-8-31_1217.fpg')
-
+        self.f.get_system_information('/tmp/s_cd_hmc_v3_2017-9-1_1120.fpg')
 
         print 'Grabbing System info: Done'
         print ''
@@ -100,8 +98,8 @@ class coarse_delay:
         # Programming file
         #prog_file = "/tmp/s_cd_hmc_v2_pol0_2017-6-28_1459.fpg"
 
-        #prog_file = "/tmp/s_cd_hmc_v3_2017-8-31_0722.fpg"
-        prog_file = "/tmp/s_cd_hmc_v3_pol0_2017-8-31_1217.fpg"
+        prog_file = "/tmp/s_cd_hmc_v3_2017-9-1_1120.fpg"
+        #prog_file = "/tmp/s_cd_hmc_v3_pol0_2017-8-31_1217.fpg"
 
         # Create FPGA Object
         #self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -3908,7 +3906,7 @@ class coarse_delay:
 
     # PFB
     # ---
-    def pfb(self, arm_mode, trig_mode, valid_mode, plot_count_max, disp_length, delay, read_length):
+    def pfb(self, arm_mode, trig_mode, valid_mode, delay, read_length):
 
         self.skarab()
 
@@ -3998,6 +3996,8 @@ class coarse_delay:
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_datain_ss.arm()
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_dataout_ss.arm()
 
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_Reorder_cntrl_snap_reord_int_ss.arm()
+
         print " "
 
 
@@ -4072,6 +4072,9 @@ class coarse_delay:
         print "Grabbing snap_reord_dataout"
         reord_dataout = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_snap_reord_dataout_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
+        print "Grabbing snap_reordb"
+        reord_int = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_Reorder_cntrl_snap_reord_int_ss.read(arm=False, man_trig=False,
+                                                                                        man_valid=False)['data']
 
 
         # CD Input data pol0
@@ -4154,21 +4157,44 @@ class coarse_delay:
         pfb1_i3 = pfb1['i3']
         '''
 
-        reord_addra = reorda['addra']
-        reord_addrb = reorda['addrb']
-        reord_ena = reorda['ena']
-        reord_enb = reorda['enb']
-        reord_p0_ph1_rdy = reorda['p0_ph1_rdy']
-        reord_p0_ph2_rdy = reorda['p0_ph2_rdy']
-        reord_p1_ph1_rdy = reorda['p1_ph1_rdy']
-        reord_p1_ph2_rdy = reorda['p1_ph2_rdy']
+        reord_addra_s1 = reorda['addra']
+        reord_addrb_s1 = reorda['addrb']
+        reord_ena_s1 = reorda['ena']
+        reord_enb_s1 = reorda['enb']
+        reord_p0_ph1_rdy_s1 = reorda['p0_ph1_rdy']
+        reord_p0_ph2_rdy_s1 = reorda['p0_ph2_rdy']
+        reord_p1_ph1_rdy_s1 = reorda['p1_ph1_rdy']
+        reord_p1_ph2_rdy_s1 = reorda['p1_ph2_rdy']
 
-        reord_addrb = reorda['addrb']
-        reord_enb = reorda['enb']
-        reord_p0_ph1_rdy = reorda['p0_ph1_rdy']
-        reord_p0_ph2_rdy = reorda['p0_ph2_rdy']
-        reord_p1_ph1_rdy = reorda['p1_ph1_rdy']
-        reord_p1_ph2_rdy = reorda['p1_ph2_rdy']
+        reord_addrb_s2 = reordb['addrb']
+        reord_enb_s2 = reordb['enb']
+        reord_p0_ph1_rdy_s2 = reordb['p0_ph1_rdy']
+        reord_p0_ph2_rdy_s2 = reordb['p0_ph2_rdy']
+        reord_p1_ph1_rdy_s2 = reordb['p1_ph1_rdy']
+        reord_p1_ph2_rdy_s2 = reordb['p1_ph2_rdy']
+
+        reord_int_rd_addr_en = reord_int['rd_addr_en']
+        reord_int_bram_rd_en = reord_int['bram_rd_en']
+        reord_int_bram_rd_addr_full = reord_int['bram_rd_addr_full']
+        reord_int_bram_rd_addr = reord_int['bram_rd_addr']
+        reord_int_rst = reord_int['rst']
+        reord_int_rst_reg = reord_int['reg_rst']
+        reord_int_wr_en = reord_int['wr_en']
+        reord_int_wr_cnt = reord_int['wr_cnt']
+        reord_int_reord_p0_ph1_rdy_s2 = reord_int['p0_ph1_rdy']
+        reord_int_reord_p0_ph2_rdy_s2 = reord_int['p0_ph2_rdy']
+        reord_int_reord_p1_ph1_rdy_s2 = reord_int['p1_ph1_rdy']
+        reord_int_reord_p1_ph2_rdy_s2 = reord_int['p1_ph2_rdy']
+
+        reord_int_reord_half_reg1 = reord_int['half_reg1']
+        reord_int_reord_half_reg2 = reord_int['half_reg2']
+        reord_int_reord_full_reg1 = reord_int['full_reg1']
+        reord_int_reord_full_reg2 = reord_int['full_reg2']
+        reord_int_reord_half_reg_rst = reord_int['half_reg_rst']
+        reord_int_reord_full_reg_rst = reord_int['full_reg_rst']
+        reord_int_reord_cnt_en1 = reord_int['cnt_en1']
+        reord_int_reord_cnt_en2 = reord_int['cnt_en2']
+        reord_int_reord_out_lower = reord_int['out_lower']
 
         reord_datain_0 = reord_datain['d0']
         reord_datain_1 = reord_datain['d1']
@@ -4197,160 +4223,6 @@ class coarse_delay:
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=1)
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_dvalid_capture_cntrl.write(reg=0)
 
-        '''
-        print ''
-        print 'Pol 0'
-        print ''
-
-        print 'D00'
-        print '---'
-        print din_00[0:read_length]
-
-        print 'D01'
-        print '---'
-        print din_01[0:read_length]
-
-        print 'D02'
-        print '---'
-        print din_02[0:read_length]
-
-        print 'D03'
-        print '---'
-        print din_03[0:read_length]
-
-        print 'D04'
-        print '---'
-        print din_04[0:read_length]
-
-        print 'D05'
-        print '---'
-        print din_05[0:read_length]
-
-        print 'D06'
-        print '---'
-        print din_06[0:read_length]
-
-        print 'D07'
-        print '---'
-        print din_07[0:read_length]
-        print ''
-        print "--------------------------------------------------------------------------------------------------------"
-
-        print ''
-        print 'Pol 1'
-        print ''
-
-        print 'D00'
-        print '---'
-        print din_10[0:read_length]
-
-        print 'D01'
-        print '---'
-        print din_11[0:read_length]
-
-        print 'D02'
-        print '---'
-        print din_12[0:read_length]
-
-        print 'D03'
-        print '---'
-        print din_13[0:read_length]
-
-        print 'D04'
-        print '---'
-        print din_14[0:read_length]
-
-        print 'D05'
-        print '---'
-        print din_15[0:read_length]
-
-        print 'D06'
-        print '---'
-        print din_16[0:read_length]
-
-        print 'D07'
-        print '---'
-        print din_17[0:read_length]
-        print ''
-        print "--------------------------------------------------------------------------------------------------------"
-
-
-        print 'pre_pfb0'
-        print '--------'
-
-        print 'D00'
-        print '---'
-        print pre_pfb0_0[0:read_length]
-
-        print 'D01'
-        print '---'
-        print pre_pfb0_1[0:read_length]
-
-        print 'D02'
-        print '---'
-        print pre_pfb0_2[0:read_length]
-
-        print 'D03'
-        print '---'
-        print pre_pfb0_3[0:read_length]
-
-        print 'D04'
-        print '---'
-        print pre_pfb0_4[0:read_length]
-
-        print 'D05'
-        print '---'
-        print pre_pfb0_5[0:read_length]
-
-        print 'D06'
-        print '---'
-        print pre_pfb0_6[0:read_length]
-
-        print 'D07'
-        print '---'
-        print pre_pfb0_7[0:read_length]
-        print ''
-        print "--------------------------------------------------------------------------------------------------------"
-
-        print 'pre_pfb1'
-        print '--------'
-
-        print 'D00'
-        print '---'
-        print pre_pfb1_0[0:read_length]
-
-        print 'D01'
-        print '---'
-        print pre_pfb1_1[0:read_length]
-
-        print 'D02'
-        print '---'
-        print pre_pfb1_2[0:read_length]
-
-        print 'D03'
-        print '---'
-        print pre_pfb1_3[0:read_length]
-
-        print 'D04'
-        print '---'
-        print pre_pfb1_4[0:read_length]
-
-        print 'D05'
-        print '---'
-        print pre_pfb1_5[0:read_length]
-
-        print 'D06'
-        print '---'
-        print pre_pfb1_6[0:read_length]
-
-        print 'D07'
-        print '---'
-        print pre_pfb1_7[0:read_length]
-        print ''
-        print "--------------------------------------------------------------------------------------------------------"
-        print ''
-        '''
-
         print ''
         print 'Pack the input correctly'
         print '------------------------'
@@ -4363,15 +4235,10 @@ class coarse_delay:
         print 'Pack the CD output'
         print '------------------'
         cd_output = []
-        cd_output2 = []
 
 
         for x in range(0, len(pre_pfb0_0)):
             cd_output.extend([pre_pfb0_0[x], pre_pfb0_1[x], pre_pfb0_2[x], pre_pfb0_3[x], pre_pfb0_4[x], pre_pfb0_5[x], pre_pfb0_6[x], pre_pfb0_7[x]])
-
-
-        #for x in range(0, len(pre_pfb2_0)):
-        #    cd_output2.extend([pre_pfb2_0[x], pre_pfb2_1[x], pre_pfb2_2[x], pre_pfb2_3[x], pre_pfb2_4[x], pre_pfb2_5[x], pre_pfb2_6[x], pre_pfb2_7[x]])
 
 
         print ''
@@ -4404,32 +4271,75 @@ class coarse_delay:
         plt.figure(1)
         plt.ion()
         plt.clf()
-        plt.subplot(211)
-        plt.plot(reord_addra)
-        plt.subplot(212)
-        plt.plot(reord_ena)
+        plt.plot(input[0:read_length*2])
 
         plt.figure(2)
         plt.ion()
         plt.clf()
-        plt.subplot(211)
-        plt.plot(reord_addrb)
-        plt.subplot(212)
-        plt.plot(reord_enb)
+        plt.plot(cd_output[0:read_length*2])
 
         plt.figure(3)
         plt.ion()
         plt.clf()
         plt.subplot(411)
-        plt.plot(reord_p0_ph1_rdy)
+        plt.plot(reord_int_wr_en)
         plt.subplot(412)
-        plt.plot(reord_p0_ph2_rdy)
+        plt.plot(reord_int_wr_cnt)
         plt.subplot(413)
-        plt.plot(reord_p1_ph1_rdy)
+        plt.plot(reord_int_reord_half_reg1)
         plt.subplot(414)
-        plt.plot(reord_p1_ph2_rdy)
+        plt.plot(reord_int_reord_full_reg1)
 
+        plt.figure(4)
+        plt.ion()
+        plt.clf()
+        plt.subplot(411)
+        plt.plot(reord_int_reord_half_reg2)
+        plt.subplot(412)
+        plt.plot(reord_int_reord_full_reg2)
+        plt.subplot(413)
+        plt.plot(reord_int_reord_cnt_en1)
+        plt.subplot(414)
+        plt.plot(reord_int_reord_cnt_en2)
 
+        plt.figure(5)
+        plt.ion()
+        plt.clf()
+        plt.subplot(411)
+        plt.plot(reord_int_reord_p0_ph1_rdy_s2)
+        plt.subplot(412)
+        plt.plot(reord_int_reord_p1_ph1_rdy_s2)
+        plt.subplot(413)
+        plt.plot(reord_int_reord_p0_ph2_rdy_s2)
+        plt.subplot(414)
+        plt.plot(reord_int_reord_p1_ph2_rdy_s2)
+
+        embed()
+
+        '''
+        reord_int_rd_addr_en
+        reord_int_bram_rd_en
+        reord_int_bram_rd_addr_full
+        reord_int_bram_rd_addr
+        reord_int_rst
+        reord_int_rst_reg
+        reord_int_wr_en
+        reord_int_wr_cnt
+        reord_int_reord_p0_ph1_rdy_s2
+        reord_int_reord_p0_ph2_rdy_s2
+        reord_int_reord_p1_ph1_rdy_s2
+        reord_int_reord_p1_ph2_rdy_s2
+
+        reord_int_reord_half_reg1
+        reord_int_reord_half_reg2
+        reord_int_reord_full_reg1
+        reord_int_reord_full_reg2
+        reord_int_reord_half_reg_rst
+        reord_int_reord_full_reg_rst
+        reord_int_reord_cnt_en1
+        reord_int_reord_cnt_en2
+        reord_int_reord_out_lower
+        '''
 
 
         '''
@@ -4509,6 +4419,28 @@ class coarse_delay:
 
 
         plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
