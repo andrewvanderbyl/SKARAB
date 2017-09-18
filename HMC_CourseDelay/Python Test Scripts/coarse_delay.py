@@ -30,7 +30,7 @@ class coarse_delay:
 
         self.f = casperfpga.CasperFpga(skarab_ip)
 
-        self.f.get_system_information('/tmp/s_cd_hmc_v3_pol0_2017-9-13_1340.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v3_pol0_2017-9-14_1811.fpg')
 
 
         print 'Grabbing System info: Done'
@@ -56,7 +56,7 @@ class coarse_delay:
 
         #self.f = casperfpga.CasperFpga('skarab0304-01')
 
-        self.f.get_system_information('/tmp/s_cd_hmc_v3_pol0_2017-9-13_1340.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v3_dsim_2017-9-18_1153.fpg')
 
         print 'Grabbing System info: Done'
         print ''
@@ -96,8 +96,8 @@ class coarse_delay:
         skarab_ip = '10.100.205.202'
 
         # Programming file
-        prog_file = "/tmp/s_cd_hmc_v3_pol0_2017-9-13_1340.fpg"
-
+        #prog_file = "/tmp/s_cd_hmc_v3_pol0_2017-9-14_1811.fpg"
+        prog_file = "/tmp/s_cd_hmc_v3_dsim_2017-9-18_1153.fpg"
 
         # Create FPGA Object
         #self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -3918,9 +3918,6 @@ class coarse_delay:
         self.f.registers.sync_select.write(reg=sync_sel)
         self.f.registers.man_sync.write(reg=0)
 
-        # Reset the plot counter
-        plot_count = 0
-
         # Set delay for test
         self.f.registers.delay0.write(initial=delay)
 
@@ -3930,14 +3927,18 @@ class coarse_delay:
 
         # Arm and load
         self.f.registers.tl_cd0_control.write(arm=1)
-        self.f.registers.tl_cd0_control.write(load_immediate=0)
+        self.f.registers.tl_cd0_control.write(load_immediate=1)
         self.f.registers.tl_cd0_control.write(arm=0)
 
         # Set the trig_arm
         self.f.registers.control.write(adc_snap_arm=0)
 
+        # Set the trig_source
+        self.f.registers.control.write(adc_snap_trig_select=0)
+
         # Enable the TVG
         self.f.registers.control.write(tvg_adc=0)
+
 
         # Reset sync monitor
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=1)
@@ -3957,21 +3958,37 @@ class coarse_delay:
         print 'Arming Snapblocks'
         print "-----------------"
 
-        self.f.snapshots.cd_in_ss.arm()
+        self.f.snapshots.cd_in_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reorda_ss.arm()
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reordb_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reorda_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reordb_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_din_ss.arm()
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_din_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        self.f.snapshots.hmc_out_ss.arm()
+        self.f.snapshots.hmc_out_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        self.f.snapshots.wb_prog_delay_bs_in_ss.arm()
+        self.f.snapshots.wb_prog_delay_bs_in_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        self.f.snapshots.delay_tl_out_ss.arm()
+        self.f.snapshots.delay_tl_out_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 		
-        self.f.snapshots.cd_out_ss.arm()
+        self.f.snapshots.cd_out_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+
+
+
+        # Force a relock
+        self.f.registers.control.write(sys_rst=1)
+        self.f.registers.control.write(sys_rst=0)
+
+        # Set the trig_arm
+        # self.f.registers.control.write(adc_snap_arm=1)
+        # print " "
+
+        # Manually set sync and dvalid
+        self.f.registers.man_sync.write(reg=1)
+        self.f.registers.man_sync.write(reg=0)
+        self.f.registers.dvalid.write(reg=1)
+
 
         print " "
 
@@ -3988,53 +4005,37 @@ class coarse_delay:
         print ''
         print "--------------------------------------------------------------------------------------------------------"
 
-        # Force a relock
-        self.f.registers.control.write(sys_rst=1)
-        self.f.registers.control.write(sys_rst=0)
-
-        # Set the trig_arm
-        # self.f.registers.control.write(adc_snap_arm=1)
-        # print " "
-
-        # Manually set sync and dvalid
-        self.f.registers.man_sync.write(reg=1)
-        self.f.registers.man_sync.write(reg=0)
-        self.f.registers.dvalid.write(reg=1)
 
         print 'Grabbing Snapshot Data'
         print "----------------------"
 
-        print "Grabbing snap_reorda"
-        cd_in = self.f.snapshots.cd_in_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        print "Grabbing cd in"
+        cd_in = self.f.snapshots.cd_in_ss.read(arm=False)['data']
 
-        print "Grabbing snap_reorda"
-        reorda = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reorda_ss.read(arm=False, man_trig=trig_mode,
-                                                                                   man_valid=valid_mode)['data']
-        print "Grabbing snap_reordb"
-        reordb = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reordb_ss.read(arm=False, man_trig=trig_mode,
-                                                                                   man_valid=valid_mode)['data']
+        print "Grabbing reorda"
+        reorda = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reorda_ss.read(arm=False)['data']
+        print "Grabbing reordb"
+        reordb = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reordb_ss.read(arm=False)['data']
 
-        print "Grabbing snap_reord_datain"
+        print "Grabbing reord_datain"
         reord_datain = \
-            self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_din_ss.read(arm=False, man_trig=trig_mode,
-                                                                                 man_valid=valid_mode)['data']
+            self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_din_ss.read(arm=False)['data']
 
-        print "Grabbing snap_reord_dataout"
+        print "Grabbing reord_dataout"
         reord_dataout = \
-            self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.read(arm=arm_mode, man_trig=trig_mode,
-                                                                                  man_valid=valid_mode)['data']
+            self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.read(arm=False)['data']
 
-        print "Grabbing snap_reorda"
-        hmc_out = self.f.snapshots.hmc_out_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
+        print "Grabbing hmc_out"
+        hmc_out = self.f.snapshots.hmc_out_ss.read(arm=False)['data']
 
         print "Grabbing SS bs_in"
-        bs_in0 = self.f.snapshots.wb_prog_delay_bs_in_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
+        bs_in0 = self.f.snapshots.wb_prog_delay_bs_in_ss.read(arm=False)['data']
 
         print "Grabbing SS delay_tl_out"
-        delay_tl_out = self.f.snapshots.delay_tl_out_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
+        delay_tl_out = self.f.snapshots.delay_tl_out_ss.read(arm=False)['data']
 
         print "Grabbing cd_out"
-        cd_out = self.f.snapshots.cd_out_ss.read(arm=arm_mode, man_trig=trig_mode, man_valid=valid_mode)['data']
+        cd_out = self.f.snapshots.cd_out_ss.read(arm=False)['data']
 
 
         # Disable the dvalid
@@ -4928,36 +4929,60 @@ class coarse_delay:
 
         self.f.registers.impulse1.write(offset=0)
         self.f.registers.impulse1.write(amplitude=0.5)
+        # --------------------------------------------------------------------------------------------------------------
 
         # Set delay for test
         self.f.registers.delay0.write(initial=delay)
         self.f.registers.delay1.write(initial=delay)
 
         # Arm and load
-        self.f.registers.tl_cd0_control.write(arm=1)
-        self.f.registers.tl_cd0_control.write(load_immediate=1)
-        self.f.registers.tl_cd0_control.write(arm=0)
+        print ''
+        print "Set trig time"
+        local_time_msw = self.f.registers.local_time_msw.read()
+        print "Local Time (msw) is %s" % local_time_msw['data']['timestamp_msw']
 
-        self.f.registers.tl_cd1_control.write(arm=1)
-        self.f.registers.tl_cd1_control.write(load_immediate=1)
-        self.f.registers.tl_cd1_control.write(arm=0)
+        # Set new trig time
+        self.f.registers.tl_cd0_control.write(load_time_msw=local_time_msw['data']['timestamp_msw'] + 1)
+
+        print "Time load time is (msw) is %s" % self.f.registers.tl_cd0_control.read()
+        print ''
+
+        self.f.registers.tl_cd0_control.write(arm=1, load_immediate=1)
+        #self.f.registers.tl_cd0_control.write(arm=0, load_immediate=0)
+        # --------------------------------------------------------------------------------------------------------------
+
 
         # Enable the TVG
         self.f.registers.control.write(tvg_adc=0)
 
         self.f.registers.adc_en0.write(en=0)
         self.f.registers.adc_en1.write(en=0)
+        # --------------------------------------------------------------------------------------------------------------
 
         # Reset sync monitor
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=1)
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=0)
+        # --------------------------------------------------------------------------------------------------------------
+
+        # Set the Snap trig source
+        self.f.registers.control.write(adc_snap_trig_select=2)
 
         # Set the Snap trig time (if used)
         self.f.registers.trig_time_msw.write(msw=0)
         self.f.registers.trig_time_lsw.write(lsw=0)
 
-        # Set the Snap trig source
-        self.f.registers.control.write(adc_snap_trig_select=0)
+        #print ''
+        #print "Set trig time"
+        #local_time_msw = self.f.registers.local_time_msw.read()
+        #print "Local Time (msw) is %s" % local_time_msw['data']['timestamp_msw']
+
+        # Set new trig time
+        #self.f.registers.trig_time_msw.write(msw=local_time_msw['data']['timestamp_msw'] + 1)
+
+        #print "Trig Time (msw) is %s" % self.f.registers.trig_time_msw.read()
+        #print ''
+        # --------------------------------------------------------------------------------------------------------------
+
 
         # Check if HMC post and init are ok
         # post_reg = self.f.registers.cd_compensation0_cd_hmc_hmc_delay_cd_hmc_post.read()
@@ -4980,6 +5005,7 @@ class coarse_delay:
         # print "Post is %s" % post
         # print "Init is %s" % init
         print " "
+        # --------------------------------------------------------------------------------------------------------------
 
         print 'Checking Initial Sync and Dvalid states'
         print "---------------------------------------"
@@ -4988,22 +5014,21 @@ class coarse_delay:
         # -----------------------
         print 'Arming Snapblocks'
         print "-----------------"
-        self.f.snapshots.snap_adc0_ss.arm()
-        self.f.snapshots.snap_adc1_ss.arm()
+        self.f.snapshots.snap_adc0_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.snap_adc1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        #self.f.snapshots.snap_pre_pfb0_ss.arm()
+        self.f.snapshots.hmc_out_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        #self.f.snapshots.snap_pfb0_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reorda_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reordb_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reorda_ss.arm()
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reordb_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_din_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_din_ss.arm()
-
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.arm()
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
         #self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_Reorder_cntrl_snap_reord_int_ss.arm()
-        self.f.snapshots.cd_compensation1_cd_hmc_hmc_delay_Reorder_cntrl_reord_int_ss.arm()
+        self.f.snapshots.cd_compensation1_cd_hmc_hmc_delay_Reorder_cntrl_reord_int_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
 
         self.f.snapshots.cd_out_ss.arm()
@@ -5032,25 +5057,19 @@ class coarse_delay:
         print ''
         print "--------------------------------------------------------------------------------------------------------"
 
-        print ''
-        print "Set trig time"
-        local_time_msw = self.f.registers.local_time_msw.read()
-        print "Local Time (msw) is %s" % local_time_msw['data']['timestamp_msw']
 
-        # Set new trig time
-        self.f.registers.trig_time_msw.write(msw=local_time_msw['data']['timestamp_msw'] + 1)
-
-        print "Trig Time (msw) is %s" % self.f.registers.trig_time_msw.read()
-        print ''
 
         print 'Grabbing Snapshot Data'
         print "----------------------"
 
         print "Grabbing snap_adc0"
-        data_in0 = self.f.snapshots.snap_adc0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        data_in0 = self.f.snapshots.snap_adc0_ss.read(arm=False)['data']
 
         print "Grabbing snap_adc1"
-        data_in1 = self.f.snapshots.snap_adc1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        data_in1 = self.f.snapshots.snap_adc1_ss.read(arm=False)['data']
+
+        print "Grabbing hmc_out"
+        hmc_out = self.f.snapshots.snap_adc1_ss.read(arm=False)['data']
 
         #print "Grabbing snap_pre_pfb0"
         #pre_pfb0 = self.f.snapshots.snap_pre_pfb0_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
@@ -5069,35 +5088,28 @@ class coarse_delay:
         # pfb1 = self.f.snapshots.snap_pfb1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
 
         print "Grabbing snap_reorda"
-        reorda = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reorda_ss.read(arm=False, man_trig=trig_mode,
-                                                                                   man_valid=valid_mode)['data']
+        reorda = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reorda_ss.read(arm=False)['data']
 
         print "Grabbing snap_reordb"
-        reordb = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reordb_ss.read(arm=False, man_trig=trig_mode,
-                                                                                   man_valid=valid_mode)['data']
+        reordb = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reordb_ss.read(arm=False)['data']
 
         print "Grabbing snap_reord_datain"
         reord_datain0 = \
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_din_ss.read(arm=False, man_trig=trig_mode,
-                                                                             man_valid=valid_mode)['data']
-        # reord_datain1 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_datain1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
-
+        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_din_ss.read(arm=False)['data']
 
         print "Grabbing snap_reord_dataout"
-        reord_dataout0 = \
-        self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.read(arm=False, man_trig=trig_mode,
-                                                                              man_valid=valid_mode)['data']
+        reord_dataout0 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.read(arm=False)['data']
+        reord_dataout1 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout1_ss.read(arm=False)['data']
 
 
         print "Grabbing reord_int P1"
         reord_int_p1 = \
-        self.f.snapshots.cd_compensation1_cd_hmc_hmc_delay_Reorder_cntrl_reord_int_ss.read(arm=False, man_trig=trig_mode,
-                                                                              man_valid=valid_mode)['data']
+        self.f.snapshots.cd_compensation1_cd_hmc_hmc_delay_Reorder_cntrl_reord_int_ss.read(arm=False)['data']
 
         print "Grabbing cd_out"
-        cd_out = self.f.snapshots.cd_out_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        cd_out = self.f.snapshots.cd_out_ss.read(arm=False)['data']
 
-        cd_out1 = self.f.snapshots.cd_out1_ss.read(arm=False, man_trig=trig_mode, man_valid=valid_mode)['data']
+        cd_out1 = self.f.snapshots.cd_out1_ss.read(arm=False)['data']
 
         # CD Input data pol0
         sync_input = data_in0['sync']
@@ -5152,7 +5164,6 @@ class coarse_delay:
         reord_ena_0 = reord_datain0['ena']
 
 
-
         reord_dataout_00 = reord_dataout0['d0']
         reord_dataout_01 = reord_dataout0['d1']
         reord_dataout_02 = reord_dataout0['d2']
@@ -5161,6 +5172,16 @@ class coarse_delay:
         reord_dataout_05 = reord_dataout0['d5']
         reord_dataout_06 = reord_dataout0['d6']
         reord_dataout_07 = reord_dataout0['d7']
+
+        reord_dataout_08 = reord_dataout1['d0']
+        reord_dataout_09 = reord_dataout1['d1']
+        reord_dataout_10 = reord_dataout1['d2']
+        reord_dataout_11 = reord_dataout1['d3']
+        reord_dataout_12 = reord_dataout1['d4']
+        reord_dataout_13 = reord_dataout1['d5']
+        reord_dataout_14 = reord_dataout1['d6']
+        reord_dataout_15 = reord_dataout1['d7']
+
 
         reord_int_rd_addr_en = reord_int_p1['rd_addr_en']
         reord_int_bram_rd_en = reord_int_p1['bram_rd_en']
@@ -5174,6 +5195,16 @@ class coarse_delay:
         reord_int_reord_p0_ph2_rdy_s2 = reord_int_p1['p0_ph2_rdy']
         reord_int_reord_p1_ph1_rdy_s2 = reord_int_p1['p1_ph1_rdy']
         reord_int_reord_p1_ph2_rdy_s2 = reord_int_p1['p1_ph2_rdy']
+
+        hmc_out_00 = hmc_out['d0']
+        hmc_out_01 = hmc_out['d1']
+        hmc_out_02 = hmc_out['d2']
+        hmc_out_03 = hmc_out['d3']
+        hmc_out_04 = hmc_out['d4']
+        hmc_out_05 = hmc_out['d5']
+        hmc_out_06 = hmc_out['d6']
+        hmc_out_07 = hmc_out['d7']
+
 
         cd_out_00 = cd_out['d00']
         cd_out_01 = cd_out['d01']
@@ -5235,9 +5266,19 @@ class coarse_delay:
             dout0.extend([reord_dataout_00[x], reord_dataout_01[x], reord_dataout_02[x], reord_dataout_03[x],
                           reord_dataout_04[x], reord_dataout_05[x], reord_dataout_06[x], reord_dataout_07[x]])
 
-        # for x in range(0, len(reord_dataout_10)):
-        #    dout1.extend([reord_dataout_10[x], reord_dataout_11[x], reord_dataout_12[x], reord_dataout_13[x], reord_dataout_14[x], reord_dataout_15[x], reord_dataout_16[x], reord_dataout_17[x]])
+        for x in range(0, len(reord_dataout_08)):
+            dout1.extend([reord_dataout_08[x], reord_dataout_09[x], reord_dataout_10[x], reord_dataout_11[x],
+                          reord_dataout_12[x], reord_dataout_13[x], reord_dataout_14[x], reord_dataout_15[x]])
 
+
+        print ''
+        print 'Pack the hmc output'
+        print '-----------------------'
+        hmc_out0 = []
+
+        for x in range(0, len(hmc_out_00)):
+            hmc_out0.extend([hmc_out_00[x], hmc_out_01[x], hmc_out_02[x], hmc_out_03[x],
+                          hmc_out_04[x], hmc_out_05[x], hmc_out_06[x], hmc_out_07[x]])
 
         print ''
         print 'Pack the cd output'
@@ -5272,12 +5313,26 @@ class coarse_delay:
         plt.figure(2)
         plt.ion()
         plt.clf()
-        plt.plot(cd_out0)
+        plt.plot(dout0)
 
-        #plt.figure(3)
-        #plt.ion()
-        #plt.clf()
-        #plt.plot(cd_out1)
+        plt.figure(3)
+        plt.ion()
+        plt.clf()
+        plt.plot(dout1)
+
+
+        plt.figure(4)
+        plt.ion()
+        plt.clf()
+        plt.plot(hmc_out0)
+
+
+        plt.figure(5)
+        plt.ion()
+        plt.clf()
+        plt.plot(cd_out0[0:20000])
+
+
 
         '''
         plt.figure(4)
