@@ -30,7 +30,7 @@ class coarse_delay:
 
         self.f = casperfpga.CasperFpga(skarab_ip)
 
-        self.f.get_system_information('/tmp/s_cd_hmc_v3_pol0_2017-9-14_1811.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v3_pol0_2017-9-20_0756.fpg')
 
 
         print 'Grabbing System info: Done'
@@ -56,7 +56,7 @@ class coarse_delay:
 
         #self.f = casperfpga.CasperFpga('skarab0304-01')
 
-        self.f.get_system_information('/tmp/s_cd_hmc_v3_dsim_2017-9-18_1153.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v3_dsim_2017-9-20_1331.fpg')
 
         print 'Grabbing System info: Done'
         print ''
@@ -96,8 +96,8 @@ class coarse_delay:
         skarab_ip = '10.100.205.202'
 
         # Programming file
-        #prog_file = "/tmp/s_cd_hmc_v3_pol0_2017-9-14_1811.fpg"
-        prog_file = "/tmp/s_cd_hmc_v3_dsim_2017-9-18_1153.fpg"
+        #prog_file = "/tmp/s_cd_hmc_v3_pol0_2017-9-20_0756.fpg"
+        prog_file = "/tmp/s_cd_hmc_v3_dsim_2017-9-20_1331.fpg"
 
         # Create FPGA Object
         #self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -3985,9 +3985,10 @@ class coarse_delay:
         # print " "
 
         # Manually set sync and dvalid
+        self.f.registers.dvalid.write(reg=1)
         self.f.registers.man_sync.write(reg=1)
         self.f.registers.man_sync.write(reg=0)
-        self.f.registers.dvalid.write(reg=1)
+
 
 
         print " "
@@ -4955,8 +4956,8 @@ class coarse_delay:
         # Enable the TVG
         self.f.registers.control.write(tvg_adc=0)
 
-        self.f.registers.adc_en0.write(en=0)
-        self.f.registers.adc_en1.write(en=0)
+        #self.f.registers.adc_en0.write(en=0)
+        #self.f.registers.adc_en1.write(en=0)
         # --------------------------------------------------------------------------------------------------------------
 
         # Reset sync monitor
@@ -5027,7 +5028,6 @@ class coarse_delay:
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        #self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_Reorder_cntrl_snap_reord_int_ss.arm()
         self.f.snapshots.cd_compensation1_cd_hmc_hmc_delay_Reorder_cntrl_reord_int_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
 
@@ -5098,9 +5098,14 @@ class coarse_delay:
         self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_din_ss.read(arm=False)['data']
 
         print "Grabbing snap_reord_dataout"
-        reord_dataout0 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.read(arm=False)['data']
-        reord_dataout1 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout1_ss.read(arm=False)['data']
+        #reord_dataout0 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout_ss.read(arm=False)['data']
+        #reord_dataout1 = self.f.snapshots.cd_compensation0_cd_hmc_hmc_delay_reord_dout1_ss.read(arm=False)['data']
 
+        print ""
+        print "Grab reord_sync count"
+        print "Reord Sync upper count: %s" %self.f.registers.cd_compensation0_cd_hmc_hmc_delay_reord_sync_out_upper.read()
+        print "Reord Sync lower count: %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_reord_sync_out_lower.read()
+        print ""
 
         print "Grabbing reord_int P1"
         reord_int_p1 = \
@@ -5163,7 +5168,7 @@ class coarse_delay:
         reord_addra_0 = reord_datain0['addra']
         reord_ena_0 = reord_datain0['ena']
 
-
+        '''
         reord_dataout_00 = reord_dataout0['d0']
         reord_dataout_01 = reord_dataout0['d1']
         reord_dataout_02 = reord_dataout0['d2']
@@ -5181,7 +5186,7 @@ class coarse_delay:
         reord_dataout_13 = reord_dataout1['d5']
         reord_dataout_14 = reord_dataout1['d6']
         reord_dataout_15 = reord_dataout1['d7']
-
+        '''
 
         reord_int_rd_addr_en = reord_int_p1['rd_addr_en']
         reord_int_bram_rd_en = reord_int_p1['bram_rd_en']
@@ -5256,6 +5261,7 @@ class coarse_delay:
         #        [reord_datain_10[x], reord_datain_11[x], reord_datain_12[x], reord_datain_13[x], reord_datain_14[x],
         #         reord_datain_15[x], reord_datain_16[x], reord_datain_17[x]])
 
+        '''
         print ''
         print 'Pack the reorder output'
         print '-----------------------'
@@ -5269,7 +5275,7 @@ class coarse_delay:
         for x in range(0, len(reord_dataout_08)):
             dout1.extend([reord_dataout_08[x], reord_dataout_09[x], reord_dataout_10[x], reord_dataout_11[x],
                           reord_dataout_12[x], reord_dataout_13[x], reord_dataout_14[x], reord_dataout_15[x]])
-
+        '''
 
         print ''
         print 'Pack the hmc output'
@@ -5310,29 +5316,32 @@ class coarse_delay:
         #plt.clf()
         #plt.plot(input)
 
-        plt.figure(2)
-        plt.ion()
-        plt.clf()
-        plt.plot(dout0)
+        #plt.figure(2)
+        #plt.ion()
+        #plt.clf()
+        #plt.plot(dout0)
 
-        plt.figure(3)
-        plt.ion()
-        plt.clf()
-        plt.plot(dout1)
+        #plt.figure(3)
+        #plt.ion()
+        #plt.clf()
+        #plt.plot(dout1)
+
+
+        #plt.figure(4)
+        #plt.ion()
+        #plt.clf()
+        #plt.plot(hmc_out0)
 
 
         plt.figure(4)
         plt.ion()
         plt.clf()
-        plt.plot(hmc_out0)
+        plt.plot(cd_out0[0:16500])
 
-
-        plt.figure(5)
-        plt.ion()
-        plt.clf()
-        plt.plot(cd_out0[0:20000])
-
-
+        #plt.figure(5)
+        #plt.ion()
+        #plt.clf()
+        #plt.plot(cd_out1)
 
         '''
         plt.figure(4)
@@ -5475,3 +5484,64 @@ class coarse_delay:
         plt.subplot(616)
         plt.plot(dv_pfb)
         '''
+
+
+    def dsim_cd_cont_read(self, arm_mode, trig_mode, valid_mode, delay, read_length):
+        self.skarab()
+
+        print 'Grabbing Snapshot Data'
+        print "----------------------"
+
+        print "Grabbing cd_out"
+        cd_out = self.f.snapshots.cd_out_ss.read(arm=arm_mode)['data']
+
+        cd_out1 = self.f.snapshots.cd_out1_ss.read(arm=arm_mode)['data']
+
+        cd_out_00 = cd_out['d00']
+        cd_out_01 = cd_out['d01']
+        cd_out_02 = cd_out['d02']
+        cd_out_03 = cd_out['d03']
+        cd_out_04 = cd_out['d04']
+        cd_out_05 = cd_out['d05']
+        cd_out_06 = cd_out['d06']
+        cd_out_07 = cd_out['d07']
+
+        cd_out_10 = cd_out1['d00']
+        cd_out_11 = cd_out1['d01']
+        cd_out_12 = cd_out1['d02']
+        cd_out_13 = cd_out1['d03']
+        cd_out_14 = cd_out1['d04']
+        cd_out_15 = cd_out1['d05']
+        cd_out_16 = cd_out1['d06']
+        cd_out_17 = cd_out1['d07']
+
+        print ''
+        print 'Pack the cd output'
+        print '-----------------------'
+        cd_out0 = []
+        cd_out1 = []
+
+        for x in range(0, len(cd_out_00)):
+            cd_out0.extend(
+                [cd_out_00[x], cd_out_01[x], cd_out_02[x], cd_out_03[x], cd_out_04[x],
+                 cd_out_05[x], cd_out_06[x], cd_out_07[x]])
+
+        for x in range(0, len(cd_out_10)):
+            cd_out1.extend(
+                [cd_out_10[x], cd_out_11[x], cd_out_12[x], cd_out_13[x], cd_out_14[x],
+                 cd_out_15[x], cd_out_16[x], cd_out_17[x]])
+
+        print ''
+        print 'Repack Done'
+        print '-----------'
+
+        print ''
+        print 'Plotting figures'
+        print '----------------'
+
+        plt.figure(4)
+        plt.ion()
+        plt.clf()
+        plt.plot(cd_out0)
+
+        plt.show()
