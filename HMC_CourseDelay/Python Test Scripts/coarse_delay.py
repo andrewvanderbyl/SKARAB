@@ -30,7 +30,7 @@ class coarse_delay:
 
         self.f = casperfpga.CasperFpga(skarab_ip)
 
-        self.f.get_system_information('/tmp/s_cd_hmc_v3_pol0_2017-9-20_0756.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v3_pol0_2017-10-19_0752.fpg')
 
 
         print 'Grabbing System info: Done'
@@ -54,9 +54,11 @@ class coarse_delay:
 
         self.f = casperfpga.CasperFpga(skarab_ip)
 
-        #self.f = casperfpga.CasperFpga('skarab0304-01')
 
-        self.f.get_system_information('/tmp/s_cd_hmc_v3_dsim_2017-9-20_1331.fpg')
+        # Specify which fpg is in use
+        # ---------------------------
+        #self.f.get_system_information('/tmp/s_cd_hmc_v3_dsim_2017-9-20_1331.fpg')
+        self.f.get_system_information('/tmp/s_c856m4k_2017-10-19_0802.fpg')
 
         print 'Grabbing System info: Done'
         print ''
@@ -75,10 +77,11 @@ class coarse_delay:
 
         print "Core details"
         self.g.print_core_details()
-        print "Counters"
-        self.g.read_counters()
-        print "Stats"
-        self.g.get_stats()
+
+        #print "Counters"
+        #self.g.read_counters()
+        #print "Stats"
+        #self.g.get_stats()
 
         #f.registers.status_reo0.read()
         print "RX Dest IP"
@@ -96,8 +99,9 @@ class coarse_delay:
         skarab_ip = '10.100.205.202'
 
         # Programming file
-        #prog_file = "/tmp/s_cd_hmc_v3_pol0_2017-9-20_0756.fpg"
-        prog_file = "/tmp/s_cd_hmc_v3_dsim_2017-9-20_1331.fpg"
+        #prog_file = "/tmp/s_cd_hmc_v3_pol0_2017-10-19_0752.fpg"
+        #prog_file = "/tmp/s_cd_hmc_v3_dsim_2017-9-20_1331.fpg"
+        prog_file = "/tmp/s_c856m4k_2017-10-19_0802.fpg"
 
         # Create FPGA Object
         #self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -3912,6 +3916,7 @@ class coarse_delay:
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_clear_hmc.write(reg=1)
         self.f.registers.cd_compensation0_cd_hmc_hmc_delay_clear_hmc.write(reg=0)
 
+        # Issue system reset
         self.f.registers.control.write(sys_rst=1)
         self.f.registers.control.write(sys_rst=0)
 
@@ -4236,10 +4241,10 @@ class coarse_delay:
         #plt.clf()
         #plt.plot(bs_in)
 
-        plt.figure(4)
+        plt.figure(5)
         plt.ion()
         plt.clf()
-        plt.plot(cd_output)
+        plt.plot(cd_output[0:5000])
 
 
         #plt.figure(5)
@@ -5545,3 +5550,210 @@ class coarse_delay:
         plt.plot(cd_out0)
 
         plt.show()
+
+    # Test the Dsim with the FEng
+    # ---------------------------
+    def dsim_feng(self, trig_mode, valid_mode, delay, read_length):
+        self.skarab()
+
+
+        # Enable the TVG
+        self.f.registers.control.write(tvg_adc0=0)
+        self.f.registers.control.write(tvg_adc1=0)
+
+        self.f.registers.control.write(cd_bypass=1)
+
+        # Set the trig_arm
+        self.f.registers.control.write(adc_snap_arm=0)
+
+        # Set Impulse values
+        self.f.registers.impulse0.write(offset=100)
+        self.f.registers.impulse0.write(amplitude=1.0)
+
+        self.f.registers.impulse1.write(offset=0)
+        self.f.registers.impulse1.write(amplitude=1.0)
+
+        # Set delay for test
+        self.f.registers.delay0.write(initial=delay)
+        self.f.registers.delay1.write(initial=delay)
+
+        # Arm and load
+        self.f.registers.tl_cd0_control.write(arm=1)
+        self.f.registers.tl_cd0_control.write(load_immediate=1)
+        self.f.registers.tl_cd0_control.write(arm=0)
+
+        self.f.registers.tl_cd1_control.write(arm=1)
+        self.f.registers.tl_cd1_control.write(load_immediate=1)
+        self.f.registers.tl_cd1_control.write(arm=0)
+
+        # Reset sync monitor
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=1)
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_sync_mon_rst.write(reg=0)
+
+        # Set the Snap trig time (if used)
+        self.f.registers.trig_time_msw.write(msw=0)
+        self.f.registers.trig_time_lsw.write(lsw=0)
+
+        # Set the Snap trig source
+        self.f.registers.control.write(adc_snap_trig_select=1)
+
+        print "System Information"
+        print "------------------"
+        print 'Requested delay is %s' % delay
+        print "Actual Delay is: %s" % self.f.registers.delay0.read()
+
+        print " "
+        print "Amplitude and Offset P0 is %s" % self.f.registers.impulse0.read()
+        print "Amplitude and Offset P1 is %s" % self.f.registers.impulse1.read()
+        print " "
+
+        print 'Checking Initial Sync and Dvalid states'
+        print "---------------------------------------"
+
+        # Arm the Snapshot Blocks
+        # -----------------------
+        print 'Arming Snapblocks'
+        print "-----------------"
+        self.f.snapshots.snap_adc0_ss.arm()
+        self.f.snapshots.snap_adc1_ss.arm()
+
+        self.f.snapshots.snap_pre_pfb0_ss.arm()
+        self.f.snapshots.snap_pre_pfb1_ss.arm()
+
+        print "------------"
+        print 'Starting TVG'
+        print "------------"
+
+        # Set the trig_arm
+        self.f.registers.control.write(adc_snap_arm=1)
+        print " "
+
+        # Force a relock
+        self.f.registers.control.write(sys_rst=1)
+        self.f.registers.control.write(sys_rst=0)
+
+        # Check if any clashes exist
+        print "Pol0 HMC write clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_err_p0.read()
+        print "Pol0 HMC read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_rd_err_p0.read()
+        print "Pol0 HMC write/read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_rd_rdy_clash_p0.read()
+        print "Pol1 HMC write clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_err_p1.read()
+        print "Pol1 HMC read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_rd_err_p1.read()
+        print "Pol1 HMC write/read clash %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_wr_rd_rdy_clash_p1.read()
+        print ''
+        print "--------------------------------------------------------------------------------------------------------"
+
+        print ''
+        print "Set trig time"
+        local_time_msw = self.f.registers.local_time_msw.read()
+        print "Local Time (msw) is %s" % local_time_msw['data']['timestamp_msw']
+
+        # Set new trig time
+        self.f.registers.trig_time_msw.write(msw=local_time_msw['data']['timestamp_msw'] + 2)
+
+        print "Trig Time (msw) is %s" % self.f.registers.trig_time_msw.read()
+        print ''
+
+
+        print "link 2 sync in %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_lnk2_in_sync_count.read()
+        print "link 3 sync in %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_lnk3_in_sync_count.read()
+
+        print "link 2 sync out %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_lnk2_out_sync_count.read()
+        print "link 3 sync out %s" % self.f.registers.cd_compensation0_cd_hmc_hmc_delay_hmc_lnk3_out_sync_count.read()
+
+
+        print 'Grabbing Snapshot Data'
+        print "----------------------"
+
+        print "Grabbing snap_adc0"
+        #data_in0 = self.f.snapshots.snap_adc0_ss.read(man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        #print "Grabbing snap_adc1"
+        #data_in1 = self.f.snapshots.snap_adc1_ss.read(man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        print "Grabbing snap_pre_pfb0"
+        #pre_pfb0 = self.f.snapshots.snap_pre_pfb0_ss.read(man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        #print "Grabbing snap_pre_pfb1"
+        #pre_pfb1 = self.f.snapshots.snap_pre_pfb1_ss.read(man_trig=trig_mode, man_valid=valid_mode)['data']
+
+        # CD Input data pol0
+        #sync_input = data_in0['sync']
+        #dv_input = data_in0['dv']
+
+        #din_00 = data_in0['p0_d0']
+        #din_01 = data_in0['p0_d1']
+        #din_02 = data_in0['p0_d2']
+        #din_03 = data_in0['p0_d3']
+        #din_04 = data_in0['p0_d4']
+        #din_05 = data_in0['p0_d5']
+        #din_06 = data_in0['p0_d6']
+        #din_07 = data_in0['p0_d7']
+
+        # CD Input data pol1
+        #din_10 = data_in1['d0']
+        #din_11 = data_in1['d1']
+        #din_12 = data_in1['d2']
+        #din_13 = data_in1['d3']
+        #din_14 = data_in1['d4']
+        #din_15 = data_in1['d5']
+        #din_16 = data_in1['d6']
+        #din_17 = data_in1['d7']
+
+        # CD Output data
+        #sync_pre_pfb = pre_pfb0['sync']
+        #dv_pre_pfb = pre_pfb0['dv']
+
+        #pre_pfb0_0 = pre_pfb0['d0']
+        #pre_pfb0_1 = pre_pfb0['d1']
+        #pre_pfb0_2 = pre_pfb0['d2']
+        #pre_pfb0_3 = pre_pfb0['d3']
+        #pre_pfb0_4 = pre_pfb0['d4']
+        #pre_pfb0_5 = pre_pfb0['d5']
+        #pre_pfb0_6 = pre_pfb0['d6']
+        #pre_pfb0_7 = pre_pfb0['d7']
+
+        #pre_pfb1_0 = pre_pfb1['d0']
+        #pre_pfb1_1 = pre_pfb1['d1']
+        #pre_pfb1_2 = pre_pfb1['d2']
+        #pre_pfb1_3 = pre_pfb1['d3']
+        #pre_pfb1_4 = pre_pfb1['d4']
+        #pre_pfb1_5 = pre_pfb1['d5']
+        #pre_pfb1_6 = pre_pfb1['d6']
+        #pre_pfb1_7 = pre_pfb1['d7']
+
+        #input0 = []
+        #for x in range(0, len(pre_pfb0_0)):
+        #    input0.extend([pre_pfb0_0[x], pre_pfb0_1[x], pre_pfb0_2[x], pre_pfb0_3[x], pre_pfb0_4[x], pre_pfb0_5[x], pre_pfb0_6[x], pre_pfb0_7[x]])
+
+
+        print ''
+        print 'Pack the input correctly'
+        print '------------------------'
+        #input0 = []
+
+        #for x in range(0, len(din_00)):
+        #    input0.extend([din_00[x], din_01[x], din_02[x], din_03[x], din_04[x], din_05[x], din_06[x], din_07[x]])
+
+        #cd_out = []
+
+        #for x in range(0, len(pre_pfb0_0)):
+        #    cd_out.extend([pre_pfb0_0[x], pre_pfb0_1[x], pre_pfb0_2[x], pre_pfb0_3[x], pre_pfb0_4[x], pre_pfb0_5[x], pre_pfb0_6[x], pre_pfb0_7[x]])
+
+
+
+        #print ''
+        #print 'Plotting figures'
+        #print '----------------'
+
+        #plt.figure(1)
+        #plt.ion()
+        #plt.clf()
+        #plt.plot(input0[0:150])
+
+
+        #plt.figure(2)
+        #plt.ion()
+        #plt.clf()
+        #plt.plot(cd_out[0:150])
+
+        #plt.show()
