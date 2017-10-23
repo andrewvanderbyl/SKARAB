@@ -8,6 +8,22 @@ import numpy as np
 import spead64_48 as spead
 import time
 
+
+# Note: USED SKARABS
+#skarab020306-01
+#skarab020302-01
+#skarab020308-01
+#skarab020309-01
+#skarab02030C-01
+#skarab02030A-01
+#skarab02030B-01
+#skarab02030E-01
+
+# Spare:
+#skarab020307-01
+#skarab020304-01
+#skarab02030F-01
+
 class dsim:
     def __init__(self):
         #logging.basicConfig()
@@ -18,6 +34,7 @@ class dsim:
         # Specify skarab to use
         # Spare SKARAB: skarab020304-01
         skarab_ip = '10.100.205.202'
+
 
         # Programming file
         prog_file = "/tmp/s_deng_rev1_13_wide_2017-10-17_1606.fpg"
@@ -56,10 +73,25 @@ class dsim:
 
 
     def run_dsim(self, arm_mode, trig_mode, valid_mode):
+
+        self.skarab_info()
+
+
+        print "Set IP Addr"
+        print "-----------"
+        print "Gbe0 is: 239.2.0.64"
+        self.f.registers.gbe_iptx0.write(reg=4009885760)
+        print "Gbe0 is: 239.2.0.65"
+        self.f.registers.gbe_iptx1.write(reg=4009885761)
+        print "Gbe0 is: 239.2.0.66"
+        self.f.registers.gbe_iptx2.write(reg=4009885762)
+        print "Gbe0 is: 239.2.0.67"
+        self.f.registers.gbe_iptx3.write(reg=4009885763)
+
         print "Starting DSim"
         print "-------------"
 
-        self.skarab_info()
+
 
         # Set the DSim CWG0
 

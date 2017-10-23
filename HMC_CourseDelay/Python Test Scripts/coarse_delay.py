@@ -30,7 +30,7 @@ class coarse_delay:
 
         self.f = casperfpga.CasperFpga(skarab_ip)
 
-        self.f.get_system_information('/tmp/s_cd_hmc_v3_pol0_2017-10-19_0752.fpg')
+        self.f.get_system_information('/tmp/s_cd_hmc_v3_pol0_2017-10-23_0836.fpg')
 
 
         print 'Grabbing System info: Done'
@@ -50,7 +50,7 @@ class coarse_delay:
         # Specify which fpg is in use
         # ---------------------------
         #self.f.get_system_information('/tmp/s_cd_hmc_v3_dsim_2017-9-20_1331.fpg')
-        self.f.get_system_information('/tmp/s_c856m4k_2017-10-20_1037.fpg')
+        self.f.get_system_information('/tmp/s_c856m4k_2017-10-23_0836.fpg')
 
         print 'Grabbing System info: Done'
         print ''
@@ -75,7 +75,7 @@ class coarse_delay:
         # Specify which fpg is in use
         # ---------------------------
         #self.f.get_system_information('/tmp/s_cd_hmc_v3_dsim_2017-9-20_1331.fpg')
-        self.f.get_system_information('/tmp/s_c856m4k_2017-10-20_1037.fpg')
+        self.f.get_system_information('/tmp/s_c856m4k_2017-10-23_0836.fpg')
 
         print 'Grabbing System info: Done'
         print ''
@@ -118,7 +118,7 @@ class coarse_delay:
         # Programming file
         #prog_file = "/tmp/s_cd_hmc_v3_pol0_2017-10-19_0752.fpg"
         #prog_file = "/tmp/s_cd_hmc_v3_dsim_2017-9-20_1331.fpg"
-        prog_file = "/tmp/s_c856m4k_2017-10-20_1037.fpg"
+        prog_file = "/tmp/s_c856m4k_2017-10-23_0836.fpg"
 
         # Create FPGA Object
         #self.f = casperfpga.SkarabFpga(skarab_ip)
@@ -5573,6 +5573,8 @@ class coarse_delay:
     def dsim_feng(self, trig_mode, valid_mode, delay, read_length):
         self.skarab()
 
+        # Set HMC Clear
+        self.f.registers.cd_compensation0_cd_hmc_hmc_delay_clear_hmc_addr_ramge.write(reg=0)
 
         # Enable the TVG
         self.f.registers.control.write(tvg_adc0=1)
@@ -5584,7 +5586,7 @@ class coarse_delay:
         self.f.registers.control.write(adc_snap_arm=0)
 
         # Set Impulse values
-        self.f.registers.impulse0.write(offset=100)
+        self.f.registers.impulse0.write(offset=0)
         self.f.registers.impulse0.write(amplitude=1.0)
 
         self.f.registers.impulse1.write(offset=10)
