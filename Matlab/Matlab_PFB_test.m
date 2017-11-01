@@ -1,8 +1,8 @@
-function [Serial_Data, Sync, Dvalid] = Matlab_PFB_test(fft_length, no_taps, Sync_in,dvalid_in,Input_0,Input_1,Input_2,Input_3,Input_4,Input_5,Input_6,Input_7,pfb_sync,pfb_dv,pfb0,pfb1,pfb2,pfb3)
+function [Serial_Data, Sync, Dvalid] = Matlab_PFB_test(fft_length, no_taps, Sync_in,dvalid_in,Input_8,Input_7,Input_6,Input_5,Input_4,Input_3,Input_2,Input_1,pfb_sync,pfb_dv,pfb3,pfb2,pfb1,pfb0)
 
     % Recombine data (Time domain)
     sprintf('Recombine data (Time domain)')
-    [Serial_Data,Sync,Dvalid] = Parallel_Serial_sync(Sync_in,dvalid_in,Input_7,Input_6,Input_5,Input_4,Input_3,Input_2,Input_1,Input_0);
+    [Serial_Data,Sync,Dvalid] = Parallel_Serial_sync(Sync_in,dvalid_in,Input_8,Input_7,Input_6,Input_5,Input_4,Input_3,Input_2,Input_1);
 
     % Recombine data (PFB Simulink)
     sprintf('Recombine data (PFB Simulink)')
@@ -15,6 +15,7 @@ function [Serial_Data, Sync, Dvalid] = Matlab_PFB_test(fft_length, no_taps, Sync
     Valid_tone = Serial_Data(find_result_dv(1,1):end).*Dvalid(find_result_dv(1,1):end);
     % ---------------------------------------------------------------------
 
+    % -------------%
     % Simulink PFB %
     % -------------%
     
@@ -40,14 +41,22 @@ function [Serial_Data, Sync, Dvalid] = Matlab_PFB_test(fft_length, no_taps, Sync
         [pfb_current] = Valid_spec(start_point:end_point);
         start_point = end_point + 1;
         end_point = end_point + spectrum_length;
+        
+        figure(1)
+        semilogy(abs(pfb_current));
+                
         pfb = pfb + pfb_current;
 
-        figure(1)
+        figure(2)
         semilogy(abs(pfb));
         pause(0.1)
     end
     
     % ---------------------------------------------------------------------
+    
+    % -----------%
+    % Matlab PFB %
+    % -----------%
     
     % Step through the input data and run through the pfb 
     extract_length = fft_length*no_taps;

@@ -51,8 +51,8 @@ elseif (strcmp(Input_class,'struct'))
     
 elseif (strcmp(Input_class,'double'))
     Spec = zeros(4*length(Input_0),1);
-    Sync = zeros(4*length(Input_0.Data),1);
-    Dvalid = zeros(4*length(Input_0.Data),1);
+    Sync = zeros(4*length(Input_0),1);
+    Dvalid = zeros(4*length(Input_0),1);
 
     for i=1:length(Input_0)
        Spec(k+1,1) = Input_0(i);
