@@ -1,23 +1,12 @@
 function [Serial_Data, Sync, Dvalid] = Matlab_PFB_test(fft_length, no_taps, Sync_in,dvalid_in,Input_8,Input_7,Input_6,Input_5,Input_4,Input_3,Input_2,Input_1,pfb_sync,pfb_dv,pfb3,pfb2,pfb1,pfb0)
 
-    % Recombine data (Time domain)
-    sprintf('Recombine data (Time domain)')
-    [Serial_Data,Sync,Dvalid] = Parallel_Serial_sync(Sync_in,dvalid_in,Input_8,Input_7,Input_6,Input_5,Input_4,Input_3,Input_2,Input_1);
-
-    % Recombine data (PFB Simulink)
-    sprintf('Recombine data (PFB Simulink)')
-    [Spec,Spec_Sync,Spec_Dvalid] = Parallel_Serial_Spectral_4k(pfb0,pfb1,pfb2,pfb3,pfb_sync,pfb_dv);
-    % ---------------------------------------------------------------------
-
-    % Extract the valid region
-    sprintf('Extracting valid region from time domain data')
-    find_result_dv = find(dvalid_in.Data > 0);
-    Valid_tone = Serial_Data(find_result_dv(1,1):end).*Dvalid(find_result_dv(1,1):end);
-    % ---------------------------------------------------------------------
-
     % -------------%
     % Simulink PFB %
     % -------------%
+
+    % Recombine data (PFB Simulink)
+    sprintf('Recombine data (PFB Simulink)')
+    [Spec,Spec_Sync,Spec_Dvalid] = Parallel_Serial_Spectral_4k(pfb3,pfb2,pfb1,pfb0,pfb_sync,pfb_dv);
     
     % Extract the valid region
     sprintf('Extracting valid region from Simulink PFB data')
@@ -38,25 +27,38 @@ function [Serial_Data, Sync, Dvalid] = Matlab_PFB_test(fft_length, no_taps, Sync
 
     for i=1:no_iter
         sprintf('PFB Iteration %f of %f', i, no_iter)
-        [pfb_current] = Valid_spec(start_point:end_point);
+        pfb_current(:,i) = Valid_spec(start_point:end_point);
         start_point = end_point + 1;
         end_point = end_point + spectrum_length;
-        
-        figure(1)
-        semilogy(abs(pfb_current));
-                
-        pfb = pfb + pfb_current;
-
-        figure(2)
-        semilogy(abs(pfb));
-        pause(0.1)
+           
     end
+    
+    pfb = pfb_current(:,(1):end).^2;
+    pfb = sqrt(mean(pfb'));
+        
+    figure(1)
+    plot(20*log10(abs(pfb(:,2:end-1))));
+    %stem(abs(pfb))
+    %semilogy(abs(pfb));
     
     % ---------------------------------------------------------------------
     
     % -----------%
     % Matlab PFB %
     % -----------%
+
+    % Recombine data (Time domain)
+    sprintf('Recombine data (Time domain)')
+    [Serial_Data,Sync,Dvalid] = Parallel_Serial_sync(Sync_in,dvalid_in,Input_8,Input_7,Input_6,Input_5,Input_4,Input_3,Input_2,Input_1);
+
+    
+    % Extract the valid region
+    sprintf('Extracting valid region from time domain data')
+    find_result_dv = find(dvalid_in.Data > 0);
+    find_result_sync = find(Sync > 0);
+    Valid_tone = Serial_Data(find_result_sync(1,1):end).*Dvalid(find_result_sync(1,1):end);
+    % ---------------------------------------------------------------------
+
     
     % Step through the input data and run through the pfb 
     extract_length = fft_length*no_taps;
@@ -76,10 +78,11 @@ function [Serial_Data, Sync, Dvalid] = Matlab_PFB_test(fft_length, no_taps, Sync
         end_point = end_point + extract_length;
         Ypfb = Ypfb + Ypfb_current;
 
-        figure(2)
-        semilogy(abs(Ypfb));
-        pause(0.1)
     end
-
-
+    
+    figure(2)
+    %stem(abs(Ypfb))
+    %semilogy(abs(Ypfb));
+    plot(20*log10(abs(Ypfb(:,2:end-1))));
+    
 end

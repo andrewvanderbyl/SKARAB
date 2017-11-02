@@ -7,8 +7,7 @@ function [Serial_Data, Sync, Dvalid] = Matlab_PFB_FIR_test(fft_length, Sync_in,d
     % Extract the valid region
     sprintf('Extracting valid region from time domain data')
     find_result_dv = find(Dvalid > 0);
-    %Valid_tone = Serial_Data(find_result_dv(1,1):end).*Dvalid(find_result_dv(1,1):end);
-    Valid_tone = Serial_Data(29000:end);
+    Valid_tone = Serial_Data(find_result_dv(1,1):end).*Dvalid(find_result_dv(1,1):end);
     % ---------------------------------------------------------------------
     
 
@@ -25,21 +24,16 @@ function [Serial_Data, Sync, Dvalid] = Matlab_PFB_FIR_test(fft_length, Sync_in,d
 
     for i=1:no_iter
         sprintf('PFB Iteration %f of %f', i, no_iter)
-        [pfb_current] = fft(Valid_tone(start_point:end_point));
+        pfb_current(:,i) = fft(Valid_tone(start_point:end_point));
         start_point = end_point + 1;
         end_point = end_point + spectrum_length;
-        
-        figure(1)
-        semilogy(abs(pfb_current));
-                
-        pfb = pfb + pfb_current;
-
-        figure(2)
-        semilogy(abs(pfb));
-        pause(0.1)
     end
     
-  
+    pfb = pfb_current(:,(1):end).^2;
+    pfb = sqrt(mean(pfb'));
+        
+    figure(1)
+    plot(20*log10(abs(pfb(:,2:end-1))));
 
 
 end
