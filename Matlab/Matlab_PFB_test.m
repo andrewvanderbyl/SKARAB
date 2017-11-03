@@ -1,9 +1,35 @@
-function [Serial_Data, Sync, Dvalid] = Matlab_PFB_test(fft_length, no_taps, Sync_in,dvalid_in,Input_8,Input_7,Input_6,Input_5,Input_4,Input_3,Input_2,Input_1,pfb_sync,pfb_dv,pfb3,pfb2,pfb1,pfb0)
+function [Serial_Data, Sync, Dvalid] = Matlab_PFB_test(fft_length, no_taps, Sync_in,dvalid_in,Input_8,Input_7,Input_6,Input_5,Input_4,Input_3,Input_2,Input_1,pfb_sync,pfb_dv,pfb3,pfb2,pfb1,pfb0,pfbAcc3,pfbAcc2,pfbAcc1,pfbAcc0,offset)
+    
+    % Note: Change to load workspace into script rather than pass values
 
-    % -------------%
-    % Simulink PFB %
-    % -------------%
+    % ------------------------------------%
+    % Simulink PFB - Accumulated Spectrum %
+    % ------------------------------------%
 
+    % Extract the accumulated spectrum
+    length_pfb_acc = length(pfbAcc0);
+    no_iter = length_pfb_acc/(fft_length/8);
+    End_extract = (length_pfb_acc - offset.Data(end));
+    Start_extract =  End_extract - fft_length/8 + 1;
+
+    
+    pfbAcc0_local = pfbAcc0(Start_extract:End_extract);
+    pfbAcc1_local = pfbAcc1(Start_extract:End_extract);
+    pfbAcc2_local = pfbAcc2(Start_extract:End_extract);
+    pfbAcc3_local = pfbAcc3(Start_extract:End_extract);
+    
+    % Recombine data (PFB Simulink)
+    sprintf('Recombine data (PFB Simulink)')
+    [Acc_Spec,Acc_Spec_Sync,Acc_Spec_Dvalid] = Parallel_Serial_Spectral_4k(pfbAcc3_local,pfbAcc2_local,pfbAcc1_local,pfbAcc0_local,pfb_sync,pfb_dv);
+    
+    Acc_Spec = Acc_Spec/no_iter;
+    
+    figure(1)
+    plot(20*log10(abs(Acc_Spec)));
+    
+    
+    % ---------------------------------------------------------------------
+    
     % Recombine data (PFB Simulink)
     sprintf('Recombine data (PFB Simulink)')
     [Spec,Spec_Sync,Spec_Dvalid] = Parallel_Serial_Spectral_4k(pfb3,pfb2,pfb1,pfb0,pfb_sync,pfb_dv);
@@ -36,10 +62,8 @@ function [Serial_Data, Sync, Dvalid] = Matlab_PFB_test(fft_length, no_taps, Sync
     pfb = pfb_current(:,(1):end).^2;
     pfb = sqrt(mean(pfb'));
         
-    figure(1)
+    figure(2)
     plot(20*log10(abs(pfb(:,2:end-1))));
-    %stem(abs(pfb))
-    %semilogy(abs(pfb));
     
     % ---------------------------------------------------------------------
     
@@ -80,9 +104,7 @@ function [Serial_Data, Sync, Dvalid] = Matlab_PFB_test(fft_length, no_taps, Sync
 
     end
     
-    figure(2)
-    %stem(abs(Ypfb))
-    %semilogy(abs(Ypfb));
+    figure(3)
     plot(20*log10(abs(Ypfb(:,2:end-1))));
     
 end
