@@ -1,13 +1,22 @@
 # Setup FEng
-import pylab as plt
+#import pylab as plt
 
+import matplotlib.pyplot as plt
 from IPython import embed
 import casperfpga
 import logging
 import numpy as np
 import spead64_48 as spead
-import time
 
+
+import spead2
+import spead2.recv as s2rx
+import time
+import threading
+import os
+import logging
+import Queue
+import matplotlib.pyplot as pyplot
 
 # Note: USED SKARABS
 #skarab020306-01
@@ -24,23 +33,29 @@ import time
 #skarab020304-01
 #skarab02030F-01
 
+HOST = 'skarab020304-01'
+
+# Programming file
+prog_file = "/tmp/s_deng_rev1_13_wide_2017-11-08_1611.fpg"
+
+logging.basicConfig(level=logging.DEBUG)
+LOGGER = logging.getLogger(__name__)
+
 class dsim:
-    def __init__(self):
-        #logging.basicConfig()
-        #casperfpga.skarab_fpga.logging.getLogger().setLevel(casperfpga.skarab_fpga.logging.DEBUG)
-        print "Test course delay on SKARAB"
+    def __init__(self, mode = 'cont', port=7148, log_handler = None, log_level = logging.INFO, spead_log_level = logging.DEBUG, **kwargs):
+        # if log_handler == None:
+        #     log_handler = log_handlers.DebugLogHandler(100)
+        # self.log_handler = log_handler
+        # self.logger = logging.getLogger('rx')
+        # self.logger.addHandler(self.log_handler)
+        # self.logger.setLevel(log_level)
+
+        print "Test DSim on SKARAB"
 
     def setup_FPGA(self):
-        # Specify skarab to use
-        # Spare SKARAB: skarab020304-01
-        skarab_ip = '10.100.205.202'
-
-
-        # Programming file
-        prog_file = "/tmp/s_deng_rev1_13_wide_2017-10-17_1606.fpg"
 
         # Create FPGA Object
-        self.f = casperfpga.CasperFpga(skarab_ip)
+        self.f = casperfpga.CasperFpga(HOST)
 
         print 'FPGA Object Created'
 
@@ -56,15 +71,29 @@ class dsim:
         print 'Grabbing System info'
         print "--------------------"
 
-        # Specify skarab to use
-        # Spare SKARAB: skarab020304-01
-        skarab_ip = '10.100.205.202'
+        print "Communicating to SKARAB: %s" % HOST
 
-        print "Communicating to SKARAB: %s" % skarab_ip
+        self.f = casperfpga.CasperFpga(HOST)
 
-        self.f = casperfpga.CasperFpga(skarab_ip)
+        self.f.get_system_information(prog_file)
 
-        self.f.get_system_information('/tmp/s_deng_rev1_13_wide_2017-10-17_1606.fpg')
+
+        print 'Grabbing System info: Done'
+        print "--------------------"
+        print ''
+
+    def roach2_info(self):
+
+        roach_HOST = 'roach020A11'
+
+        print 'Grabbing System info'
+        print "--------------------"
+
+        print "Communicating to SKARAB: %s" % roach_HOST
+
+        self.f = casperfpga.CasperFpga(roach_HOST)
+
+        self.f.get_system_information()
 
 
         print 'Grabbing System info: Done'
@@ -80,13 +109,23 @@ class dsim:
         print "Set IP Addr"
         print "-----------"
         print "Gbe0 is: 239.2.0.64"
-        self.f.registers.gbe_iptx0.write(reg=4009885760)
+        self.f.registers.gbe_iptx0.write(reg=4009885760+4)
         print "Gbe0 is: 239.2.0.65"
-        self.f.registers.gbe_iptx1.write(reg=4009885761)
+        self.f.registers.gbe_iptx1.write(reg=4009885761+4)
         print "Gbe0 is: 239.2.0.66"
-        self.f.registers.gbe_iptx2.write(reg=4009885762)
+        self.f.registers.gbe_iptx2.write(reg=4009885762+4)
         print "Gbe0 is: 239.2.0.67"
-        self.f.registers.gbe_iptx3.write(reg=4009885763)
+        self.f.registers.gbe_iptx3.write(reg=4009885763+4)
+
+        print "iptx0: %s" % self.f.registers.gbe_iptx0.read()
+        print "iptx1: %s" % self.f.registers.gbe_iptx1.read()
+        print "iptx2: %s" % self.f.registers.gbe_iptx2.read()
+        print "iptx3: %s" % self.f.registers.gbe_iptx3.read()
+
+        print "Setting Port 7148"
+        self.f.registers.gbe_porttx.write(reg=7148)
+        print "Port: %s" % self.f.registers.gbe_porttx.read()
+
 
         print "Starting DSim"
         print "-------------"
@@ -115,9 +154,15 @@ class dsim:
         self.f.registers.orig_control.write(tvg_select0=1)
         self.f.registers.orig_control.write(tvg_select1=1)
 
+        self.f.registers.test_control.write(sel_ramp80=1)
+        self.f.registers.test_control.write(rst_ramp80=0)
+
         # Traffic Control
         self.f.registers.pol_traffic_trigger.write(pol0_tx_trigger=1)
+        self.f.registers.pol_traffic_trigger.write(pol1_tx_trigger=1)
+
         self.f.registers.pol_tx_always_on.write(pol0_tx_always_on=1)
+        self.f.registers.pol_tx_always_on.write(pol1_tx_always_on=1)
 
         # Source Control
         self.f.registers.src_sel_cntrl.write(src_sel_0=0)
@@ -126,6 +171,8 @@ class dsim:
         # Sync Control
         self.f.registers.orig_control.write(msync=1)
         self.f.registers.orig_control.write(msync=0)
+
+        self.f.registers.gbecontrol.write(gbe0=1, gbe1=1, gbe2=1, gbe3=1)
 
         # Arm the Snapshot Blocks
         # -----------------------
@@ -141,27 +188,27 @@ class dsim:
         print "----------------------"
 
         print "Grabbing localtime"
-        ss_localtime = self.f.snapshots.ss_localtime_ss.read(arm=False)['data']
-        localtime = ss_localtime['time']
+        #ss_localtime = self.f.snapshots.ss_localtime_ss.read(arm=False)['data']
+        #localtime = ss_localtime['time']
 
         print "Grabbing fifo_in"
-        ss_fifo_in = self.f.snapshots.ss_fifo_in_ss.read(arm=False)['data']
+        #ss_fifo_in = self.f.snapshots.ss_fifo_in_ss.read(arm=False)['data']
 
-        fifo_in_d0 = ss_fifo_in['d0']
-        fifo_in_d1 = ss_fifo_in['d1']
-        fifo_in_d2 = ss_fifo_in['d2']
-        fifo_in_d3 = ss_fifo_in['d3']
-        fifo_in_d4 = ss_fifo_in['d4']
-        fifo_in_d5 = ss_fifo_in['d5']
-        fifo_in_d6 = ss_fifo_in['d6']
-        fifo_in_d7 = ss_fifo_in['d7']
+        #fifo_in_d0 = ss_fifo_in['d0']
+        #fifo_in_d1 = ss_fifo_in['d1']
+        #fifo_in_d2 = ss_fifo_in['d2']
+        #fifo_in_d3 = ss_fifo_in['d3']
+        #fifo_in_d4 = ss_fifo_in['d4']
+        #fifo_in_d5 = ss_fifo_in['d5']
+        #fifo_in_d6 = ss_fifo_in['d6']
+        #fifo_in_d7 = ss_fifo_in['d7']
 
-        fifo_in = []
+        #fifo_in = []
 
-        for x in range(0, len(fifo_in_d0)):
-            fifo_in.extend(
-                [fifo_in_d0[x], fifo_in_d1[x], fifo_in_d2[x], fifo_in_d3[x], fifo_in_d4[x],
-                 fifo_in_d5[x], fifo_in_d6[x], fifo_in_d7[x]])
+        #for x in range(0, len(fifo_in_d0)):
+        #    fifo_in.extend(
+        #        [fifo_in_d0[x], fifo_in_d1[x], fifo_in_d2[x], fifo_in_d3[x], fifo_in_d4[x],
+        #         fifo_in_d5[x], fifo_in_d6[x], fifo_in_d7[x]])
 
 
         print "Grabbing cwg0 and cwg1"
@@ -221,10 +268,10 @@ class dsim:
         plt.clf()
         plt.plot(cwg1)
 
-        plt.figure(3)
-        plt.ion()
-        plt.clf()
-        plt.plot(fifo_in)
+        #plt.figure(3)
+        #plt.ion()
+        #plt.clf()
+        #plt.plot(fifo_in)
 
         plt.figure(4)
         plt.ion()
@@ -243,22 +290,37 @@ class dsim:
         print "RX DSim data"
         print "------------"
 
-        '''
-                Process SPEAD data from X engines and forward it to the SD.
-        '''
+        LOGGER.info('Data reception on port %i.' % data_port)
+        ig = spead2.ItemGroup()
+        print ig
+        embed()
 
-        logger = self.logger
-        logger.info("Data reception on port %i." % data_port)
+        strm = s2rx.Stream(spead2.ThreadPool(), bug_compat=0, max_heaps=8,
+                           ring_heaps=8)
+        strm.add_udp_reader(port=data_port, max_size=9200,
+                            buffer_size=51200000)
 
-        rx = spead.TransportUDPrx(data_port, pkt_count=1024, buffer_size=51200000)
-        #logger.info("Sending Signal Display data to %s:%i." % (sd_ip, sd_port))
-        #tx_sd = spead.Transmitter(spead.TransportUDPtx(sd_ip, sd_port))
-        #ig = spead.ItemGroup()
-        #ig_sd = spead.ItemGroup()
+        last_heap_cnt = -1
+        heap_ctr = 0
+        embed()
 
-        print "Stopping RX data"
-        print "----------------"
-        rx.stop()
+        print 'About to try'
+        print strm
+
+        try:
+            for heap in strm:
+                # wait for the got_data event to be cleared
+                print heap
+                #LOGGER.debug('PROCESSING HEAP ctr(%i) cnt(%i) - '
+                #             '%i' % (heap_ctr, heap.cnt, diff))
+                #ig.update(heap)
+
+        except MemoryError:
+            self.memory_error_event.set()
+
+        strm.stop()
+        LOGGER.info("Files and sockets closed.")
+        self.quit_event.clear()
 
 
 
