@@ -18,6 +18,10 @@ import logging
 import Queue
 import matplotlib.pyplot as pyplot
 
+from corr2 import utils
+from corr2.corr_rx import CorrRx
+from corr2.dsimhost_fpga import FpgaDsimHost
+
 # Note: USED SKARABS
 #skarab020306-01
 #skarab020302-01
@@ -289,42 +293,33 @@ class dsim:
 
         print "RX DSim data"
         print "------------"
+        rx_port = 7148
 
-        LOGGER.info('Data reception on port %i.' % data_port)
-        ig = spead2.ItemGroup()
-        print ig
-        embed()
+        receiver = CorrRx(port=rx_port, queue_size=5)
 
-        strm = s2rx.Stream(spead2.ThreadPool(), bug_compat=0, max_heaps=8,
-                           ring_heaps=8)
-        strm.add_udp_reader(port=data_port, max_size=9200,
-                            buffer_size=51200000)
-
-        last_heap_cnt = -1
-        heap_ctr = 0
-        embed()
-
-        print 'About to try'
-        print strm
+        #logger.info('Waiting for receiver to report running')
+        receiver.daemon = True
+        receiver.start(timeout=10)
+        if receiver.running_event.wait(timeout=10):
+            print 'Receiver ready'
+            #logger.info('Receiver ready')
+        else:
+            print 'Receiver not ready'
+            msg = 'Receiver not ready'
+            #logger.info(msg)
+            raise RuntimeError(msg)
 
         try:
-            for heap in strm:
-                # wait for the got_data event to be cleared
-                print heap
-                #LOGGER.debug('PROCESSING HEAP ctr(%i) cnt(%i) - '
-                #             '%i' % (heap_ctr, heap.cnt, diff))
-                #ig.update(heap)
-
-        except MemoryError:
-            self.memory_error_event.set()
-
-        strm.stop()
-        LOGGER.info("Files and sockets closed.")
-        self.quit_event.clear()
-
-
-
-
+            raw_input('Press Enter get clean dump')
+            dump = receiver.get_clean_dump()
+        except KeyboardInterrupt:
+            print 'KB interrupt'
+            #logger.info('Keyboard interrupt')
+        except Exception:
+            raise
+        else:
+            print 'Dump received'
+            #logger.info('Dump received')
     # Test methods
 
     def test_var_args(self,farg,*args):

@@ -28,7 +28,7 @@ import time
 HOST = 'skarab020304-01'
 
 # Programming file
-prog_file = "/tmp/pfb_fft_test_2017-11-15_1206.fpg"
+prog_file = "/tmp/pfb_fft_test_2017-11-16_1306.fpg"
 
 class pfb:
     def __init__(self):
@@ -71,46 +71,70 @@ class pfb:
 
         self.skarab_info()
 
+        print "Disable System"
+        print "--------------"
+        self.f.registers.sys_en.write(en=0)
+        self.f.registers.bram_clr.write(reg=0)
+
+
+        print "Clear BRAM"
+        print "----------"
+        self.f.registers.bram_clr.write(reg=1)
+
+        print 'BRAM clear done is %s' % self.f.registers.bram_clear_done.read()
+
+        while self.f.registers.bram_clear_done.read()['data']['reg'] < 1:
+            print 'Waiting for BRAM clear done'
+
+        print 'Clear Done complete'
+        print ''
+        self.f.registers.bram_clr.write(reg=0)
+
         print "FFT Shift"
         print "---------"
-        self.f.registers.fft_shift.write(fft_shift=0)
+        self.f.registers.fft_shift.write(fft_shift=8191)
         print "FFT shift is %s" % self.f.registers.fft_shift.read()
         print ""
 
         print "Spectrum Accumulation"
         print "---------------------"
-        self.f.registers.spectrum_limit.write(reg=np.power(2,accumulation_len))
+        self.f.registers.spectrum_limit.write(limit=np.power(2,accumulation_len))
         print "Spectrum accumulation limit is %s" % self.f.registers.spectrum_limit.read()
         print ""
 
         self.f.registers.tvg_sel.write(tvg_sel=0)
-        self.f.registers.debug_sel.write(tvg_sel=0)
+        self.f.registers.debug_sel.write(sel=0)
 
         print "Set the DSim"
         print "------------"
 
         # Set the CWG scale
-        self.f.registers.scale_cwg0.write(scale=0.25)
-        self.f.registers.scale_out0.write(scale=1.0)
+        self.f.registers.scale_cwg0.write(scale=0.01)
+        self.f.registers.scale_out0.write(scale=0.5)
 
         # Set the frequency
         self.f.registers.freq_cwg0.write(frequency=8192000)
 
         # Noise Control
-        self.f.registers.scale_wng0.write(scale=0.5)
+        self.f.registers.scale_wng0.write(scale=0.0)
 
         # Arm the Snapshot Blocks
         # -----------------------
         print 'Arming Snapblocks'
         print "-----------------"
         print ""
-        #self.f.snapshots.ss_pfb_real_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
-        #self.f.snapshots.ss_pfb_imag_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_real_sq_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_imag_sq_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
         self.f.snapshots.ss_pfb_real_dir_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_imag_dir_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+
+        self.f.snapshots.ss_pfb_cwg_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+
+        self.f.snapshots.ss_pfb_tp_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.ss_pfb_tp1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.ss_pfb_tp2_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.ss_pfb_tp3_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
         print 'Reset'
         print "-----"
@@ -118,6 +142,12 @@ class pfb:
         # Sync Control
         self.f.registers.sys_rst.write(rst='pulse')
 
+        print "Check Spectrum Counter"
+        print "----------------------"
+        print "Spectrum Counter is %s" % self.f.registers.spectrum_counter.read()
+        print ""
+        print "Spectrum Counter (SS) is %s" % self.f.registers.spectrum_counter_ss.read()
+        print ""
 
         print "Check Sync"
         print "----------"
@@ -125,29 +155,108 @@ class pfb:
         print "PFB Sync out %s" % self.f.registers.pfbout_sync_count.read()
         print ""
 
+        print "*************"
+        print 'System Enable'
+        print "*************"
+        print ""
+        self.f.registers.sys_en.write(en=1)
+
+
         print "PFB OF"
         print "------"
         print "PFB OF is %s" % self.f.registers.pfb_of.read()
         print ""
 
-
-
         print "Check Spectrum Counter"
         print "----------------------"
         print "Spectrum Counter is %s" % self.f.registers.spectrum_counter.read()
         print ""
+        print "Spectrum Counter (SS) is %s" % self.f.registers.spectrum_counter_ss.read()
+        print ""
 
-        while self.f.registers.spectrum_counter.read() < self.f.registers.spectrum_limit.read():
+        print "Check Sync"
+        print "----------"
+        print "PFB Sync in %s" % self.f.registers.pfbin_sync_count.read()
+        print "PFB Sync out %s" % self.f.registers.pfbout_sync_count.read()
+        print ""
+
+        spec_limit = self.f.registers.spectrum_limit.read()
+
+        while self.f.registers.spectrum_counter.read()['data']['reg'] < spec_limit['data']['limit']:
             print "Spectrum Counter is %s" % self.f.registers.spectrum_counter.read()
 
+
+        print ""
+        print 'Grabbing Snapshot TP'
+        print "--------------------"
+        print ""
+
+        ss_tp = self.f.snapshots.ss_pfb_tp_ss.read(arm=False)['data']
+        ss_tp1 = self.f.snapshots.ss_pfb_tp1_ss.read(arm=False)['data']
+        ss_tp2 = self.f.snapshots.ss_pfb_tp2_ss.read(arm=False)['data']
+        ss_tp3 = self.f.snapshots.ss_pfb_tp3_ss.read(arm=False)['data']
+
+        tp_in0 = ss_tp['in0']
+        tp_in1 = ss_tp['in1']
+        tp_in2 = ss_tp['in2']
+        tp_in3 = ss_tp['in3']
+
+        tp1_in0 = ss_tp1['in0']
+        tp1_in1 = ss_tp1['in1']
+        tp1_in2 = ss_tp1['in2']
+        tp1_in3 = ss_tp1['in3']
+
+        tp2_in0 = ss_tp2['in0']
+        tp2_in1 = ss_tp2['in1']
+        tp2_in2 = ss_tp2['in2']
+        tp2_in3 = ss_tp2['in3']
+
+        tp3_in0 = ss_tp3['in0']
+        tp3_in1 = ss_tp3['in1']
+        tp3_in2 = ss_tp3['in2']
+        tp3_in3 = ss_tp3['in3']
+
+        tp = []
+        tp1 = []
+        tp2 = []
+        tp3 = []
+
+        for x in range(0, len(tp_in0)):
+            tp.extend([tp_in0[x], tp_in1[x], tp_in2[x], tp_in3[x]])
+            tp1.extend([tp1_in0[x], tp1_in1[x], tp1_in2[x], tp1_in3[x]])
+            tp2.extend([tp2_in0[x], tp2_in1[x], tp2_in2[x], tp2_in3[x]])
+            tp3.extend([tp3_in0[x], tp3_in1[x], tp3_in2[x], tp3_in3[x]])
+
+        #embed()
 
         print ""
         print 'Grabbing Snapshot Data'
         print "----------------------"
         print ""
 
+        print "Grabbing CWG data"
+        print ""
+        ss_cwg = self.f.snapshots.ss_pfb_cwg_ss.read(arm=False)['data']
+
+        cwg0 = ss_cwg['d0']
+        cwg1 = ss_cwg['d1']
+        cwg2 = ss_cwg['d2']
+        cwg3 = ss_cwg['d3']
+        cwg4 = ss_cwg['d4']
+        cwg5 = ss_cwg['d5']
+        cwg6 = ss_cwg['d6']
+        cwg7 = ss_cwg['d7']
+
+
+        cwg = []
+
+        for x in range(0, len(cwg0)):
+            cwg.extend(
+                [cwg0[x], cwg1[x], cwg2[x], cwg3[x], cwg4[x], cwg5[x], cwg6[x], cwg7[x]])
+
 
         print "Grabbing ss_pfb_real_dir and ss_pfb_imag_dir"
+        print ""
         ss_pfb_real_dir = self.f.snapshots.ss_pfb_real_dir_ss.read(arm=False)['data']
         ss_pfb_imag_dir = self.f.snapshots.ss_pfb_imag_dir_ss.read(arm=False)['data']
 
@@ -165,7 +274,7 @@ class pfb:
         pfb_real_dir = []
         pfb_imag_dir = []
 
-        for x in range(0, len(pfb_real_dir)):
+        for x in range(0, len(pfb_real0_dir)):
             pfb_real_dir.extend(
                 [pfb_real0_dir[x], pfb_real1_dir[x], pfb_real2_dir[x], pfb_real3_dir[x]])
 
@@ -174,34 +283,9 @@ class pfb:
 
         complx_dir = pfb_real_dir + np.multiply(pfb_imag_dir,1j)
 
-        '''
-        print "Grabbing ss_pfb_real_ss and ss_pfb_imag_ss"
-        ss_pfb_real = self.f.snapshots.ss_pfb_real_ss.read(arm=False)['data']
-        ss_pfb_imag = self.f.snapshots.ss_pfb_imag_ss.read(arm=False)['data']
-
-        pfb_real0 = ss_pfb_real['pfb2_r0']
-        pfb_real1 = ss_pfb_real['pfb2_r1']
-        pfb_real2 = ss_pfb_real['pfb2_r2']
-        pfb_real3 = ss_pfb_real['pfb2_r3']
-
-        pfb_imag0 = ss_pfb_imag['pfb2_i0']
-        pfb_imag1 = ss_pfb_imag['pfb2_i1']
-        pfb_imag2 = ss_pfb_imag['pfb2_i2']
-        pfb_imag3 = ss_pfb_imag['pfb2_i3']
-
-        pfb_real = []
-        pfb_imag = []
-
-        for x in range(0, len(pfb_real0)):
-            pfb_real.extend(
-                [pfb_real0[x], pfb_real1[x], pfb_real2[x], pfb_real3[x]])
-
-            pfb_imag.extend(
-                [pfb_imag0[x], pfb_imag1[x], pfb_imag2[x], pfb_imag3[x]])
-
-        '''
 
         print "Grabbing ss_pfb_real_sq and ss_pfb_imag_sq"
+        print ""
         ss_pfb_real_square = self.f.snapshots.ss_pfb_real_sq_ss.read(arm=False)['data']
         ss_pfb_imag_square = self.f.snapshots.ss_pfb_imag_sq_ss.read(arm=False)['data']
 
@@ -229,25 +313,49 @@ class pfb:
         complx_sq = pfb_real_sq + np.multiply(pfb_imag_sq,1j)
 
 
+        print "Check Spectrum Counter (SS)"
+        print "---------------------------"
+        print "Spectrum Counter is %s" % self.f.registers.spectrum_counter_ss.read()
+        print ""
 
-        plt.figure(1)
-        plt.ion()
-        plt.clf()
-        plt.plot(np.abs(np.abs(complx_dir)))
+
+        #plt.figure(1)
+        #plt.ion()
+        #plt.clf()
+        #plt.plot(cwg)
 
         plt.figure(2)
         plt.ion()
         plt.clf()
-        plt.semilogy(np.abs(np.abs(complx_dir)))
+        plt.plot(np.abs(complx_dir))
 
         plt.figure(3)
         plt.ion()
-        plt.semilogy(np.abs(np.abs(complx_sq)))
+        plt.plot(np.abs(complx_sq))
 
+        plt.figure(4)
+        plt.ion()
+        plt.semilogy(np.abs(complx_sq))
 
-
+        #plt.figure(5)
+        #plt.ion()
+        #plt.clf()
+        #plt.subplot(411)
+        #plt.plot(tp)
+        #plt.subplot(412)
+        #plt.plot(tp1)
+        #plt.subplot(413)
+        #plt.plot(tp2)
+        #plt.subplot(414)
+        #plt.plot(tp3)
         plt.show()
 
+        print ""
+        print "Disable System"
+        print "--------------"
+        self.f.registers.sys_en.write(en=0)
+
+        print ""
         print "Done"
         print "----"
 
