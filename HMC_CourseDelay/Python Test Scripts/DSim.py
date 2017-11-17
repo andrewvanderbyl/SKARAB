@@ -37,10 +37,14 @@ from corr2.dsimhost_fpga import FpgaDsimHost
 #skarab020304-01
 #skarab02030F-01
 
-HOST = 'skarab020304-01'
+HOST1 = 'skarab020304-01'
+HOST2 = 'skarab020307-01'
+roach_HOST = 'roach020A11'
 
-# Programming file
-prog_file = "/tmp/s_deng_rev1_13_wide_2017-11-08_1611.fpg"
+# Programming file(s)
+prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-08_1611.fpg"
+prog_file_feng = "/tmp/s_c856m4k.fpg"
+
 
 logging.basicConfig(level=logging.DEBUG)
 LOGGER = logging.getLogger(__name__)
@@ -54,32 +58,61 @@ class dsim:
         # self.logger.addHandler(self.log_handler)
         # self.logger.setLevel(log_level)
 
-        print "Test DSim on SKARAB"
+        print "Test DSim on SKARAB using FEng"
 
-    def setup_FPGA(self):
+    def setup_FPGA_skarab_feng(self):
 
         # Create FPGA Object
-        self.f = casperfpga.CasperFpga(HOST)
+        self.f = casperfpga.CasperFpga(HOST1)
 
         print 'FPGA Object Created'
 
         try:
-            self.f.upload_to_ram_and_program(prog_file)
+            self.f.upload_to_ram_and_program(prog_file_feng)
+            print "Programming FPGA done"
+
+        except:
+            print "Programming Failed"
+
+    def setup_FPGA_skarab_dsim(self):
+
+        # Create FPGA Object
+        self.f = casperfpga.CasperFpga(HOST2)
+
+        print 'FPGA Object Created'
+
+        try:
+            self.f.upload_to_ram_and_program(prog_file_feng)
             print "Programming FPGA done"
 
         except:
             print "Programming Failed"
 
 
-    def skarab_info(self):
+    def skarab_info_feng(self):
         print 'Grabbing System info'
         print "--------------------"
 
-        print "Communicating to SKARAB: %s" % HOST
+        print "Communicating to SKARAB: %s" % HOST1
 
-        self.f = casperfpga.CasperFpga(HOST)
+        self.f = casperfpga.CasperFpga(HOST1)
 
-        self.f.get_system_information(prog_file)
+        self.f.get_system_information(prog_file_feng)
+
+
+        print 'Grabbing System info: Done'
+        print "--------------------"
+        print ''
+
+    def skarab_info_dsim(self):
+        print 'Grabbing System info'
+        print "--------------------"
+
+        print "Communicating to SKARAB: %s" % HOST2
+
+        self.f = casperfpga.CasperFpga(HOST2)
+
+        self.f.get_system_information(prog_file_dsim)
 
 
         print 'Grabbing System info: Done'
@@ -88,16 +121,14 @@ class dsim:
 
     def roach2_info(self):
 
-        roach_HOST = 'roach020A11'
-
         print 'Grabbing System info'
         print "--------------------"
 
-        print "Communicating to SKARAB: %s" % roach_HOST
+        print "Communicating to ROACH: %s" % roach_HOST
 
-        self.f = casperfpga.CasperFpga(roach_HOST)
+        self.d = casperfpga.CasperFpga(roach_HOST)
 
-        self.f.get_system_information()
+        self.d.get_system_information()
 
 
         print 'Grabbing System info: Done'
@@ -107,7 +138,7 @@ class dsim:
 
     def run_dsim(self, arm_mode, trig_mode, valid_mode):
 
-        self.skarab_info()
+        self.skarab_info_dsim()
 
 
         print "Set IP Addr"
@@ -289,38 +320,36 @@ class dsim:
         print "----"
 
 
-    def rx_data(self,data_port=7148, sd_ip='127.0.0.1', sd_port=7149, **kwargs):
+    def feng_rx_data(self,data_port=7148, sd_ip='127.0.0.1', sd_port=7149, **kwargs):
 
-        print "RX DSim data"
-        print "------------"
-        rx_port = 7148
+        print "RX DSim data on Feng"
+        print "--------------------"
+        print ''
 
-        receiver = CorrRx(port=rx_port, queue_size=5)
+        print 'Connect to DSim and configure'
+        self.roach2_info()
 
-        #logger.info('Waiting for receiver to report running')
-        receiver.daemon = True
-        receiver.start(timeout=10)
-        if receiver.running_event.wait(timeout=10):
-            print 'Receiver ready'
-            #logger.info('Receiver ready')
-        else:
-            print 'Receiver not ready'
-            msg = 'Receiver not ready'
-            #logger.info(msg)
-            raise RuntimeError(msg)
+        print 'Connect to FEng and configure'
+        self.skarab_info_feng()
 
-        try:
-            raw_input('Press Enter get clean dump')
-            dump = receiver.get_clean_dump()
-        except KeyboardInterrupt:
-            print 'KB interrupt'
-            #logger.info('Keyboard interrupt')
-        except Exception:
-            raise
-        else:
-            print 'Dump received'
-            #logger.info('Dump received')
-    # Test methods
+        print "Setup multicast receive"
+        #g = self.f.gbes["gbe0"]
+        #g.multicast_receive?
+        #g.multicast_receive('239.2.0.64', 4)
+
+        self.g = self.f.gbes["gbe0"]
+        # g.multicast_receive?
+        self.g.multicast_receive('239.2.0.68', 4)
+
+        print "Setup multicast receive done"
+
+
+        print "Core details"
+        self.g.print_core_details()
+
+
+
+
 
     def test_var_args(self,farg,*args):
 

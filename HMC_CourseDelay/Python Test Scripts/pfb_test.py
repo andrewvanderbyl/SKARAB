@@ -28,7 +28,7 @@ import time
 HOST = 'skarab020304-01'
 
 # Programming file
-prog_file = "/tmp/pfb_fft_test_2017-11-16_1306.fpg"
+prog_file = "/tmp/pfb_fft_test_2017-11-17_1025.fpg"
 
 class pfb:
     def __init__(self):
@@ -79,7 +79,7 @@ class pfb:
 
         print "Clear BRAM"
         print "----------"
-        self.f.registers.bram_clr.write(reg=1)
+        self.f.registers.bram_clr.write(reg=0)
 
         print 'BRAM clear done is %s' % self.f.registers.bram_clear_done.read()
 
@@ -109,14 +109,14 @@ class pfb:
         print "------------"
 
         # Set the CWG scale
-        self.f.registers.scale_cwg0.write(scale=0.01)
-        self.f.registers.scale_out0.write(scale=0.5)
+        self.f.registers.scale_cwg0.write(scale=0.75)
+        self.f.registers.scale_out0.write(scale=1.0)
 
         # Set the frequency
         self.f.registers.freq_cwg0.write(frequency=8192000)
 
         # Noise Control
-        self.f.registers.scale_wng0.write(scale=0.0)
+        self.f.registers.scale_wng0.write(scale=0.1)
 
         # Arm the Snapshot Blocks
         # -----------------------
@@ -125,6 +125,12 @@ class pfb:
         print ""
         self.f.snapshots.ss_pfb_real_sq_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_imag_sq_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+
+        self.f.snapshots.ss_pfb_sq1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.ss_pfb_sq2_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.ss_pfb_sq3_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+
+
 
         self.f.snapshots.ss_pfb_real_dir_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_imag_dir_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
@@ -135,6 +141,8 @@ class pfb:
         self.f.snapshots.ss_pfb_tp1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_tp2_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_tp3_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+
+
 
         print 'Reset'
         print "-----"
@@ -196,36 +204,29 @@ class pfb:
         ss_tp2 = self.f.snapshots.ss_pfb_tp2_ss.read(arm=False)['data']
         ss_tp3 = self.f.snapshots.ss_pfb_tp3_ss.read(arm=False)['data']
 
-        tp_in0 = ss_tp['in0']
-        tp_in1 = ss_tp['in1']
-        tp_in2 = ss_tp['in2']
-        tp_in3 = ss_tp['in3']
 
-        tp1_in0 = ss_tp1['in0']
-        tp1_in1 = ss_tp1['in1']
-        tp1_in2 = ss_tp1['in2']
-        tp1_in3 = ss_tp1['in3']
+        tp_in0 = ss_tp['pfb2_r0']
+        tp_in1 = ss_tp['pfb2_r1']
+        tp_in2 = ss_tp['pfb2_r2']
 
-        tp2_in0 = ss_tp2['in0']
-        tp2_in1 = ss_tp2['in1']
-        tp2_in2 = ss_tp2['in2']
-        tp2_in3 = ss_tp2['in3']
+        tp1_in0 = ss_tp1['pfb2_r3']
+        tp1_in1 = ss_tp1['pfb2_i0']
+        tp1_in2 = ss_tp1['pfb2_i1']
 
-        tp3_in0 = ss_tp3['in0']
-        tp3_in1 = ss_tp3['in1']
-        tp3_in2 = ss_tp3['in2']
-        tp3_in3 = ss_tp3['in3']
+        tp2_in0 = ss_tp2['pfb2_i2']
+        tp2_in1 = ss_tp2['pfb2_i3']
+
 
         tp = []
         tp1 = []
         tp2 = []
-        tp3 = []
+        #tp3 = []
 
         for x in range(0, len(tp_in0)):
-            tp.extend([tp_in0[x], tp_in1[x], tp_in2[x], tp_in3[x]])
-            tp1.extend([tp1_in0[x], tp1_in1[x], tp1_in2[x], tp1_in3[x]])
-            tp2.extend([tp2_in0[x], tp2_in1[x], tp2_in2[x], tp2_in3[x]])
-            tp3.extend([tp3_in0[x], tp3_in1[x], tp3_in2[x], tp3_in3[x]])
+            tp.extend([tp_in0[x], tp_in1[x], tp_in2[x], tp1_in0[x]])
+            tp1.extend([tp1_in1[x], tp1_in2[x], tp2_in0[x], tp2_in1[x]])
+            #tp2.extend([tp2_in0[x], tp2_in1[x], tp2_in2[x], tp2_in3[x]])
+            #tp3.extend([tp3_in0[x], tp3_in1[x], tp3_in2[x], tp3_in3[x]])
 
         #embed()
 
@@ -313,6 +314,36 @@ class pfb:
         complx_sq = pfb_real_sq + np.multiply(pfb_imag_sq,1j)
 
 
+        print "Grabbing ss_pfb_sq1, ss_pfb_sq2, ss_pfb_sq3"
+        print ""
+        ss_pfb_sq1 = self.f.snapshots.ss_pfb_sq1_ss.read(arm=False)['data']
+        ss_pfb_sq2 = self.f.snapshots.ss_pfb_sq2_ss.read(arm=False)['data']
+        ss_pfb_sq3 = self.f.snapshots.ss_pfb_sq3_ss.read(arm=False)['data']
+
+        pfb_real0_sq_full = ss_pfb_sq1['pfb2_r0']
+        pfb_real1_sq_full = ss_pfb_sq1['pfb2_r1']
+        pfb_real2_sq_full = ss_pfb_sq1['pfb2_r2']
+        pfb_real3_sq_full = ss_pfb_sq2['pfb2_r3']
+
+        pfb_imag0_sq_full = ss_pfb_sq2['pfb2_i0']
+        pfb_imag1_sq_full = ss_pfb_sq2['pfb2_i1']
+        pfb_imag2_sq_full = ss_pfb_sq3['pfb2_i2']
+        pfb_imag3_sq_full = ss_pfb_sq3['pfb2_i3']
+
+        pfb_real_sq_full = []
+        pfb_imag_sq_full = []
+
+        for x in range(0, len(pfb_real0_sq)):
+            pfb_real_sq_full.extend(
+                [pfb_real0_sq_full[x], pfb_real1_sq_full[x], pfb_real2_sq_full[x], pfb_real3_sq_full[x]])
+
+            pfb_imag_sq_full.extend(
+                [pfb_imag0_sq_full[x], pfb_imag1_sq_full[x], pfb_imag2_sq_full[x], pfb_imag3_sq_full[x]])
+
+        complx_sq_full = pfb_real_sq_full + np.multiply(pfb_imag_sq_full,1j)
+
+
+
         print "Check Spectrum Counter (SS)"
         print "---------------------------"
         print "Spectrum Counter is %s" % self.f.registers.spectrum_counter_ss.read()
@@ -329,21 +360,33 @@ class pfb:
         plt.clf()
         plt.plot(np.abs(complx_dir))
 
-        plt.figure(3)
-        plt.ion()
-        plt.plot(np.abs(complx_sq))
+        #plt.figure(3)
+        #plt.ion()
+        #plt.clf()
+        #plt.plot(np.abs(complx_sq))
 
-        plt.figure(4)
-        plt.ion()
-        plt.semilogy(np.abs(complx_sq))
+        #plt.figure(4)
+        #plt.ion()
+        #plt.clf()
+        #plt.semilogy(np.abs(complx_sq))
 
         #plt.figure(5)
         #plt.ion()
         #plt.clf()
-        #plt.subplot(411)
-        #plt.plot(tp)
-        #plt.subplot(412)
-        #plt.plot(tp1)
+        #plt.plot(np.abs(complx_sq_full))
+
+        #plt.figure(6)
+        #plt.ion()
+        #plt.clf()
+        #plt.semilogy(np.abs(complx_sq_full))
+
+        plt.figure(6)
+        plt.ion()
+        plt.clf()
+        plt.subplot(411)
+        plt.plot(np.abs(tp))
+        plt.subplot(412)
+        plt.plot(np.abs(tp1))
         #plt.subplot(413)
         #plt.plot(tp2)
         #plt.subplot(414)
