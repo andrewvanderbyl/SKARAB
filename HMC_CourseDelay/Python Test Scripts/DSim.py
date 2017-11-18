@@ -136,7 +136,182 @@ class dsim:
         print ''
 
 
-    def run_dsim(self, arm_mode, trig_mode, valid_mode):
+    def run_dsim_roach(self, arm_mode, trig_mode, valid_mode):
+
+        self.roach2_info()
+
+        #print "Set IP Addr"
+        #print "-----------"
+        #print "Gbe0 is: 239.2.0.64"
+        #self.f.registers.gbe_iptx0.write(reg=4009885760 + 4)
+        #print "Gbe0 is: 239.2.0.65"
+        #self.f.registers.gbe_iptx1.write(reg=4009885761 + 4)
+        #print "Gbe0 is: 239.2.0.66"
+        #self.f.registers.gbe_iptx2.write(reg=4009885762 + 4)
+        #print "Gbe0 is: 239.2.0.67"
+        #self.f.registers.gbe_iptx3.write(reg=4009885763 + 4)
+
+        print "iptx0: %s" % self.d.registers.gbe_iptx0.read()
+        print "iptx1: %s" % self.d.registers.gbe_iptx1.read()
+        print "iptx2: %s" % self.d.registers.gbe_iptx2.read()
+        print "iptx3: %s" % self.d.registers.gbe_iptx3.read()
+
+        #print "Setting Port 7148"
+        #self.f.registers.gbe_porttx.write(reg=7148)
+        print "Port: %s" % self.d.registers.gbe_porttx.read()
+
+        print "Starting DSim"
+        print "-------------"
+
+        # Set the DSim CWG0
+
+        # Set the CWG scale
+        self.d.registers.scale_cwg0.write(scale=0.5)
+        self.d.registers.scale_out0.write(scale=0.5)
+
+        self.d.registers.scale_cwg1.write(scale=0.5)
+        self.d.registers.scale_out1.write(scale=0.5)
+
+        # Set the frequency
+        self.d.registers.freq_cwg0.write(frequency=10000000)
+        self.d.registers.freq_cwg1.write(frequency=1000000)
+
+        # Noise Control
+        self.d.registers.scale_wng0.write(scale=0.0)
+        self.d.registers.scale_wng1.write(scale=0.0)
+        self.d.registers.scale_wng_corr.write(scale=0.0)
+
+        # TVG Select
+        #self.d.registers.orig_control.write(tvg_select0=1)
+        #self.d.registers.orig_control.write(tvg_select1=1)
+
+        #self.d.registers.test_control.write(sel_ramp80=1)
+        #self.d.registers.test_control.write(rst_ramp80=0)
+
+        # Traffic Control
+        #self.d.registers.pol_traffic_trigger.write(pol0_tx_trigger=1)
+        #self.d.registers.pol_traffic_trigger.write(pol1_tx_trigger=1)
+
+        #self.d.registers.pol_tx_always_on.write(pol0_tx_always_on=1)
+        #self.d.registers.pol_tx_always_on.write(pol1_tx_always_on=1)
+
+        # Source Control
+        #self.d.registers.src_sel_cntrl.write(src_sel_0=0)
+        #self.d.registers.src_sel_cntrl.write(src_sel_1=0)
+
+        # Sync Control
+        #self.d.registers.orig_control.write(msync=1)
+        #self.d.registers.orig_control.write(msync=0)
+
+        #self.d.registers.gbecontrol.write(gbe0=1, gbe1=1, gbe2=1, gbe3=1)
+
+        # Arm the Snapshot Blocks
+        # -----------------------
+        print 'Arming Snapblocks'
+        print "-----------------"
+
+        self.d.snapshots.ss_fifo_in_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.d.snapshots.ss_localtime_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.d.snapshots.ss_cwg0_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.d.snapshots.ss_cwg1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+
+        print 'Grabbing Snapshot Data'
+        print "----------------------"
+
+        print "Grabbing localtime"
+        # ss_localtime = self.f.snapshots.ss_localtime_ss.read(arm=False)['data']
+        # localtime = ss_localtime['time']
+
+        print "Grabbing fifo_in"
+        # ss_fifo_in = self.f.snapshots.ss_fifo_in_ss.read(arm=False)['data']
+
+        # fifo_in_d0 = ss_fifo_in['d0']
+        # fifo_in_d1 = ss_fifo_in['d1']
+        # fifo_in_d2 = ss_fifo_in['d2']
+        # fifo_in_d3 = ss_fifo_in['d3']
+        # fifo_in_d4 = ss_fifo_in['d4']
+        # fifo_in_d5 = ss_fifo_in['d5']
+        # fifo_in_d6 = ss_fifo_in['d6']
+        # fifo_in_d7 = ss_fifo_in['d7']
+
+        # fifo_in = []
+
+        # for x in range(0, len(fifo_in_d0)):
+        #    fifo_in.extend(
+        #        [fifo_in_d0[x], fifo_in_d1[x], fifo_in_d2[x], fifo_in_d3[x], fifo_in_d4[x],
+        #         fifo_in_d5[x], fifo_in_d6[x], fifo_in_d7[x]])
+
+
+        print "Grabbing cwg0 and cwg1"
+        ss_cwg0 = self.d.snapshots.ss_cwg0_ss.read(arm=False)['data']
+
+        cwg0_d0 = ss_cwg0['d0']
+        cwg0_d1 = ss_cwg0['d1']
+        cwg0_d2 = ss_cwg0['d2']
+        cwg0_d3 = ss_cwg0['d3']
+        cwg0_d4 = ss_cwg0['d4']
+        cwg0_d5 = ss_cwg0['d5']
+        cwg0_d6 = ss_cwg0['d6']
+        cwg0_d7 = ss_cwg0['d7']
+
+        cwg0 = []
+
+        for x in range(0, len(cwg0_d0)):
+            cwg0.extend(
+                [cwg0_d0[x], cwg0_d1[x], cwg0_d2[x], cwg0_d3[x], cwg0_d4[x],
+                 cwg0_d5[x], cwg0_d6[x], cwg0_d7[x]])
+
+        ss_cwg1 = self.d.snapshots.ss_cwg1_ss.read(arm=False)['data']
+
+        cwg1_d0 = ss_cwg1['d0']
+        cwg1_d1 = ss_cwg1['d1']
+        cwg1_d2 = ss_cwg1['d2']
+        cwg1_d3 = ss_cwg1['d3']
+        cwg1_d4 = ss_cwg1['d4']
+        cwg1_d5 = ss_cwg1['d5']
+        cwg1_d6 = ss_cwg1['d6']
+        cwg1_d7 = ss_cwg1['d7']
+
+        cwg1 = []
+
+        for x in range(0, len(cwg1_d0)):
+            cwg1.extend(
+                [cwg1_d0[x], cwg1_d1[x], cwg1_d2[x], cwg1_d3[x], cwg1_d4[x],
+                 cwg1_d5[x], cwg1_d6[x], cwg1_d7[x]])
+
+        # print "localtime is %s" % localtime
+
+        # Noise Histogram
+        hist0 = np.histogram(cwg0)
+        hist1 = np.histogram(cwg1)
+
+        plt.figure(1)
+        plt.ion()
+        plt.clf()
+        plt.plot(cwg0)
+
+        plt.figure(2)
+        plt.ion()
+        plt.clf()
+        plt.plot(cwg1)
+
+        # plt.figure(3)
+        # plt.ion()
+        # plt.clf()
+        # plt.plot(fifo_in)
+
+        plt.figure(4)
+        plt.ion()
+        plt.clf()
+        plt.plot(hist0[0])
+        plt.plot(hist1[0])
+
+        plt.show()
+
+        print "Done"
+        print "----"
+
+    def run_dsim_skarab(self, arm_mode, trig_mode, valid_mode):
 
         self.skarab_info_dsim()
 
@@ -327,29 +502,67 @@ class dsim:
         print ''
 
         print 'Connect to DSim and configure'
+        print ""
         self.roach2_info()
 
         print 'Connect to FEng and configure'
+        print ""
         self.skarab_info_feng()
 
         print "Setup multicast receive"
+        print ""
         #g = self.f.gbes["gbe0"]
         #g.multicast_receive?
         #g.multicast_receive('239.2.0.64', 4)
 
-        self.g = self.f.gbes["gbe0"]
+        g = self.f.gbes["gbe0"]
         # g.multicast_receive?
-        self.g.multicast_receive('239.2.0.68', 4)
+        g.multicast_receive('239.2.0.64', 4)
 
         print "Setup multicast receive done"
+        print ""
+
+        #Setup FEng
+        self.f.registers.control.write(adc_snap_arm=1)
+        self.f.registers.control.write(adc_snap_trig_select=1)
+
+        # Plot ADC data
+        # Arm the snapblocks
+        print "Arming SS"
+        print ""
+        self.f.snapshots.snap_adc0_ss.arm(man_trig=False, man_valid=False)
+        self.f.snapshots.snap_adc1_ss.arm(man_trig=False, man_valid=False)
 
 
-        print "Core details"
-        self.g.print_core_details()
+        # Grab SS data
+        print "Grabbing SS"
+        print ""
+        snap_adc0 = self.f.snapshots.snap_adc0_ss.read(arm=False)['data']
+        snap_adc1 = self.f.snapshots.snap_adc1_ss.read(arm=False)['data']
+
+        p0_d0 = snap_adc0['p0_d0']
+        p0_d1 = snap_adc0['p0_d1']
+        p0_d2 = snap_adc0['p0_d2']
+        p0_d3 = snap_adc0['p0_d3']
+        p0_d4 = snap_adc0['p0_d4']
+        p0_d5 = snap_adc0['p0_d5']
+        p0_d6 = snap_adc0['p0_d6']
+        p0_d7 = snap_adc0['p0_d7']
+
+        print "Extracting Data"
+        print ""
+        # Recombine
+        p0_data = []
+
+        for x in range(0, len(p0_d0)):
+            p0_data.extend([p0_d0[x], p0_d1[x], p0_d2[x], p0_d3[x], p0_d4[x], p0_d5[x], p0_d6[x], p0_d7[x]])
 
 
-
-
+        plt.figure(1)
+        plt.ion()
+        plt.clf()
+        plt.plot(p0_data)
+        plt.show()
 
     def test_var_args(self,farg,*args):
 

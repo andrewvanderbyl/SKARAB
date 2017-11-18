@@ -28,7 +28,7 @@ import time
 HOST = 'skarab020304-01'
 
 # Programming file
-prog_file = "/tmp/pfb_fft_test_2017-11-17_1025.fpg"
+prog_file = "/tmp/pfb_fft_test_2017-11-17_1642.fpg"
 
 class pfb:
     def __init__(self):
@@ -79,7 +79,7 @@ class pfb:
 
         print "Clear BRAM"
         print "----------"
-        self.f.registers.bram_clr.write(reg=0)
+        self.f.registers.bram_clr.write(reg=1)
 
         print 'BRAM clear done is %s' % self.f.registers.bram_clear_done.read()
 
@@ -116,7 +116,7 @@ class pfb:
         self.f.registers.freq_cwg0.write(frequency=8192000)
 
         # Noise Control
-        self.f.registers.scale_wng0.write(scale=0.1)
+        self.f.registers.scale_wng0.write(scale=0.0)
 
         # Arm the Snapshot Blocks
         # -----------------------
@@ -141,8 +141,8 @@ class pfb:
         self.f.snapshots.ss_pfb_tp1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_tp2_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_tp3_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
-
-
+        self.f.snapshots.ss_pfb_tp4_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.ss_pfb_tp5_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
         print 'Reset'
         print "-----"
@@ -193,48 +193,15 @@ class pfb:
         while self.f.registers.spectrum_counter.read()['data']['reg'] < spec_limit['data']['limit']:
             print "Spectrum Counter is %s" % self.f.registers.spectrum_counter.read()
 
+        #-----------------------------------------------------------------------------------------------------------
 
         print ""
-        print 'Grabbing Snapshot TP'
-        print "--------------------"
-        print ""
-
-        ss_tp = self.f.snapshots.ss_pfb_tp_ss.read(arm=False)['data']
-        ss_tp1 = self.f.snapshots.ss_pfb_tp1_ss.read(arm=False)['data']
-        ss_tp2 = self.f.snapshots.ss_pfb_tp2_ss.read(arm=False)['data']
-        ss_tp3 = self.f.snapshots.ss_pfb_tp3_ss.read(arm=False)['data']
-
-
-        tp_in0 = ss_tp['pfb2_r0']
-        tp_in1 = ss_tp['pfb2_r1']
-        tp_in2 = ss_tp['pfb2_r2']
-
-        tp1_in0 = ss_tp1['pfb2_r3']
-        tp1_in1 = ss_tp1['pfb2_i0']
-        tp1_in2 = ss_tp1['pfb2_i1']
-
-        tp2_in0 = ss_tp2['pfb2_i2']
-        tp2_in1 = ss_tp2['pfb2_i3']
-
-
-        tp = []
-        tp1 = []
-        tp2 = []
-        #tp3 = []
-
-        for x in range(0, len(tp_in0)):
-            tp.extend([tp_in0[x], tp_in1[x], tp_in2[x], tp1_in0[x]])
-            tp1.extend([tp1_in1[x], tp1_in2[x], tp2_in0[x], tp2_in1[x]])
-            #tp2.extend([tp2_in0[x], tp2_in1[x], tp2_in2[x], tp2_in3[x]])
-            #tp3.extend([tp3_in0[x], tp3_in1[x], tp3_in2[x], tp3_in3[x]])
-
-        #embed()
-
-        print ""
+        print "----------------------"
         print 'Grabbing Snapshot Data'
         print "----------------------"
         print ""
 
+        #-----------------------------------------------------------------------------------------------------------
         print "Grabbing CWG data"
         print ""
         ss_cwg = self.f.snapshots.ss_pfb_cwg_ss.read(arm=False)['data']
@@ -248,13 +215,68 @@ class pfb:
         cwg6 = ss_cwg['d6']
         cwg7 = ss_cwg['d7']
 
-
         cwg = []
 
         for x in range(0, len(cwg0)):
             cwg.extend(
                 [cwg0[x], cwg1[x], cwg2[x], cwg3[x], cwg4[x], cwg5[x], cwg6[x], cwg7[x]])
 
+        #-----------------------------------------------------------------------------------------------------------
+
+        print ""
+        print 'Grabbing Snapshot TP'
+        print "--------------------"
+        print ""
+
+        ss_tp = self.f.snapshots.ss_pfb_tp_ss.read(arm=False)['data']
+        ss_tp1 = self.f.snapshots.ss_pfb_tp1_ss.read(arm=False)['data']
+        ss_tp2 = self.f.snapshots.ss_pfb_tp2_ss.read(arm=False)['data']
+        ss_tp3 = self.f.snapshots.ss_pfb_tp3_ss.read(arm=False)['data']
+        ss_tp4 = self.f.snapshots.ss_pfb_tp4_ss.read(arm=False)['data']
+        ss_tp5 = self.f.snapshots.ss_pfb_tp5_ss.read(arm=False)['data']
+
+        # Input squared
+        tp_in0 = ss_tp['pfb2_r0']
+        tp_in1 = ss_tp['pfb2_r1']
+        tp_in2 = ss_tp['pfb2_r2']
+        tp1_in0 = ss_tp1['pfb2_r3']
+
+        tp1_in1 = ss_tp1['pfb2_i0']
+        tp1_in2 = ss_tp1['pfb2_i1']
+        tp2_in0 = ss_tp2['pfb2_i2']
+        tp2_in1 = ss_tp2['pfb2_i3']
+
+        # Feedback
+        tp3_in0 = ss_tp3['pfb2_r0']
+        tp3_in1 = ss_tp3['pfb2_r1']
+        tp3_in2 = ss_tp3['pfb2_r2']
+        tp4_in0 = ss_tp4['pfb2_r3']
+
+        tp4_in1 = ss_tp4['pfb2_i0']
+        tp4_in2 = ss_tp4['pfb2_i1']
+        tp5_in0 = ss_tp5['pfb2_i2']
+        tp5_in1 = ss_tp5['pfb2_i3']
+
+        # Recombine
+        in_sq_real = []
+        in_sq_imag = []
+        fb_real = []
+        fb_imag = []
+
+
+        for x in range(0, len(tp_in0)):
+            in_sq_real.extend([tp_in0[x], tp_in1[x], tp_in2[x], tp1_in0[x]])
+            in_sq_imag.extend([tp1_in1[x], tp1_in2[x], tp2_in0[x], tp2_in1[x]])
+
+            fb_real.extend([tp3_in0[x], tp3_in1[x], tp3_in2[x], tp4_in0[x]])
+            fb_imag.extend([tp4_in1[x], tp4_in2[x], tp5_in0[x], tp5_in1[x]])
+
+
+        complx_in_sq = in_sq_real + np.multiply(in_sq_imag,1j)
+        complx_fb = fb_real + np.multiply(fb_imag, 1j)
+
+        #embed()
+        #-----------------------------------------------------------------------------------------------------------
 
         print "Grabbing ss_pfb_real_dir and ss_pfb_imag_dir"
         print ""
@@ -284,6 +306,7 @@ class pfb:
 
         complx_dir = pfb_real_dir + np.multiply(pfb_imag_dir,1j)
 
+        #-----------------------------------------------------------------------------------------------------------
 
         print "Grabbing ss_pfb_real_sq and ss_pfb_imag_sq"
         print ""
@@ -313,6 +336,7 @@ class pfb:
 
         complx_sq = pfb_real_sq + np.multiply(pfb_imag_sq,1j)
 
+        #-----------------------------------------------------------------------------------------------------------
 
         print "Grabbing ss_pfb_sq1, ss_pfb_sq2, ss_pfb_sq3"
         print ""
@@ -342,6 +366,7 @@ class pfb:
 
         complx_sq_full = pfb_real_sq_full + np.multiply(pfb_imag_sq_full,1j)
 
+        #-----------------------------------------------------------------------------------------------------------
 
 
         print "Check Spectrum Counter (SS)"
@@ -355,42 +380,49 @@ class pfb:
         #plt.clf()
         #plt.plot(cwg)
 
-        plt.figure(2)
+        #plt.figure(2)
+        #plt.ion()
+        #plt.clf()
+        #plt.subplot(211)
+        #plt.plot(np.abs(complx_dir))
+        #plt.subplot(212)
+        #plt.semilogy(np.abs(complx_dir))
+
+        plt.figure(3)
         plt.ion()
         plt.clf()
-        plt.plot(np.abs(complx_dir))
+        plt.subplot(211)
+        plt.plot(np.abs(complx_in_sq))
+        plt.subplot(212)
+        plt.semilogy(np.abs(complx_in_sq))
 
-        #plt.figure(3)
-        #plt.ion()
-        #plt.clf()
-        #plt.plot(np.abs(complx_sq))
+        plt.figure(4)
+        plt.ion()
+        plt.clf()
+        plt.subplot(211)
+        plt.plot(np.abs(complx_fb))
+        plt.subplot(212)
+        plt.semilogy(np.abs(complx_fb))
 
-        #plt.figure(4)
-        #plt.ion()
-        #plt.clf()
-        #plt.semilogy(np.abs(complx_sq))
-
-        #plt.figure(5)
-        #plt.ion()
-        #plt.clf()
-        #plt.plot(np.abs(complx_sq_full))
+        plt.figure(5)
+        plt.ion()
+        plt.clf()
+        plt.subplot(211)
+        plt.plot(np.abs(complx_sq))
+        plt.subplot(212)
+        plt.semilogy(np.abs(complx_sq))
 
         #plt.figure(6)
         #plt.ion()
         #plt.clf()
+        #plt.subplot(211)
+        #plt.plot(np.abs(complx_sq_full))
+        #plt.subplot(212)
         #plt.semilogy(np.abs(complx_sq_full))
 
-        plt.figure(6)
-        plt.ion()
-        plt.clf()
-        plt.subplot(411)
-        plt.plot(np.abs(tp))
-        plt.subplot(412)
-        plt.plot(np.abs(tp1))
-        #plt.subplot(413)
-        #plt.plot(tp2)
-        #plt.subplot(414)
-        #plt.plot(tp3)
+
+
+
         plt.show()
 
         print ""
