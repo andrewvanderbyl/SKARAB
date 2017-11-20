@@ -60,12 +60,14 @@ class dsim:
 
         print "Test DSim on SKARAB using FEng"
 
+    # -------------------------------------------------------------------------------------------------------------
     def setup_FPGA_skarab_feng(self):
 
         # Create FPGA Object
         self.f = casperfpga.CasperFpga(HOST1)
 
         print 'FPGA Object Created'
+        print "Communicating to SKARAB: %s" % HOST1
 
         try:
             self.f.upload_to_ram_and_program(prog_file_feng)
@@ -73,21 +75,6 @@ class dsim:
 
         except:
             print "Programming Failed"
-
-    def setup_FPGA_skarab_dsim(self):
-
-        # Create FPGA Object
-        self.f = casperfpga.CasperFpga(HOST2)
-
-        print 'FPGA Object Created'
-
-        try:
-            self.f.upload_to_ram_and_program(prog_file_feng)
-            print "Programming FPGA done"
-
-        except:
-            print "Programming Failed"
-
 
     def skarab_info_feng(self):
         print 'Grabbing System info'
@@ -99,10 +86,27 @@ class dsim:
 
         self.f.get_system_information(prog_file_feng)
 
-
         print 'Grabbing System info: Done'
         print "--------------------"
         print ''
+
+    # -------------------------------------------------------------------------------------------------------------
+
+    def setup_FPGA_skarab_dsim(self):
+
+        # Create FPGA Object
+        self.d = casperfpga.CasperFpga(HOST2)
+
+        print 'FPGA Object Created'
+        print "Communicating to SKARAB: %s" % HOST2
+
+        try:
+            self.d.upload_to_ram_and_program(prog_file_dsim)
+            print "Programming FPGA done"
+
+        except:
+            print "Programming Failed"
+
 
     def skarab_info_dsim(self):
         print 'Grabbing System info'
@@ -110,14 +114,16 @@ class dsim:
 
         print "Communicating to SKARAB: %s" % HOST2
 
-        self.f = casperfpga.CasperFpga(HOST2)
+        self.d = casperfpga.CasperFpga(HOST2)
 
-        self.f.get_system_information(prog_file_dsim)
+        self.d.get_system_information(prog_file_dsim)
 
 
         print 'Grabbing System info: Done'
         print "--------------------"
         print ''
+
+    # -------------------------------------------------------------------------------------------------------------
 
     def roach2_info(self):
 
@@ -126,14 +132,17 @@ class dsim:
 
         print "Communicating to ROACH: %s" % roach_HOST
 
-        self.d = casperfpga.CasperFpga(roach_HOST)
+        self.dr = casperfpga.CasperFpga(roach_HOST)
 
-        self.d.get_system_information()
+        self.dr.get_system_information()
 
 
         print 'Grabbing System info: Done'
         print "--------------------"
         print ''
+
+    # -------------------------------------------------------------------------------------------------------------
+
 
 
     def run_dsim_roach(self, arm_mode, trig_mode, valid_mode):
@@ -173,7 +182,7 @@ class dsim:
         self.d.registers.scale_out1.write(scale=0.5)
 
         # Set the frequency
-        self.d.registers.freq_cwg0.write(frequency=10000000)
+        self.d.registers.freq_cwg0.write(frequency=8192000)
         self.d.registers.freq_cwg1.write(frequency=1000000)
 
         # Noise Control
@@ -205,109 +214,6 @@ class dsim:
 
         #self.d.registers.gbecontrol.write(gbe0=1, gbe1=1, gbe2=1, gbe3=1)
 
-        # Arm the Snapshot Blocks
-        # -----------------------
-        print 'Arming Snapblocks'
-        print "-----------------"
-
-        self.d.snapshots.ss_fifo_in_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
-        self.d.snapshots.ss_localtime_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
-        self.d.snapshots.ss_cwg0_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
-        self.d.snapshots.ss_cwg1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
-
-        print 'Grabbing Snapshot Data'
-        print "----------------------"
-
-        print "Grabbing localtime"
-        # ss_localtime = self.f.snapshots.ss_localtime_ss.read(arm=False)['data']
-        # localtime = ss_localtime['time']
-
-        print "Grabbing fifo_in"
-        # ss_fifo_in = self.f.snapshots.ss_fifo_in_ss.read(arm=False)['data']
-
-        # fifo_in_d0 = ss_fifo_in['d0']
-        # fifo_in_d1 = ss_fifo_in['d1']
-        # fifo_in_d2 = ss_fifo_in['d2']
-        # fifo_in_d3 = ss_fifo_in['d3']
-        # fifo_in_d4 = ss_fifo_in['d4']
-        # fifo_in_d5 = ss_fifo_in['d5']
-        # fifo_in_d6 = ss_fifo_in['d6']
-        # fifo_in_d7 = ss_fifo_in['d7']
-
-        # fifo_in = []
-
-        # for x in range(0, len(fifo_in_d0)):
-        #    fifo_in.extend(
-        #        [fifo_in_d0[x], fifo_in_d1[x], fifo_in_d2[x], fifo_in_d3[x], fifo_in_d4[x],
-        #         fifo_in_d5[x], fifo_in_d6[x], fifo_in_d7[x]])
-
-
-        print "Grabbing cwg0 and cwg1"
-        ss_cwg0 = self.d.snapshots.ss_cwg0_ss.read(arm=False)['data']
-
-        cwg0_d0 = ss_cwg0['d0']
-        cwg0_d1 = ss_cwg0['d1']
-        cwg0_d2 = ss_cwg0['d2']
-        cwg0_d3 = ss_cwg0['d3']
-        cwg0_d4 = ss_cwg0['d4']
-        cwg0_d5 = ss_cwg0['d5']
-        cwg0_d6 = ss_cwg0['d6']
-        cwg0_d7 = ss_cwg0['d7']
-
-        cwg0 = []
-
-        for x in range(0, len(cwg0_d0)):
-            cwg0.extend(
-                [cwg0_d0[x], cwg0_d1[x], cwg0_d2[x], cwg0_d3[x], cwg0_d4[x],
-                 cwg0_d5[x], cwg0_d6[x], cwg0_d7[x]])
-
-        ss_cwg1 = self.d.snapshots.ss_cwg1_ss.read(arm=False)['data']
-
-        cwg1_d0 = ss_cwg1['d0']
-        cwg1_d1 = ss_cwg1['d1']
-        cwg1_d2 = ss_cwg1['d2']
-        cwg1_d3 = ss_cwg1['d3']
-        cwg1_d4 = ss_cwg1['d4']
-        cwg1_d5 = ss_cwg1['d5']
-        cwg1_d6 = ss_cwg1['d6']
-        cwg1_d7 = ss_cwg1['d7']
-
-        cwg1 = []
-
-        for x in range(0, len(cwg1_d0)):
-            cwg1.extend(
-                [cwg1_d0[x], cwg1_d1[x], cwg1_d2[x], cwg1_d3[x], cwg1_d4[x],
-                 cwg1_d5[x], cwg1_d6[x], cwg1_d7[x]])
-
-        # print "localtime is %s" % localtime
-
-        # Noise Histogram
-        hist0 = np.histogram(cwg0)
-        hist1 = np.histogram(cwg1)
-
-        plt.figure(1)
-        plt.ion()
-        plt.clf()
-        plt.plot(cwg0)
-
-        plt.figure(2)
-        plt.ion()
-        plt.clf()
-        plt.plot(cwg1)
-
-        # plt.figure(3)
-        # plt.ion()
-        # plt.clf()
-        # plt.plot(fifo_in)
-
-        plt.figure(4)
-        plt.ion()
-        plt.clf()
-        plt.plot(hist0[0])
-        plt.plot(hist1[0])
-
-        plt.show()
-
         print "Done"
         print "----"
 
@@ -319,22 +225,22 @@ class dsim:
         print "Set IP Addr"
         print "-----------"
         print "Gbe0 is: 239.2.0.64"
-        self.f.registers.gbe_iptx0.write(reg=4009885760+4)
+        self.d.registers.gbe_iptx0.write(reg=4009885764+4)
         print "Gbe0 is: 239.2.0.65"
-        self.f.registers.gbe_iptx1.write(reg=4009885761+4)
+        self.d.registers.gbe_iptx1.write(reg=4009885765+4)
         print "Gbe0 is: 239.2.0.66"
-        self.f.registers.gbe_iptx2.write(reg=4009885762+4)
+        self.d.registers.gbe_iptx2.write(reg=4009885766+4)
         print "Gbe0 is: 239.2.0.67"
-        self.f.registers.gbe_iptx3.write(reg=4009885763+4)
+        self.d.registers.gbe_iptx3.write(reg=4009885767+4)
 
-        print "iptx0: %s" % self.f.registers.gbe_iptx0.read()
-        print "iptx1: %s" % self.f.registers.gbe_iptx1.read()
-        print "iptx2: %s" % self.f.registers.gbe_iptx2.read()
-        print "iptx3: %s" % self.f.registers.gbe_iptx3.read()
+        print "iptx0: %s" % self.d.registers.gbe_iptx0.read()
+        print "iptx1: %s" % self.d.registers.gbe_iptx1.read()
+        print "iptx2: %s" % self.d.registers.gbe_iptx2.read()
+        print "iptx3: %s" % self.d.registers.gbe_iptx3.read()
 
         print "Setting Port 7148"
-        self.f.registers.gbe_porttx.write(reg=7148)
-        print "Port: %s" % self.f.registers.gbe_porttx.read()
+        self.d.registers.gbe_porttx.write(reg=7148)
+        print "Port: %s" % self.d.registers.gbe_porttx.read()
 
 
         print "Starting DSim"
@@ -345,54 +251,54 @@ class dsim:
         # Set the DSim CWG0
 
         # Set the CWG scale
-        self.f.registers.scale_cwg0.write(scale=0.5)
-        self.f.registers.scale_out0.write(scale=0.5)
+        self.d.registers.scale_cwg0.write(scale=0.5)
+        self.d.registers.scale_out0.write(scale=0.5)
 
-        self.f.registers.scale_cwg1.write(scale=0.5)
-        self.f.registers.scale_out1.write(scale=0.5)
+        self.d.registers.scale_cwg1.write(scale=0.5)
+        self.d.registers.scale_out1.write(scale=0.5)
 
         # Set the frequency
-        self.f.registers.freq_cwg0.write(frequency=10000000)
-        self.f.registers.freq_cwg1.write(frequency=1000000)
+        self.d.registers.freq_cwg0.write(frequency=10000000)
+        self.d.registers.freq_cwg1.write(frequency=1000000)
 
         # Noise Control
-        self.f.registers.scale_wng0.write(scale=0.0)
-        self.f.registers.scale_wng1.write(scale=0.0)
-        self.f.registers.scale_wng_corr.write(scale=0.0)
+        self.d.registers.scale_wng0.write(scale=0.0)
+        self.d.registers.scale_wng1.write(scale=0.0)
+        self.d.registers.scale_wng_corr.write(scale=0.0)
 
         # TVG Select
-        self.f.registers.orig_control.write(tvg_select0=1)
-        self.f.registers.orig_control.write(tvg_select1=1)
+        self.d.registers.orig_control.write(tvg_select0=1)
+        self.d.registers.orig_control.write(tvg_select1=1)
 
-        self.f.registers.test_control.write(sel_ramp80=1)
-        self.f.registers.test_control.write(rst_ramp80=0)
+        self.d.registers.test_control.write(sel_ramp80=1)
+        self.d.registers.test_control.write(rst_ramp80=0)
 
         # Traffic Control
-        self.f.registers.pol_traffic_trigger.write(pol0_tx_trigger=1)
-        self.f.registers.pol_traffic_trigger.write(pol1_tx_trigger=1)
+        self.d.registers.pol_traffic_trigger.write(pol0_tx_trigger=1)
+        self.d.registers.pol_traffic_trigger.write(pol1_tx_trigger=1)
 
-        self.f.registers.pol_tx_always_on.write(pol0_tx_always_on=1)
-        self.f.registers.pol_tx_always_on.write(pol1_tx_always_on=1)
+        self.d.registers.pol_tx_always_on.write(pol0_tx_always_on=1)
+        self.d.registers.pol_tx_always_on.write(pol1_tx_always_on=1)
 
         # Source Control
-        self.f.registers.src_sel_cntrl.write(src_sel_0=0)
-        self.f.registers.src_sel_cntrl.write(src_sel_1=0)
+        self.d.registers.src_sel_cntrl.write(src_sel_0=0)
+        self.d.registers.src_sel_cntrl.write(src_sel_1=0)
 
         # Sync Control
-        self.f.registers.orig_control.write(msync=1)
-        self.f.registers.orig_control.write(msync=0)
+        self.d.registers.orig_control.write(msync=1)
+        self.d.registers.orig_control.write(msync=0)
 
-        self.f.registers.gbecontrol.write(gbe0=1, gbe1=1, gbe2=1, gbe3=1)
+        self.d.registers.gbecontrol.write(gbe0=1, gbe1=1, gbe2=1, gbe3=1)
 
         # Arm the Snapshot Blocks
         # -----------------------
         print 'Arming Snapblocks'
         print "-----------------"
 
-        self.f.snapshots.ss_fifo_in_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
-        self.f.snapshots.ss_localtime_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
-        self.f.snapshots.ss_cwg0_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
-        self.f.snapshots.ss_cwg1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.d.snapshots.ss_fifo_in_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.d.snapshots.ss_localtime_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.d.snapshots.ss_cwg0_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.d.snapshots.ss_cwg1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
         print 'Grabbing Snapshot Data'
         print "----------------------"
@@ -422,7 +328,7 @@ class dsim:
 
 
         print "Grabbing cwg0 and cwg1"
-        ss_cwg0 = self.f.snapshots.ss_cwg0_ss.read(arm=False)['data']
+        ss_cwg0 = self.d.snapshots.ss_cwg0_ss.read(arm=False)['data']
 
         cwg0_d0 = ss_cwg0['d0']
         cwg0_d1 = ss_cwg0['d1']
@@ -442,7 +348,7 @@ class dsim:
 
 
 
-        ss_cwg1 = self.f.snapshots.ss_cwg1_ss.read(arm=False)['data']
+        ss_cwg1 = self.d.snapshots.ss_cwg1_ss.read(arm=False)['data']
 
         cwg1_d0 = ss_cwg1['d0']
         cwg1_d1 = ss_cwg1['d1']
@@ -517,7 +423,8 @@ class dsim:
 
         g = self.f.gbes["gbe0"]
         # g.multicast_receive?
-        g.multicast_receive('239.2.0.64', 4)
+        #g.multicast_receive('239.2.0.64', 4)
+        g.multicast_receive('239.2.0.68', 4)
 
         print "Setup multicast receive done"
         print ""

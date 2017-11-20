@@ -28,7 +28,7 @@ import time
 HOST = 'skarab020304-01'
 
 # Programming file
-prog_file = "/tmp/pfb_fft_test_2017-11-17_1642.fpg"
+prog_file = "/tmp/pfb_fft_test_2017-11-20_1024.fpg"
 
 class pfb:
     def __init__(self):
@@ -84,7 +84,8 @@ class pfb:
         print 'BRAM clear done is %s' % self.f.registers.bram_clear_done.read()
 
         while self.f.registers.bram_clear_done.read()['data']['reg'] < 1:
-            print 'Waiting for BRAM clear done'
+            a = 1
+            #print 'Waiting for BRAM clear done'
 
         print 'Clear Done complete'
         print ''
@@ -103,7 +104,7 @@ class pfb:
         print ""
 
         self.f.registers.tvg_sel.write(tvg_sel=0)
-        self.f.registers.debug_sel.write(sel=0)
+        self.f.registers.debug_sel.write(sel=1)
 
         print "Set the DSim"
         print "------------"
@@ -191,7 +192,8 @@ class pfb:
         spec_limit = self.f.registers.spectrum_limit.read()
 
         while self.f.registers.spectrum_counter.read()['data']['reg'] < spec_limit['data']['limit']:
-            print "Spectrum Counter is %s" % self.f.registers.spectrum_counter.read()
+            a = 1
+            #print "Spectrum Counter is %s" % self.f.registers.spectrum_counter.read()
 
         #-----------------------------------------------------------------------------------------------------------
 
