@@ -42,8 +42,10 @@ HOST2 = 'skarab020307-01'
 roach_HOST = 'roach020A11'
 
 # Programming file(s)
-prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-08_1611.fpg"
-prog_file_feng = "/tmp/s_c856m4k.fpg"
+prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-21_1149.fpg"
+#prog_file_feng = "/tmp/s_c856m4k.fpg"
+prog_file_feng = "/tmp/s_c856m4k_2017-11-17_0846.fpg"
+
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -224,13 +226,13 @@ class dsim:
 
         print "Set IP Addr"
         print "-----------"
-        print "Gbe0 is: 239.2.0.64"
+        print "Gbe0 is: 239.2.0.68"
         self.d.registers.gbe_iptx0.write(reg=4009885764+4)
-        print "Gbe0 is: 239.2.0.65"
+        print "Gbe0 is: 239.2.0.69"
         self.d.registers.gbe_iptx1.write(reg=4009885765+4)
-        print "Gbe0 is: 239.2.0.66"
+        print "Gbe0 is: 239.2.0.70"
         self.d.registers.gbe_iptx2.write(reg=4009885766+4)
-        print "Gbe0 is: 239.2.0.67"
+        print "Gbe0 is: 239.2.0.71"
         self.d.registers.gbe_iptx3.write(reg=4009885767+4)
 
         print "iptx0: %s" % self.d.registers.gbe_iptx0.read()

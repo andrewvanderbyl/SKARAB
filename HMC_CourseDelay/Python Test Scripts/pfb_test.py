@@ -28,7 +28,9 @@ import time
 HOST = 'skarab020304-01'
 
 # Programming file
-prog_file = "/tmp/pfb_fft_test_2017-11-20_1024.fpg"
+#prog_file = "/tmp/pfb_fft_test_2017-11-20_1024.fpg"
+prog_file = "/tmp/pfb_fft_vacc_2017-11-21_1039.fpg"
+
 
 class pfb:
     def __init__(self):
@@ -423,6 +425,229 @@ class pfb:
         #plt.semilogy(np.abs(complx_sq_full))
 
 
+        plt.show()
+
+        print ""
+        print "Disable System"
+        print "--------------"
+        self.f.registers.sys_en.write(en=0)
+
+        print ""
+        print "Done"
+        print "----"
+
+
+    def pfb_vacc(self, trig_mode, valid_mode, accumulation_len):
+
+        self.skarab_info()
+
+        print "Disable System"
+        print "--------------"
+        self.f.registers.sys_en.write(en=0)
+
+        print "FFT Shift"
+        print "---------"
+        self.f.registers.fft_shift.write(fft_shift=8191)
+        print "FFT shift is %s" % self.f.registers.fft_shift.read()
+        print ""
+
+        print "Spectrum Accumulation"
+        print "---------------------"
+        self.f.registers.spectrum_limit.write(limit=np.power(2,accumulation_len))
+        print "Spectrum accumulation limit is %s" % self.f.registers.spectrum_limit.read()
+        print ""
+
+        self.f.registers.tvg_sel.write(tvg_sel=0)
+
+        print "Set the DSim"
+        print "------------"
+
+        # Set the CWG scale
+        self.f.registers.scale_cwg0.write(scale=0.75)
+        self.f.registers.scale_out0.write(scale=1.0)
+
+        # Set the frequency
+        self.f.registers.freq_cwg0.write(frequency=8192000)
+
+        # Noise Control
+        self.f.registers.scale_wng0.write(scale=0.0)
+
+        # Arm the Snapshot Blocks
+        # -----------------------
+        print 'Arming Snapblocks'
+        print "-----------------"
+        print ""
+        self.f.snapshots.ss_pfb_cwg_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+
+        self.f.snapshots.ss_pfb_real_dir_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.ss_pfb_imag_dir_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+
+        self.f.snapshots.ss_pfb_sq0_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.ss_pfb_sq1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.ss_pfb_sq2_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+
+        print 'Reset'
+        print "-----"
+        print ""
+        # Sync Control
+        self.f.registers.sys_rst.write(rst='pulse')
+
+        print "Settign Accumulation limit"
+        print "--------------------------"
+        self.f.registers.acc_len.write(reg=np.power(2,accumulation_len))
+        print "Accumulation is %s" % self.f.registers.acc_len.read()
+        print ""
+        self.f.registers.cnt_rst.write(reg='pulse')
+
+        print "Check Spectrum Counter"
+        print "----------------------"
+        print "Spectrum Counter is %s" % self.f.registers.spectrum_counter.read()
+        print ""
+
+        print "Check Sync"
+        print "----------"
+        print "PFB Sync in %s" % self.f.registers.pfbin_sync_count.read()
+        print "PFB Sync out %s" % self.f.registers.pfbout_sync_count.read()
+        print ""
+
+        print "*************"
+        print 'System Enable'
+        print "*************"
+        print ""
+        self.f.registers.sys_en.write(en=1)
+
+
+        print "PFB OF"
+        print "------"
+        print "PFB OF is %s" % self.f.registers.pfb_of.read()
+        print ""
+
+        print "Check Spectrum Counter"
+        print "----------------------"
+        print "Spectrum Counter is %s" % self.f.registers.spectrum_counter.read()
+        print ""
+
+        print "Check Sync"
+        print "----------"
+        print "PFB Sync in %s" % self.f.registers.pfbin_sync_count.read()
+        print "PFB Sync out %s" % self.f.registers.pfbout_sync_count.read()
+        print ""
+
+        #-----------------------------------------------------------------------------------------------------------
+
+        print ""
+        print "----------------------"
+        print 'Grabbing Snapshot Data'
+        print "----------------------"
+        print ""
+
+        #-----------------------------------------------------------------------------------------------------------
+        print "Grabbing CWG data"
+        print ""
+        ss_cwg = self.f.snapshots.ss_pfb_cwg_ss.read(arm=False)['data']
+
+        cwg0 = ss_cwg['d0']
+        cwg1 = ss_cwg['d1']
+        cwg2 = ss_cwg['d2']
+        cwg3 = ss_cwg['d3']
+        cwg4 = ss_cwg['d4']
+        cwg5 = ss_cwg['d5']
+        cwg6 = ss_cwg['d6']
+        cwg7 = ss_cwg['d7']
+
+        cwg = []
+
+        for x in range(0, len(cwg0)):
+            cwg.extend(
+                [cwg0[x], cwg1[x], cwg2[x], cwg3[x], cwg4[x], cwg5[x], cwg6[x], cwg7[x]])
+
+        #-----------------------------------------------------------------------------------------------------------
+
+        print "Grabbing ss_pfb_real_dir and ss_pfb_imag_dir"
+        print ""
+        ss_pfb_real_dir = self.f.snapshots.ss_pfb_real_dir_ss.read(arm=False)['data']
+        ss_pfb_imag_dir = self.f.snapshots.ss_pfb_imag_dir_ss.read(arm=False)['data']
+
+        pfb_real0_dir = ss_pfb_real_dir['pfb2_r0']
+        pfb_real1_dir = ss_pfb_real_dir['pfb2_r1']
+        pfb_real2_dir = ss_pfb_real_dir['pfb2_r2']
+        pfb_real3_dir = ss_pfb_real_dir['pfb2_r3']
+
+        pfb_imag0_dir = ss_pfb_imag_dir['pfb2_i0']
+        pfb_imag1_dir = ss_pfb_imag_dir['pfb2_i1']
+        pfb_imag2_dir = ss_pfb_imag_dir['pfb2_i2']
+        pfb_imag3_dir = ss_pfb_imag_dir['pfb2_i3']
+
+
+        pfb_real_dir = []
+        pfb_imag_dir = []
+
+        for x in range(0, len(pfb_real0_dir)):
+            pfb_real_dir.extend(
+                [pfb_real0_dir[x], pfb_real1_dir[x], pfb_real2_dir[x], pfb_real3_dir[x]])
+
+            pfb_imag_dir.extend(
+                [pfb_imag0_dir[x], pfb_imag1_dir[x], pfb_imag2_dir[x], pfb_imag3_dir[x]])
+
+        complx_dir = pfb_real_dir + np.multiply(pfb_imag_dir,1j)
+
+        #-----------------------------------------------------------------------------------------------------------
+
+        print "Grabbing Accumulated data"
+        print ""
+        ss_pfb0 = self.f.snapshots.ss_pfb_sq0_ss.read(arm=False)['data']
+        ss_pfb1 = self.f.snapshots.ss_pfb_sq1_ss.read(arm=False)['data']
+        ss_pfb2 = self.f.snapshots.ss_pfb_sq2_ss.read(arm=False)['data']
+
+
+        pfb_acc0 = ss_pfb0['pfb2_0']
+        pfb_acc1 = ss_pfb0['pfb2_1']
+        pfb_acc2 = ss_pfb1['pfb2_0']
+        pfb_acc3 = ss_pfb1['pfb2_1']
+
+        pfb_acc = ss_pfb2['acc']
+        pfb_dv = ss_pfb2['dv']
+
+
+        pfb_acc_comb = []
+
+        for x in range(0, len(pfb_acc0)):
+            pfb_acc_comb.extend(
+                [pfb_acc0[x], pfb_acc1[x], pfb_acc2[x], pfb_acc3[x]])
+
+        #-----------------------------------------------------------------------------------------------------------
+
+
+        #plt.figure(1)
+        #plt.ion()
+        #plt.clf()
+        #plt.plot(cwg)
+
+
+        plt.figure(2)
+        plt.ion()
+        plt.clf()
+        plt.subplot(211)
+        plt.plot(np.abs(complx_dir))
+        plt.subplot(212)
+        plt.semilogy(np.abs(complx_dir))
+
+
+        plt.figure(3)
+        plt.ion()
+        plt.clf()
+        plt.subplot(211)
+        plt.plot(np.abs(pfb_acc_comb))
+        plt.subplot(212)
+        plt.semilogy(np.abs(pfb_acc_comb))
+
+        plt.figure(4)
+        plt.ion()
+        plt.clf()
+        plt.subplot(211)
+        plt.plot(pfb_acc)
+        plt.subplot(212)
+        plt.plot(pfb_dv)
 
 
         plt.show()
@@ -436,28 +661,6 @@ class pfb:
         print "Done"
         print "----"
 
-
-    def rx_data(self,data_port=7148, sd_ip='127.0.0.1', sd_port=7149, **kwargs):
-
-        print "RX DSim data"
-        print "------------"
-
-        '''
-                Process SPEAD data from X engines and forward it to the SD.
-        '''
-
-        logger = self.logger
-        logger.info("Data reception on port %i." % data_port)
-
-        rx = spead.TransportUDPrx(data_port, pkt_count=1024, buffer_size=51200000)
-        #logger.info("Sending Signal Display data to %s:%i." % (sd_ip, sd_port))
-        #tx_sd = spead.Transmitter(spead.TransportUDPtx(sd_ip, sd_port))
-        #ig = spead.ItemGroup()
-        #ig_sd = spead.ItemGroup()
-
-        print "Stopping RX data"
-        print "----------------"
-        rx.stop()
 
 
 
