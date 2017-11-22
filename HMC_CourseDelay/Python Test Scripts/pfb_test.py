@@ -29,7 +29,7 @@ HOST = 'skarab020304-01'
 
 # Programming file
 #prog_file = "/tmp/pfb_fft_test_2017-11-20_1024.fpg"
-prog_file = "/tmp/pfb_fft_vacc_2017-11-21_1039.fpg"
+prog_file = "/tmp/pfb_fft_vacc_2017-11-22_1107.fpg"
 
 
 class pfb:
@@ -437,7 +437,7 @@ class pfb:
         print "----"
 
 
-    def pfb_vacc(self, trig_mode, valid_mode, accumulation_len):
+    def pfb_vacc(self, trig_mode, valid_mode, accumulation_len,sleep,noise):
 
         self.skarab_info()
 
@@ -463,14 +463,14 @@ class pfb:
         print "------------"
 
         # Set the CWG scale
-        self.f.registers.scale_cwg0.write(scale=0.75)
+        self.f.registers.scale_cwg0.write(scale=0.95)
         self.f.registers.scale_out0.write(scale=1.0)
 
         # Set the frequency
         self.f.registers.freq_cwg0.write(frequency=8192000)
 
         # Noise Control
-        self.f.registers.scale_wng0.write(scale=0.0)
+        self.f.registers.scale_wng0.write(scale=noise)
 
         # Arm the Snapshot Blocks
         # -----------------------
@@ -485,14 +485,10 @@ class pfb:
         self.f.snapshots.ss_pfb_sq0_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_sq1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_sq2_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        self.f.snapshots.ss_pfb_sq3_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        print 'Reset'
-        print "-----"
-        print ""
-        # Sync Control
-        self.f.registers.sys_rst.write(rst='pulse')
 
-        print "Settign Accumulation limit"
+        print "Setting Accumulation limit"
         print "--------------------------"
         self.f.registers.acc_len.write(reg=np.power(2,accumulation_len))
         print "Accumulation is %s" % self.f.registers.acc_len.read()
@@ -509,12 +505,28 @@ class pfb:
         print "PFB Sync in %s" % self.f.registers.pfbin_sync_count.read()
         print "PFB Sync out %s" % self.f.registers.pfbout_sync_count.read()
         print ""
+        #-----------------------------------------------------------------------------------------------------------
+
+        print 'Sleep time - Accumulations happening!'
+        print 'Sleeping for %s seconds' %sleep
+        time.sleep(sleep)
+        print 'Sleep Done'
+        print ''
+        #-----------------------------------------------------------------------------------------------------------
+
+        print 'Reset'
+        print "-----"
+        print ""
+        # Sync Control
+        self.f.registers.sys_rst.write(rst='pulse')
 
         print "*************"
         print 'System Enable'
         print "*************"
         print ""
         self.f.registers.sys_en.write(en=1)
+
+        #-----------------------------------------------------------------------------------------------------------
 
 
         print "PFB OF"
@@ -532,6 +544,7 @@ class pfb:
         print "PFB Sync in %s" % self.f.registers.pfbin_sync_count.read()
         print "PFB Sync out %s" % self.f.registers.pfbout_sync_count.read()
         print ""
+
 
         #-----------------------------------------------------------------------------------------------------------
 
@@ -598,8 +611,9 @@ class pfb:
         ss_pfb0 = self.f.snapshots.ss_pfb_sq0_ss.read(arm=False)['data']
         ss_pfb1 = self.f.snapshots.ss_pfb_sq1_ss.read(arm=False)['data']
         ss_pfb2 = self.f.snapshots.ss_pfb_sq2_ss.read(arm=False)['data']
+        ss_pfb3 = self.f.snapshots.ss_pfb_sq3_ss.read(arm=False)['data']
 
-
+        '''
         pfb_acc0 = ss_pfb0['pfb2_0']
         pfb_acc1 = ss_pfb0['pfb2_1']
         pfb_acc2 = ss_pfb1['pfb2_0']
@@ -608,6 +622,19 @@ class pfb:
         pfb_acc = ss_pfb2['acc']
         pfb_dv = ss_pfb2['dv']
 
+
+        pfb_acc_comb = []
+
+        for x in range(0, len(pfb_acc0)):
+            pfb_acc_comb.extend(
+                [pfb_acc0[x], pfb_acc1[x], pfb_acc2[x], pfb_acc3[x]])
+        '''
+
+
+        pfb_acc0 = ss_pfb0['pfb2_0']
+        pfb_acc1 = ss_pfb1['pfb2_0']
+        pfb_acc2 = ss_pfb2['pfb2_0']
+        pfb_acc3 = ss_pfb3['pfb2_0']
 
         pfb_acc_comb = []
 
@@ -624,13 +651,13 @@ class pfb:
         #plt.plot(cwg)
 
 
-        plt.figure(2)
-        plt.ion()
-        plt.clf()
-        plt.subplot(211)
-        plt.plot(np.abs(complx_dir))
-        plt.subplot(212)
-        plt.semilogy(np.abs(complx_dir))
+        #plt.figure(2)
+        #plt.ion()
+        #plt.clf()
+        #plt.subplot(211)
+        #plt.plot(np.abs(complx_dir))
+        #plt.subplot(212)
+        #plt.semilogy(np.abs(complx_dir))
 
 
         plt.figure(3)
@@ -641,20 +668,23 @@ class pfb:
         plt.subplot(212)
         plt.semilogy(np.abs(pfb_acc_comb))
 
-        plt.figure(4)
-        plt.ion()
-        plt.clf()
-        plt.subplot(211)
-        plt.plot(pfb_acc)
-        plt.subplot(212)
-        plt.plot(pfb_dv)
+        #plt.figure(4)
+        #plt.ion()
+        #plt.clf()
+        #plt.subplot(211)
+        #plt.plot(pfb_acc)
+        #plt.subplot(212)
+        #plt.plot(pfb_dv)
 
 
         plt.show()
 
+
         print ""
+        print "**************"
         print "Disable System"
-        print "--------------"
+        print "**************"
+        print ""
         self.f.registers.sys_en.write(en=0)
 
         print ""

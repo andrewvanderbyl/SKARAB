@@ -42,9 +42,9 @@ HOST2 = 'skarab020307-01'
 roach_HOST = 'roach020A11'
 
 # Programming file(s)
-prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-21_1149.fpg"
+prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-21_1556.fpg"
 #prog_file_feng = "/tmp/s_c856m4k.fpg"
-prog_file_feng = "/tmp/s_c856m4k_2017-11-17_0846.fpg"
+prog_file_feng = "/tmp/s_c856m4k_2017-11-21_1714.fpg"
 
 
 
