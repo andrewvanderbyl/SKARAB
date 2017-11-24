@@ -11,6 +11,6 @@ Real_Signal = Amplitude*real(Complex_Signal);
 
 
 % Random
-Random_Signal = exp(1i*2*pi*randn(1,Num_Samples)); 
+Random_Signal = exp(1i*2*pi*randn(1,floor(Num_Samples))); 
 
 end 
