@@ -18,18 +18,25 @@ N = 4;   % Number of taps in each FIR filter.
 % PFB Coefficients precision
 Config.Total_coeffBits = 18;
 Config.coeff_precision =  2^(-17);
+
 % Input data precision
 Config.Total_dataBits = 10;
 Config.data_precision =  2^(-9);
+
 % Intermediary precision
 Config.Total_intmedBits = 25;
 Config.intmed_precision =  2^(-24);
+
+% FFT precision
+Config.Total_fftBits = 18+13;
+Config.fft_precision =  2^(-17);
+
 % Output precision
-Config.Total_outBits = 8;
-Config.out_precision =  2^(-7);
+Config.Total_outBits = 18;
+Config.out_precision =  2^(-17);
 
 % Rounding and Saturate Method
-%RndMth = 'Floor';
+RndMth = 'Nearest';
 DoSatur = 'on';
 
 % -------------------------------------------------------------------------
@@ -46,7 +53,7 @@ b = windowval .* sinc(fwidth*([0:alltaps-1]/(M)-N/2));
 b = [b,zeros(1,M*N-length(b))];
 
 % Fixed point
-b_fp = num2fixpt(b, sfix(Config.Total_coeffBits), Config.coeff_precision, 'Nearest', DoSatur);
+b_fp = num2fixpt(b, sfix(Config.Total_coeffBits), Config.coeff_precision, RndMth, DoSatur);
 
 
 % Reshape the filter coefficients into a matrix whos rows 
@@ -68,18 +75,18 @@ HH = zeros(M,length(w));  % Stores output power for each channel.
 % -------------------------------------------------------------------------
 
 % Define the number of accumulations
-accumulations = 2^6;
+accumulations = 2^19;
 HH_vacc =  zeros(M,1);
 HH_vacc_fp =  zeros(M,1);
 
 % -------------------------------------------------------------------------
 
 % Generate an input signal
-freq = 104e6;
+freq = 208984375;
 fs = 1712e6;
 cycles = alltaps/(floor(fs/freq));
-noise_level = 2^(-15);
-Amplitude = 1;
+noise_level = 2^(-9);
+Amplitude = 0.9;
 
 for i=1:accumulations
     display(i) 
@@ -96,7 +103,7 @@ for i=1:accumulations
     X = reshape(X,M,length(X)/M);
 
     % Fixed point
-    X_fp = num2fixpt(X, sfix(Config.Total_dataBits), Config.data_precision, 'Floor', DoSatur);
+    X_fp = num2fixpt(X, sfix(Config.Total_dataBits), Config.data_precision, RndMth, DoSatur);
     
     % Make the output the same size as the input.
     Y = zeros(size(X));   
@@ -114,39 +121,43 @@ for i=1:accumulations
     Ynw=fft(X);
     
     % Fixed point
-    Y_fp_intmed = num2fixpt(Y_fp, sfix(Config.Total_intmedBits), Config.intmed_precision, 'Floor', DoSatur);    
-    Y_fp = fft(Y_fp_intmed);
+    %Y_fp_intmed = num2fixpt(Y_fp, sfix(Config.Total_intmedBits), Config.intmed_precision, RndMth, DoSatur);    
+    %Y_fp = fft(Y_fp_intmed);
+    
+    Y_fp = fft(Y_fp);
     Ynw_fp = fft(X_fp);
 
+    % Fixed point
+    Y_fp = num2fixpt(Y_fp, sfix(Config.Total_fftBits), Config.fft_precision, RndMth, DoSatur);   
+    
     % Store the output power
     HH(:,1) = sqrt(mean((abs(Y).^2).')'); % RMS voltage
     HH_nw(:,1) = sqrt(mean((abs(Ynw).^2).')'); % RMS voltage
-    HH_var(:,1) = var(Y.')';              % Total energy
-    HH_max(:,1) = max(abs(Y).')';         % Max-hold amplitude
-    HH_mean(:,1) = mean(abs(Y).')';       % Average amplitude
-    HH_mean_nw(:,1) = mean(abs(Ynw).');   % Average amplitude
+    %HH_var(:,1) = var(Y.')';              % Total energy
+    %HH_max(:,1) = max(abs(Y).')';         % Max-hold amplitude
+    %HH_mean(:,1) = mean(abs(Y).')';       % Average amplitude
+    %HH_mean_nw(:,1) = mean(abs(Ynw).');   % Average amplitude
 
     % Store the output power
     HH_fp(:,1) = sqrt(mean((abs(Y_fp).^2).')'); % RMS voltage
     HH_nw_fp(:,1) = sqrt(mean((abs(Ynw_fp).^2).')'); % RMS voltage
-    HH_var_fp(:,1) = var(Y_fp.')';              % Total energy
-    HH_max_fp(:,1) = max(abs(Y_fp).')';         % Max-hold amplitude
-    HH_mean_fp(:,1) = mean(abs(Y_fp).')';       % Average amplitude
-    HH_mean_nw_fp(:,1) = mean(abs(Ynw_fp).');   % Average amplitude
+    %HH_var_fp(:,1) = var(Y_fp.')';              % Total energy
+    %HH_max_fp(:,1) = max(abs(Y_fp).')';         % Max-hold amplitude
+    %HH_mean_fp(:,1) = mean(abs(Y_fp).')';       % Average amplitude
+    %HH_mean_nw_fp(:,1) = mean(abs(Ynw_fp).');   % Average amplitude
     
     % Compute log
-    HH_dB = 20*log10(HH(:));
-    HH_dB_nw = 20*log10(HH_nw(:));
-    HH_var_dB = 20*log10(HH_var(:));
-    HH_max_dB = 20*log10(HH_max(:));
-    HH_mean_dB = 20*log10(HH_mean(:));
-    HH_mean_dB_nw = 20*log10(HH_mean_nw(:));
+    %HH_dB = 20*log10(HH(:));
+    %HH_dB_nw = 20*log10(HH_nw(:));
+    %HH_var_dB = 20*log10(HH_var(:));
+    %HH_max_dB = 20*log10(HH_max(:));
+    %HH_mean_dB = 20*log10(HH_mean(:));
+    %HH_mean_dB_nw = 20*log10(HH_mean_nw(:));
 
     % Accumulate the spectra
     HH_vacc = HH_vacc + HH;
-    
+
     HH_vacc_fp = HH_vacc_fp + HH_fp;
-   
 
 end
 
@@ -156,4 +167,5 @@ semilogy(HH_vacc)
 figure(2)
 semilogy(HH_vacc_fp)
 
-
+% Save the computed files
+save(strcat('/home/jasper/Desktop/','pfb_vacc_',num2str(accumulations),'_freq_',num2str(freq),'.mat'),'HH_vacc','HH_vacc_fp')
