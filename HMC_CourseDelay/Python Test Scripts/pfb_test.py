@@ -2,6 +2,7 @@
 #import pylab as plt
 
 import matplotlib.pyplot as plt
+
 from IPython import embed
 import casperfpga
 import logging
@@ -28,8 +29,17 @@ import time
 HOST = 'skarab020304-01'
 
 # Programming file
-#prog_file = "/tmp/pfb_fft_test_2017-11-20_1024.fpg"
-prog_file = "/tmp/pfb_fft_vacc_2017-11-22_1107.fpg"
+# ----------------
+
+# base (fpg)
+#prog_file = "/tmp/pfb_fft_vacc_2017-11-22_1107.fpg"
+
+# changes (fpg)
+#prog_file = "/tmp/pfb_fft_vacc_3_2017-11-22_1612.fpg"
+
+#prog_file = "/tmp/pfb_fft_vacc_4_2017-11-24_0734.fpg"
+prog_file = "/tmp/pfb_fft_vacc_5_2017-11-24_0743.fpg"
+
 
 
 class pfb:
@@ -68,10 +78,38 @@ class pfb:
         print "--------------------"
         print ''
 
+    def save_to_mat(self, data, filename=None):
+        import scipy.io as sio
+        import numpy as np
+        datadict = {
+            'simin_%s' % k: {
+                'time': [], 'signals': {
+                    'dimensions': 1, 'values': np.array(data[k], dtype=np.uint32)}
+            } for k in data.keys()
+            }
+
+        for k in data.keys():
+            datadict['simin_%s' % k]['signals']['values'].shape = (len(data[k]), 1)
+
+        if filename is None:
+            #filename = '/tmp/ctdata_%i.mat' % np.random.randint(1000000)
+            filename = '~/acc_%i_.mat' % np.random.randint(1000000)
+
+        sio.savemat(filename, datadict)
+
+        return filename
 
     def pfb_test(self, trig_mode, valid_mode, accumulation_len):
 
+        print ""
+        print " *** Starting Test *** "
+        print ""
+
         self.skarab_info()
+
+        print ""
+        print 'Running fpg: %s' % prog_file
+        print ""
 
         print "Disable System"
         print "--------------"
@@ -116,10 +154,10 @@ class pfb:
         self.f.registers.scale_out0.write(scale=1.0)
 
         # Set the frequency
-        self.f.registers.freq_cwg0.write(frequency=8192000)
+        self.f.registers.freq_cwg0.write(frequency=8192000*2)
 
         # Noise Control
-        self.f.registers.scale_wng0.write(scale=0.0)
+        self.f.registers.scale_wng0.write(scale=0.0039) #2^-8
 
         # Arm the Snapshot Blocks
         # -----------------------
@@ -439,7 +477,15 @@ class pfb:
 
     def pfb_vacc(self, trig_mode, valid_mode, accumulation_len,sleep,noise):
 
+        print ""
+        print " *** Starting Test *** "
+        print ""
+
         self.skarab_info()
+
+        print ""
+        print 'Running fpg: %s' % prog_file
+        print ""
 
         print "Disable System"
         print "--------------"
@@ -642,8 +688,8 @@ class pfb:
             pfb_acc_comb.extend(
                 [pfb_acc0[x], pfb_acc1[x], pfb_acc2[x], pfb_acc3[x]])
 
+        accumulations = {'combined':pfb_acc_comb}
         #-----------------------------------------------------------------------------------------------------------
-
 
         #plt.figure(1)
         #plt.ion()
@@ -660,12 +706,17 @@ class pfb:
         #plt.semilogy(np.abs(complx_dir))
 
 
+        #plt.figure(3)
+        #plt.ion()
+        #plt.clf()
+        #plt.subplot(211)
+        #plt.plot(np.abs(pfb_acc_comb))
+        #plt.subplot(212)
+        #plt.semilogy(np.abs(pfb_acc_comb))
+
         plt.figure(3)
         plt.ion()
         plt.clf()
-        plt.subplot(211)
-        plt.plot(np.abs(pfb_acc_comb))
-        plt.subplot(212)
         plt.semilogy(np.abs(pfb_acc_comb))
 
         #plt.figure(4)
@@ -692,6 +743,8 @@ class pfb:
         print "----"
 
 
+
+        self.save_to_mat(accumulations,prog_file+'.mat')
 
 
 

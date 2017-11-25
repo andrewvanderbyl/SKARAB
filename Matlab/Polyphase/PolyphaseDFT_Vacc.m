@@ -75,7 +75,7 @@ HH = zeros(M,length(w));  % Stores output power for each channel.
 % -------------------------------------------------------------------------
 
 % Define the number of accumulations
-accumulations = 2^19;
+accumulations = 2^10;
 HH_vacc =  zeros(M,1);
 HH_vacc_fp =  zeros(M,1);
 
@@ -86,7 +86,7 @@ freq = 208984375;
 fs = 1712e6;
 cycles = alltaps/(floor(fs/freq));
 noise_level = 2^(-9);
-Amplitude = 0.9;
+Amplitude = 0.75;
 
 for i=1:accumulations
     display(i) 
