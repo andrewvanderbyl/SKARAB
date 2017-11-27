@@ -28,7 +28,7 @@ Config.Total_intmedBits = 25;
 Config.intmed_precision =  2^(-24);
 
 % FFT precision
-Config.Total_fftBits = 18+13;
+Config.Total_fftBits = 18;
 Config.fft_precision =  2^(-17);
 
 % Output precision
@@ -75,7 +75,7 @@ HH = zeros(M,length(w));  % Stores output power for each channel.
 % -------------------------------------------------------------------------
 
 % Define the number of accumulations
-accumulations = 2^10;
+accumulations = 2^18;
 HH_vacc =  zeros(M,1);
 HH_vacc_fp =  zeros(M,1);
 

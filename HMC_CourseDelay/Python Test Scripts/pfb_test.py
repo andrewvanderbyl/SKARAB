@@ -32,13 +32,14 @@ HOST = 'skarab020304-01'
 # ----------------
 
 # base (fpg)
-#prog_file = "/tmp/pfb_fft_vacc_2017-11-22_1107.fpg"
+prog_file = "/tmp/pfb_fft_vacc_2017-11-22_1107.fpg"
 
 # changes (fpg)
+#prog_file = "/tmp/pfb_fft_vacc_1_2017-11-22_1612.fpg"
+#prog_file = "/tmp/pfb_fft_vacc_2_2017-11-22_1612.fpg"
 #prog_file = "/tmp/pfb_fft_vacc_3_2017-11-22_1612.fpg"
-
 #prog_file = "/tmp/pfb_fft_vacc_4_2017-11-24_0734.fpg"
-prog_file = "/tmp/pfb_fft_vacc_5_2017-11-24_0743.fpg"
+#prog_file = "/tmp/pfb_fft_vacc_5_2017-11-24_0743.fpg"
 
 
 
@@ -84,7 +85,7 @@ class pfb:
         datadict = {
             'simin_%s' % k: {
                 'time': [], 'signals': {
-                    'dimensions': 1, 'values': np.array(data[k], dtype=np.uint32)}
+                    'dimensions': 1, 'values': np.array(data[k], dtype=np.float32)}
             } for k in data.keys()
             }
 
@@ -93,7 +94,9 @@ class pfb:
 
         if filename is None:
             #filename = '/tmp/ctdata_%i.mat' % np.random.randint(1000000)
-            filename = '~/acc_%i_.mat' % np.random.randint(1000000)
+	    import time
+	    split_filename = prog_file.split("/")
+            filename = '/home/avanderbyl/results/acc_%s.mat' % split_filename[2]
 
         sio.savemat(filename, datadict)
 
@@ -744,7 +747,7 @@ class pfb:
 
 
 
-        self.save_to_mat(accumulations,prog_file+'.mat')
+        self.save_to_mat(accumulations)
 
 
 
