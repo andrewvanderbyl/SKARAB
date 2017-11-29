@@ -42,7 +42,17 @@ HOST2 = 'skarab020307-01'
 roach_HOST = 'roach020A11'
 
 # Programming file(s)
-prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-27_1150.fpg"
+#prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-27_1150.fpg"
+#prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-27_1657.fpg"
+#prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-28_1156.fpg"
+#prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-28_1355.fpg"
+#prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-28_1547.fpg"
+
+#prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-28_1718.fpg"
+
+prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-29_1118.fpg"
+
+
 #prog_file_feng = "/tmp/s_c856m4k.fpg"
 prog_file_feng = "/tmp/s_c856m4k_2017-11-21_1714.fpg"
 
@@ -223,21 +233,19 @@ class dsim:
 
         self.skarab_info_dsim()
 
-        print ""
-        print self.d.registers.gbecontrol.read()
-        print ""
-        print self.d.gbes.forty_gbe.read_counters()
-
         # Disable GBE's
         print ""
         print "Disabling Gbes"
         print ""
         self.d.registers.gbecontrol.write_int(0)
 
+
+        self.d.registers.control.write(status_clr='pulse')
+        self.d.registers.control.write(gbe_rst='pulse')
+
         print ""
         print self.d.gbes.forty_gbe.read_counters()
         print ""
-
 
         print "Set IP Addr"
         print "-----------"
@@ -246,9 +254,17 @@ class dsim:
         print "Gbe0 is: 239.2.0.73"
         self.d.registers.gbe_iptx1.write(reg=4009885769)
         print "Gbe0 is: 239.2.0.74"
-        self.d.registers.gbe_iptx2.write(reg=40098857670)
+        self.d.registers.gbe_iptx2.write(reg=4009885770)
         print "Gbe0 is: 239.2.0.75"
-        self.d.registers.gbe_iptx3.write(reg=40098857671)
+        self.d.registers.gbe_iptx3.write(reg=4009885771)
+        print ""
+
+        #self.d.registers.orig_control.write(mrst='pulse')
+        #self.d.registers.orig_control.write(msync='pulse')
+        #if self.d.gbes[0].get_port() != 30000:
+        self.d.gbes.forty_gbe.set_port(30000)
+        self.d.registers.gbe_porttx.write(reg=30000)
+        print "Port: %s" % self.d.registers.gbe_porttx.read()
         print ""
 
         print "iptx0: %s" % self.d.registers.gbe_iptx0.read()
@@ -257,21 +273,16 @@ class dsim:
         print "iptx3: %s" % self.d.registers.gbe_iptx3.read()
         print ""
 
-        #print "Setting Port 7148"
-        #self.d.registers.gbe_porttx.write(reg=7148)
-        print "Port: %s" % self.d.registers.gbe_porttx.read()
         print ""
+        print "Enable Gbes"
+        print ""
+        self.d.registers.gbecontrol.write_int(15)
+
 
         self.d.registers.receptor_id.write(pol0_id=0, pol1_id=1)
 
         # ramp 80 or ramp 64?
         self.d.registers.test_control.write(sel_ramp80=True, rst_ramp80='pulse')
-
-        #self.d.registers.orig_control.write(mrst='pulse')
-        #self.d.registers.orig_control.write(msync='pulse')
-        #if self.d.gbes[0].get_port() != 30000:
-        self.d.gbes.forty_gbe.set_port(30000)
-        self.d.registers.gbe_porttx.write(reg=30000)
 
         print "Starting DSim"
         print "-------------"
@@ -315,11 +326,11 @@ class dsim:
 
 
         # Sys Reset
-        print ""
-        print "Reset System"
-        print ""
-        self.d.registers.control.write(status_clr='pulse')
-        self.d.registers.control.write(gbe_rst='pulse')
+        #print ""
+        #print "Reset System"
+        #print ""
+        #self.d.registers.control.write(status_clr='pulse')
+        #self.d.registers.control.write(gbe_rst='pulse')
 
         # Sync Control
         self.d.registers.orig_control.write(mrst='pulse')
@@ -336,13 +347,13 @@ class dsim:
         self.d.snapshots.ss_cwg0_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.d.snapshots.ss_cwg1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        print ""
-        print self.d.registers.gbecontrol.read()
+        #print ""
+        #print self.d.registers.gbecontrol.read()
 
-        print ""
-        print "Enable Gbes"
-        print ""
-        self.d.registers.gbecontrol.write(gbe0=1, gbe1=1, gbe2=1, gbe3=1)
+        #print ""
+        #print "Enable Gbes"
+        #print ""
+        #self.d.registers.gbecontrol.write(gbe0=1, gbe1=1, gbe2=1, gbe3=1)
 
 
 
@@ -447,20 +458,20 @@ class dsim:
         print ""
         print self.d.gbes.forty_gbe.read_counters()
 
-        print ""
-        print "Disabling Gbes"
-        print ""
-        self.d.registers.gbecontrol.write_int(0)
+        #print ""
+        #print "Disabling Gbes"
+        #print ""
+        #self.d.registers.gbecontrol.write_int(0)
 
-        print ""
-        print "Reset System"
-        print ""
-        self.d.registers.control.write(status_clr='pulse')
-        self.d.registers.control.write(gbe_rst='pulse')
+        #print ""
+        #print "Reset System"
+        #print ""
+        #self.d.registers.control.write(status_clr='pulse')
+        #self.d.registers.control.write(gbe_rst='pulse')
 
         # Sync Control
-        self.d.registers.orig_control.write(mrst='pulse')
-        self.d.registers.orig_control.write(msync='pulse')
+        #self.d.registers.orig_control.write(mrst='pulse')
+        #self.d.registers.orig_control.write(msync='pulse')
 
         print ""
         print " *** Done ***"
@@ -472,9 +483,9 @@ class dsim:
         print "--------------------"
         print ''
 
-        print 'Connect to DSim and configure'
-        print ""
-        self.roach2_info()
+        #print 'Connect to DSim and configure'
+        #print ""
+        #self.roach2_info()
 
         print 'Connect to FEng and configure'
         print ""

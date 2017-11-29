@@ -32,7 +32,8 @@ HOST = 'skarab020304-01'
 # ----------------
 
 # base (fpg)
-prog_file = "/tmp/pfb_fft_vacc_2017-11-22_1107.fpg"
+#prog_file = "/tmp/pfb_fft_vacc_2017-11-22_1107.fpg"
+#prog_file = "/tmp/pfb_fft_vacc_2017-11-27_1650.fpg"
 
 # changes (fpg)
 #prog_file = "/tmp/pfb_fft_vacc_1_2017-11-22_1612.fpg"
@@ -40,6 +41,13 @@ prog_file = "/tmp/pfb_fft_vacc_2017-11-22_1107.fpg"
 #prog_file = "/tmp/pfb_fft_vacc_3_2017-11-22_1612.fpg"
 #prog_file = "/tmp/pfb_fft_vacc_4_2017-11-24_0734.fpg"
 #prog_file = "/tmp/pfb_fft_vacc_5_2017-11-24_0743.fpg"
+
+#prog_file = "/tmp/pfb_fft_vacc_3_2017-11-28_0736.fpg"
+#prog_file = "/tmp/pfb_fft_vacc_4_2017-11-27_1651.fpg"
+#prog_file = "/tmp/pfb_fft_vacc_5_2017-11-27_1803.fpg"
+
+prog_file = "/tmp/pfb_fft_vacc_xil_2017-11-29_1120.fpg"
+
 
 
 
@@ -516,7 +524,8 @@ class pfb:
         self.f.registers.scale_out0.write(scale=1.0)
 
         # Set the frequency
-        self.f.registers.freq_cwg0.write(frequency=8192000)
+        #self.f.registers.freq_cwg0.write(frequency=8192000)
+        self.f.registers.freq_cwg0.write(frequency=16384)
 
         # Noise Control
         self.f.registers.scale_wng0.write(scale=noise)
@@ -536,6 +545,7 @@ class pfb:
         self.f.snapshots.ss_pfb_sq2_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_sq3_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
+        self.f.snapshots.ss_fft_sq_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
         print "Setting Accumulation limit"
         print "--------------------------"
@@ -655,7 +665,7 @@ class pfb:
 
         #-----------------------------------------------------------------------------------------------------------
 
-        print "Grabbing Accumulated data"
+        print "Grabbing Accumulated PFB data"
         print ""
         ss_pfb0 = self.f.snapshots.ss_pfb_sq0_ss.read(arm=False)['data']
         ss_pfb1 = self.f.snapshots.ss_pfb_sq1_ss.read(arm=False)['data']
@@ -694,6 +704,17 @@ class pfb:
         accumulations = {'combined':pfb_acc_comb}
         #-----------------------------------------------------------------------------------------------------------
 
+
+        print "Grabbing Accumulated FFT data"
+        print ""
+        ss_fft = self.f.snapshots.ss_fft_sq_ss.read(arm=False)['data']
+
+        fft_xil = ss_fft['pfb2_0']
+
+        #accumulations = {'combined':pfb_acc_comb}
+        #-----------------------------------------------------------------------------------------------------------
+
+
         #plt.figure(1)
         #plt.ion()
         #plt.clf()
@@ -721,6 +742,12 @@ class pfb:
         plt.ion()
         plt.clf()
         plt.semilogy(np.abs(pfb_acc_comb))
+
+        plt.figure(4)
+        plt.ion()
+        plt.clf()
+        plt.semilogy(np.abs(fft_xil))
+
 
         #plt.figure(4)
         #plt.ion()
