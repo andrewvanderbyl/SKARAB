@@ -27,6 +27,8 @@ import time
 #skarab02030F-01
 
 HOST = 'skarab020304-01'
+HOST1 = 'skarab02030F-01'
+HOST2 = 'skarab020307-01'
 
 # Programming file
 # ----------------
@@ -46,7 +48,12 @@ HOST = 'skarab020304-01'
 #prog_file = "/tmp/pfb_fft_vacc_4_2017-11-27_1651.fpg"
 #prog_file = "/tmp/pfb_fft_vacc_5_2017-11-27_1803.fpg"
 
-prog_file = "/tmp/pfb_fft_vacc_xil_2017-11-29_1120.fpg"
+#prog_file = "/tmp/pfb_fft_vacc_xil_2017-11-29_1120.fpg"
+
+#prog_file = "/tmp/pfb_fft_vacc_tw_2017-12-11_1634.fpg"
+prog_file = "/tmp/pfb_fft_vacc_tw_2017-12-12_0821.fpg"
+
+
 
 
 
@@ -60,7 +67,7 @@ class pfb:
     def setup_FPGA(self):
 
         # Create FPGA Object
-        self.f = casperfpga.CasperFpga(HOST)
+        self.f = casperfpga.CasperFpga(HOST2)
 
         print 'FPGA Object Created'
 
@@ -76,9 +83,9 @@ class pfb:
         print 'Grabbing System info'
         print "--------------------"
 
-        print "Communicating to SKARAB: %s" % HOST
+        print "Communicating to SKARAB: %s" % HOST2
 
-        self.f = casperfpga.CasperFpga(HOST)
+        self.f = casperfpga.CasperFpga(HOST2)
 
         self.f.get_system_information(prog_file)
 
@@ -508,11 +515,11 @@ class pfb:
         print "FFT shift is %s" % self.f.registers.fft_shift.read()
         print ""
 
-        print "Spectrum Accumulation"
-        print "---------------------"
-        self.f.registers.spectrum_limit.write(limit=np.power(2,accumulation_len))
-        print "Spectrum accumulation limit is %s" % self.f.registers.spectrum_limit.read()
-        print ""
+        #print "Spectrum Accumulation"
+        #print "---------------------"
+        #self.f.registers.spectrum_limit.write(limit=np.power(2,accumulation_len))
+        #print "Spectrum accumulation limit is %s" % self.f.registers.spectrum_limit.read()
+        #print ""
 
         self.f.registers.tvg_sel.write(tvg_sel=0)
 
@@ -545,7 +552,7 @@ class pfb:
         self.f.snapshots.ss_pfb_sq2_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.f.snapshots.ss_pfb_sq3_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
-        self.f.snapshots.ss_fft_sq_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        #self.f.snapshots.ss_fft_sq_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
         print "Setting Accumulation limit"
         print "--------------------------"
@@ -705,11 +712,11 @@ class pfb:
         #-----------------------------------------------------------------------------------------------------------
 
 
-        print "Grabbing Accumulated FFT data"
-        print ""
-        ss_fft = self.f.snapshots.ss_fft_sq_ss.read(arm=False)['data']
+        #print "Grabbing Accumulated FFT data"
+        #print ""
+        #ss_fft = self.f.snapshots.ss_fft_sq_ss.read(arm=False)['data']
 
-        fft_xil = ss_fft['pfb2_0']
+        #fft_xil = ss_fft['pfb2_0']
 
         #accumulations = {'combined':pfb_acc_comb}
         #-----------------------------------------------------------------------------------------------------------
@@ -743,10 +750,10 @@ class pfb:
         plt.clf()
         plt.semilogy(np.abs(pfb_acc_comb))
 
-        plt.figure(4)
-        plt.ion()
-        plt.clf()
-        plt.semilogy(np.abs(fft_xil))
+        #plt.figure(4)
+        #plt.ion()
+        #plt.clf()
+        #plt.semilogy(np.abs(fft_xil))
 
 
         #plt.figure(4)

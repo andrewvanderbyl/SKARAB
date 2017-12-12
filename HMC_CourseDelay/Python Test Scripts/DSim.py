@@ -50,13 +50,20 @@ roach_HOST = 'roach020A11'
 
 #prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-28_1718.fpg"
 
-prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-29_1118.fpg"
+#prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-29_1118.fpg"
+#prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-11-29_1406.fpg"
+#prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-12-03.fpg"
+#prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-12-11_0659.fpg"
+#prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-12-11_1256.fpg"
+prog_file_dsim = "/tmp/s_deng_rev1_13_wide_2017-12-12_0951.fpg"
 
 
-#prog_file_feng = "/tmp/s_c856m4k.fpg"
+
+
+#prog_file_dsim = "/tmp/s_deng_tvg_rev1_13_ramp_2017-11-22_0856.fpg"
+
+#prog_file_feng = "/tmp/s_c856m4k_2017-11-17_0846.fpg"
 prog_file_feng = "/tmp/s_c856m4k_2017-11-21_1714.fpg"
-
-
 
 logging.basicConfig(level=logging.DEBUG)
 LOGGER = logging.getLogger(__name__)
@@ -223,7 +230,6 @@ class dsim:
         # Sync Control
         #self.d.registers.orig_control.write(msync=1)
         #self.d.registers.orig_control.write(msync=0)
-
         #self.d.registers.gbecontrol.write(gbe0=1, gbe1=1, gbe2=1, gbe3=1)
 
         print "Done"
@@ -233,6 +239,9 @@ class dsim:
 
         self.skarab_info_dsim()
 
+        print self.d.system_info
+
+
         # Disable GBE's
         print ""
         print "Disabling Gbes"
@@ -241,7 +250,7 @@ class dsim:
 
 
         self.d.registers.control.write(status_clr='pulse')
-        self.d.registers.control.write(gbe_rst='pulse')
+        #self.d.registers.control.write(gbe_rst='pulse')
 
         print ""
         print self.d.gbes.forty_gbe.read_counters()
@@ -273,12 +282,6 @@ class dsim:
         print "iptx3: %s" % self.d.registers.gbe_iptx3.read()
         print ""
 
-        print ""
-        print "Enable Gbes"
-        print ""
-        self.d.registers.gbecontrol.write_int(15)
-
-
         self.d.registers.receptor_id.write(pol0_id=0, pol1_id=1)
 
         # ramp 80 or ramp 64?
@@ -298,7 +301,7 @@ class dsim:
         self.d.registers.scale_out1.write(scale=0.5)
 
         # Set the frequency
-        self.d.registers.freq_cwg0.write(frequency=10000000)
+        self.d.registers.freq_cwg0.write(frequency=1000000)
         self.d.registers.freq_cwg1.write(frequency=1000000)
 
         # Noise Control
@@ -310,8 +313,8 @@ class dsim:
         self.d.registers.orig_control.write(tvg_select0=1)
         self.d.registers.orig_control.write(tvg_select1=1)
 
-        self.d.registers.test_control.write(sel_ramp80=1)
-        self.d.registers.test_control.write(rst_ramp80=0)
+        #self.d.registers.test_control.write(sel_ramp80=1)
+        #self.d.registers.test_control.write(rst_ramp80=0)
 
         # Traffic Control
         self.d.registers.pol_traffic_trigger.write(pol0_tx_trigger=1)
@@ -336,7 +339,6 @@ class dsim:
         self.d.registers.orig_control.write(mrst='pulse')
         self.d.registers.orig_control.write(msync='pulse')
 
-
         # Arm the Snapshot Blocks
         # -----------------------
         print 'Arming Snapblocks'
@@ -346,6 +348,10 @@ class dsim:
         self.d.snapshots.ss_localtime_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.d.snapshots.ss_cwg0_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
         self.d.snapshots.ss_cwg1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+
+        #self.d.snapshots.ss_gbe_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        #self.d.snapshots.ss_gbe1_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
+        #self.d.snapshots.ss_gbe2_ss.arm(man_trig=trig_mode, man_valid=valid_mode)
 
         #print ""
         #print self.d.registers.gbecontrol.read()
@@ -424,6 +430,30 @@ class dsim:
                  cwg1_d5[x], cwg1_d6[x], cwg1_d7[x]])
 
 
+        #print "Grabbing gbe ss"
+        #ss_gbe_ss = self.d.snapshots.ss_gbe_ss.read(arm=False)['data']
+
+        #gbe_rst = ss_gbe_ss['rst']
+        #gbe_dv = ss_gbe_ss['dv']
+        #gbe_txip = ss_gbe_ss['txip']
+        #gbe_port = ss_gbe_ss['port']
+        #gbe_eof = ss_cwg1['eof']
+        #gbe_w0 = ss_cwg1['w0']
+
+        #print ''
+        #print gbe_rst[0:100]
+        #print ''
+        #print gbe_dv[0:100]
+        #print ''
+        #print gbe_txip[0:100]
+        #print ''
+        #print gbe_port[0:100]
+        #print ''
+        #print gbe_eof[0:100]
+        #print ''
+        #print gbe_w0[0:100]
+        #print ''
+
         #print "localtime is %s" % localtime
 
         # Noise Histogram
@@ -453,6 +483,13 @@ class dsim:
         #plt.plot(hist1[0])
 
         plt.show()
+
+        print ""
+        print "Enable Gbes"
+        print ""
+        self.d.registers.gbecontrol.write_int(15)
+
+
 
         print self.d.registers.gbecontrol.read()
         print ""
@@ -566,6 +603,69 @@ class dsim:
         #plt.clf()
         #plt.plot(snap)
         #plt.show()
+
+
+    def run_dsim_skarab_ramp(self, arm_mode, trig_mode, valid_mode):
+
+        self.skarab_info_dsim()
+
+        # Disable GBE's
+        print ""
+        print "Disabling Gbes"
+        print ""
+        self.d.registers.gbecontrol.write_int(0)
+
+        self.d.registers.control.write(status_clr='pulse')
+        self.d.registers.control.write(gbe_rst='pulse')
+
+        #self.d.registers.control.write(mrst='pulse')
+        #self.d.registers.control.write(msync='pulse')
+
+        print ""
+        print self.d.gbes.forty_gbe.read_counters()
+        print ""
+
+        print "Set IP Addr"
+        print "-----------"
+        print "Gbe0 is: 239.2.0.72"
+        self.d.registers.gbe_iptx0.write(reg=4009885768)
+        print "Gbe0 is: 239.2.0.73"
+        self.d.registers.gbe_iptx1.write(reg=4009885769)
+        print "Gbe0 is: 239.2.0.74"
+        self.d.registers.gbe_iptx2.write(reg=4009885770)
+        print "Gbe0 is: 239.2.0.75"
+        self.d.registers.gbe_iptx3.write(reg=4009885771)
+        print ""
+
+        self.d.gbes.forty_gbe.set_port(30000)
+        self.d.registers.gbe_porttx.write(reg=30000)
+        print "Port: %s" % self.d.registers.gbe_porttx.read()
+        print ""
+
+        print "iptx0: %s" % self.d.registers.gbe_iptx0.read()
+        print "iptx1: %s" % self.d.registers.gbe_iptx1.read()
+        print "iptx2: %s" % self.d.registers.gbe_iptx2.read()
+        print "iptx3: %s" % self.d.registers.gbe_iptx3.read()
+        print ""
+
+        self.d.registers.receptor_id.write(pol0_id=0, pol1_id=1)
+
+        # ramp 80 or ramp 64?
+        self.d.registers.test_control.write(sel_ramp80=False, rst_ramp80='pulse')
+
+        print ""
+        print "Enable Gbes"
+        print ""
+        self.d.registers.gbecontrol.write_int(15)
+
+        print self.d.registers.gbecontrol.read()
+        print ""
+        print self.d.gbes.forty_gbe.read_counters()
+
+        print ""
+        print " *** Done ***"
+        print ""
+
 
     def test_var_args(self,farg,*args):
 
