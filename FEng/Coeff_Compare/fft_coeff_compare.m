@@ -15,8 +15,8 @@ load d_bf23.mat
 % Load coefficients captured in simulink (fixed-point)
 %load coeffs_direct_fft_new.mat
 %load coeffs_direct_fft_BRAM_Share.mat
-%load coeffs_direct_fft_all.mat
-load coeffs_direct_fft_no_select.mat
+load coeffs_direct_fft_all.mat
+%load coeffs_direct_fft_no_select.mat
 
 
 
@@ -62,7 +62,7 @@ ts10 = d_bf10_real(7:end,1);
 diff_bf11_real = butterfly1_1r.Data(2067:2067+length(d_bf11_real(:,1))-1,1) - d_bf11_real(:,1);
 diff_bf11_imag = butterfly1_1i.Data(2067:2067+length(d_bf11_imag(:,1))-1,1) - d_bf11_imag(:,1);
 
-tc11 = butterfly1_1i.Data(2067:2067+length(d_bf11_real(:,1))-1,1);
+tc11 = butterfly1_1r.Data(2067:2067+length(d_bf11_real(:,1))-1,1);
 ts11 = d_bf11_real(:,1);
 
 % Direct FFT: BF20
