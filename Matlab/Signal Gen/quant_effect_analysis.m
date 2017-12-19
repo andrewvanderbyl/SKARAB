@@ -7,11 +7,13 @@ Config.coeff_precision =  2^(-17);
 RndMth = 'Nearest';
 DoSatur = 'on';
 
-acc_len = 2^5;
+acc_len = 2^8;
 
 noise_level = 1*2^(-17);
 
 error_awg = 0;
+
+Random_Signal_sum = 0;
 
 error_status = false;
 
@@ -36,6 +38,8 @@ for i=1:acc_len
     
     error_awg = error_awg + (Sig_awg-X_fp_awg);
     
+    Random_Signal_sum = Random_Signal +Random_Signal_sum;
+    
 end
 
 figure(1)
@@ -46,12 +50,18 @@ hold off
 
 figure(2)
 hold on
-plot(Sig_awg-X_fp_awg)
+plot(Real_Signal-X_fp_awg)
 plot(Sig_awg*1e-05)
 hold off
 
 figure(3)
-plot(error_awg)
+hold on
+plot(Real_Signal)
+plot(Sig_awg)
+hold off
 
+
+figure(4)
+plot(Random_Signal)
 %hist(error_awg)
 

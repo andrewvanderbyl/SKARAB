@@ -1,55 +1,96 @@
 % Clear the workspace
 clear
 
+bram_share = true;
+
 % Load coefficients captured in Matlab (cosin_init.m)(before fixed_point
 % conversion)
-cd /home/jasper/Desktop/
-load d_bf0.mat
-load d_bf10.mat
-load d_bf11.mat
-load d_bf20.mat
-load d_bf21.mat
-load d_bf22.mat
-load d_bf23.mat
+cd /home/jasper/SKARAB/FEng/Coeff_Compare/
 
-% Load coefficients captured in simulink (fixed-point)
+if (bram_share == true)
+    % No BRAM share, but others selected
+    load d_bf00_no_bram_share_all.mat
+    d_bf00_real = real_vals';
+    d_bf00_imag = imag_vals';
+
+    load d_bf10_no_bram_share_all.mat
+    d_bf10_real = real_vals';
+    d_bf10_imag = imag_vals';
+
+    load d_bf11_no_bram_share_all.mat
+    d_bf11_real = real_vals';
+    d_bf11_imag = imag_vals';
+
+    load d_bf20_no_bram_share_all.mat
+    d_bf20_real = real_vals';
+    d_bf20_imag = imag_vals';
+
+    load d_bf21_no_bram_share_all.mat
+    d_bf21_real = real_vals';
+    d_bf21_imag = imag_vals';
+
+    load d_bf22_no_bram_share_all.mat
+    d_bf22_real = real_vals';
+    d_bf22_imag = imag_vals';
+
+    load d_bf23_no_bram_share_all.mat
+    d_bf23_real = real_vals';
+    d_bf23_imag = imag_vals';
+    
+    % Load coefficients captured in simulink (fixed-point)
+    load coeffs_direct_fft_all.mat
+
+else
+    % No BRAM settings selected
+    load d_bf00_no_sel.mat
+    d_bf00_real = real_vals';
+    d_bf00_imag = imag_vals';
+
+    load d_bf10_no_sel.mat
+    d_bf10_real = real_vals';
+    d_bf10_imag = imag_vals';
+
+    load d_bf11_no_sel.mat
+    d_bf11_real = real_vals';
+    d_bf11_imag = imag_vals';
+
+    load d_bf20_no_sel.mat
+    d_bf20_real = real_vals';
+    d_bf20_imag = imag_vals';
+
+    load d_bf21_no_sel.mat
+    d_bf21_real = real_vals';
+    d_bf21_imag = imag_vals';
+
+    load d_bf22_no_sel.mat
+    d_bf22_real = real_vals';
+    d_bf22_imag = imag_vals';
+
+    load d_bf23_no_sel.mat
+    d_bf23_real = real_vals';
+    d_bf23_imag = imag_vals';
+    
+    % Load coefficients captured in simulink (fixed-point)
+    load coeffs_direct_fft_no_select_dir.mat
+
+end
+
+
 %load coeffs_direct_fft_new.mat
 %load coeffs_direct_fft_BRAM_Share.mat
-load coeffs_direct_fft_all.mat
-%load coeffs_direct_fft_no_select.mat
+%load coeffs_direct_fft_all.mat
 
+figure_offset = 0;
 
-
-% Transpose the matrix for each direct_fft (float) coefficient
-d_bf0_real = d_bf0_real';
-d_bf0_imag =  d_bf0_imag';
-
-d_bf10_imag = d_bf10_imag';
-d_bf10_real = d_bf10_real';
-
-d_bf11_imag = d_bf11_imag';
-d_bf11_real = d_bf11_real';
-
-d_bf20_real = d_bf20_real';
-d_bf20_imag = d_bf20_imag';
-
-d_bf21_imag = d_bf21_imag';
-d_bf21_real = d_bf21_real';
-
-d_bf22_imag = d_bf22_imag';
-d_bf22_real = d_bf22_real';
-
-d_bf23_imag = d_bf23_imag';
-d_bf23_real = d_bf23_real';
 
 % Compare Coefficients
 
 % Direct FFT: BF0
-diff_bf00_real = butterfly0_0r.Data(2029:2029+1020,1) - d_bf0_real(4:end,1);
-diff_bf00_imag = butterfly0_0i.Data(2029:2029+1020,1) - d_bf0_imag(4:end,1);
+diff_bf00_real = butterfly0_0r.Data(2029:2029+1020,1) - d_bf00_real(4:end,1);
+diff_bf00_imag = butterfly0_0i.Data(2029:2029+1020,1) - d_bf00_imag(4:end,1);
 
 tc00 = butterfly0_0r.Data(2029:2029+1020,1);
-ts00 = d_bf0_real(4:end,1);
+ts00 = d_bf00_real(4:end,1);
 
 % Direct FFT: BF10
 diff_bf10_real = butterfly1_0r.Data(2073:2073+length(d_bf10_real(7:end,1))-1,1) - d_bf10_real(7:end,1);
@@ -97,7 +138,7 @@ ts23 = d_bf23_real(:,1);
 
 
 
-figure(1)
+figure(1+figure_offset)
 subplot(3,3,1)
 hold on
 plot(butterfly0_0r.Data)
@@ -134,7 +175,7 @@ plot(butterfly2_3r.Data)
 plot(butterfly2_3i.Data)
 hold off
 
-figure(2)
+figure(2+figure_offset)
 subplot(3,3,1)
 hold on
 plot(tc00)
@@ -171,62 +212,62 @@ plot(tc23)
 plot(ts23)
 hold off
 
-figure(3)
-subplot(3,3,1)
-hold on
-plot(diff_bf00_real)
-hold off
-subplot(3,3,2)
-hold on
-plot(diff_bf10_real)
-hold off
-subplot(3,3,3)
-hold on
-plot(diff_bf11_real)
-hold off
-subplot(3,3,4)
-hold on
-plot(diff_bf20_real)
-hold off
-subplot(3,3,5)
-hold on
-plot(diff_bf21_real)
-hold off
-subplot(3,3,6)
-hold on
-plot(diff_bf22_real)
-hold off
-subplot(3,3,7)
-hold on
-plot(diff_bf23_real)
-hold off
+% figure(3+figure_offset)
+% subplot(3,3,1)
+% hold on
+% plot(diff_bf00_real)
+% hold off
+% subplot(3,3,2)
+% hold on
+% plot(diff_bf10_real)
+% hold off
+% subplot(3,3,3)
+% hold on
+% plot(diff_bf11_real)
+% hold off
+% subplot(3,3,4)
+% hold on
+% plot(diff_bf20_real)
+% hold off
+% subplot(3,3,5)
+% hold on
+% plot(diff_bf21_real)
+% hold off
+% subplot(3,3,6)
+% hold on
+% plot(diff_bf22_real)
+% hold off
+% subplot(3,3,7)
+% hold on
+% plot(diff_bf23_real)
+% hold off
 
-figure(4)
-subplot(3,3,1)
-hold on
-plot(diff_bf00_imag)
-hold off
-subplot(3,3,2)
-hold on
-plot(diff_bf10_imag)
-hold off
-subplot(3,3,3)
-hold on
-plot(diff_bf11_imag)
-hold off
-subplot(3,3,4)
-hold on
-plot(diff_bf20_imag)
-hold off
-subplot(3,3,5)
-hold on
-plot(diff_bf21_imag)
-hold off
-subplot(3,3,6)
-hold on
-plot(diff_bf22_imag)
-hold off
-subplot(3,3,7)
-hold on
-plot(diff_bf23_imag)
-hold off
+% figure(4+figure_offset)
+% subplot(3,3,1)
+% hold on
+% plot(diff_bf00_imag)
+% hold off
+% subplot(3,3,2)
+% hold on
+% plot(diff_bf10_imag)
+% hold off
+% subplot(3,3,3)
+% hold on
+% plot(diff_bf11_imag)
+% hold off
+% subplot(3,3,4)
+% hold on
+% plot(diff_bf20_imag)
+% hold off
+% subplot(3,3,5)
+% hold on
+% plot(diff_bf21_imag)
+% hold off
+% subplot(3,3,6)
+% hold on
+% plot(diff_bf22_imag)
+% hold off
+% subplot(3,3,7)
+% hold on
+% plot(diff_bf23_imag)
+% hold off
