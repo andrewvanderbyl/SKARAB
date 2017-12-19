@@ -188,20 +188,20 @@ reuse_block(blk, 'bus_mult', 'casper_library_bus/bus_mult', ...
 %%%%%%%%%%%
 %  debug  %
 %%%%%%%%%%% 
-coeff_str = strsplit(blk,'/');
-
-reuse_block(blk, 'gatewayoutdb', 'xbsIndex_r4/Gateway Out', 'Position', [275 225 335 240]);
-add_line(blk,'coeff_gen/1','gatewayoutdb/1');
-
-reuse_block(blk, ['ws' coeff_str{5} '1'], 'Simulink/Sinks/To Workspace', 'VariableName',[coeff_str{5} 'a'],'Position', [275 225 325 240]);
-add_line(blk,'gatewayoutdb/1', ['ws' coeff_str{5} '1' '/1']);
-
-
-reuse_block(blk, 'gatewayoutdb1', 'xbsIndex_r4/Gateway Out', 'Position', [275 225 335 240]);
-add_line(blk,'bus_expand/1','gatewayoutdb1/1');
-
-reuse_block(blk, ['ws' coeff_str{5} '2'], 'Simulink/Sinks/To Workspace', 'VariableName',[coeff_str{5} 'b'],'Position', [275 225 325 240]);
-add_line(blk,'gatewayoutdb1/1', ['ws' coeff_str{5} '2' '/1']);
+% coeff_str = strsplit(blk,'/');
+% 
+% reuse_block(blk, 'gatewayoutdb', 'xbsIndex_r4/Gateway Out', 'Position', [275 225 335 240]);
+% add_line(blk,'coeff_gen/1','gatewayoutdb/1');
+% 
+% reuse_block(blk, ['ws' coeff_str{5} '1'], 'Simulink/Sinks/To Workspace', 'VariableName',[coeff_str{5} 'a'],'Position', [275 225 325 240]);
+% add_line(blk,'gatewayoutdb/1', ['ws' coeff_str{5} '1' '/1']);
+% 
+% 
+% reuse_block(blk, 'gatewayoutdb1', 'xbsIndex_r4/Gateway Out', 'Position', [275 225 335 240]);
+% add_line(blk,'bus_expand/1','gatewayoutdb1/1');
+% 
+% reuse_block(blk, ['ws' coeff_str{5} '2'], 'Simulink/Sinks/To Workspace', 'VariableName',[coeff_str{5} 'b'],'Position', [275 225 325 240]);
+% add_line(blk,'gatewayoutdb1/1', ['ws' coeff_str{5} '2' '/1']);
 
 %convert
 if strcmp(quantization, 'Truncate'), quant = '0';
