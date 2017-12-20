@@ -1,7 +1,7 @@
 % Clear the workspace
 clear
 
-bram_share = true;
+bram_share = false;
 
 % Load coefficients captured in Matlab (cosin_init.m)(before fixed_point
 % conversion)

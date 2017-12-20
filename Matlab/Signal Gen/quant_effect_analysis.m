@@ -7,7 +7,7 @@ Config.coeff_precision =  2^(-17);
 RndMth = 'Nearest';
 DoSatur = 'on';
 
-acc_len = 2^8;
+acc_len = 2^0;
 
 noise_level = 1*2^(-17);
 
@@ -41,6 +41,23 @@ for i=1:acc_len
     Random_Signal_sum = Random_Signal +Random_Signal_sum;
     
 end
+
+rs = Real_Signal';
+
+mean_diff_test1 = mean( (Real_Signal(1:2048)-X_fp(1:2048)) )
+mean_diff_test2 = mean( (Real_Signal(2048:2048+2047)-X_fp(2048:2048+2047)) )
+
+
+mean_diff1 = mean( (Real_Signal(1:2048)-X_fp(1:2048)) )
+mean_diff2 = mean( (Real_Signal(2049:2049+2047)-X_fp(2049:2049+2047)) )
+mean_diff3 = mean( (Real_Signal(4097:4097+2047)-X_fp(4097:4097+2047)) )
+mean_diff4 = mean( (Real_Signal(6145:6145+2047)-X_fp(6145:6145+2047)) )
+
+rms_diff1 = sqrt(mean( (Real_Signal(1:2048)-X_fp(1:2048)).^2 ))
+rms_diff2 = sqrt(mean( (Real_Signal(2049:2049+2047)-X_fp(2049:2049+2047)).^2 ))
+rms_diff3 = sqrt(mean( (Real_Signal(4097:4097+2047)-X_fp(4097:4097+2047)).^2 ))
+rms_diff4 = sqrt(mean( (Real_Signal(6145:6145+2047)-X_fp(6145:6145+2047)).^2 ))
+
 
 figure(1)
 hold on
