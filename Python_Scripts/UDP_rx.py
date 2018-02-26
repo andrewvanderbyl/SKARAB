@@ -19,6 +19,8 @@ LOGGER = logging.getLogger(__name__)
 serverSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 serverSock.bind((UDP_IP_ADDRESS,UDP_PORT_NO))
 
+# Classes
+# -------
 class UDP_rx:
     def __init__(self, mode = 'cont', port=7148, log_handler = None, log_level = logging.INFO, spead_log_level = logging.DEBUG, **kwargs):
         # if log_handler == None:
@@ -63,31 +65,42 @@ class UDP_rx:
             current_datetime_split = current_datetime.split(' ')
             current_date = current_datetime_split[0]
 
-	    # Save incoming data to file
-	    if Write_type == 'O':
-		print 'TP0'		
-		#If write_type selected to overwrite, only do this the irst time as otherwise all received data for the session will be clobbered.  
-		file = open(event + current_date,"w")
+	    thread.start_new_thread(write_file,(event, current_date, current_datetime, Write_type, data, addr))
+
+
+# Global Methods
+# --------------
+
+def write_file(event, current_date, current_datetime, Write_type, data, addr):
+  print "Writing file"
+  # Save incoming data to file
+
+  try:
+	  if Write_type == 'O':
+		#If write_type selected to overwrite, only do this the first time as otherwise all received data for the session will be clobbered.  
+		#file = open(event + current_date,"w")
+		file = open(event + current_date,"a")
 
 		# Force 'Append after the first receive'
 		Write_type = 'A'
-	    elif Write_type == 'A':
-		print 'TP1'
-            	file = open(event + current_date,"a")
-	    else:
-		print 'TP2'
+	  elif Write_type == 'A':
+		file = open(event + current_date,"a")
+	  else: 
 		file = open(event + current_date,"a")
 
-            file.write("Addr: " + str(addr) +"\n")
-            file.write("Date: " + current_datetime +"\n")
-            file.write(data)
-            file.write("\n\n")
-            file.close()
+	  file.write("Addr: " + str(addr) +"\n")
+	  file.write("Date: " + current_datetime +"\n")
+	  file.write(data)
+	  file.write("\n\n")
+	  file.close()
 
-            print "Date: ", current_datetime
-            print "Addr: ", addr
-            print "Data: ", data
-	    print "\n"
+	  print "Date: ", current_datetime
+	  print "Addr: ", addr
+	  print "Data: ", data
+	  print "\n"    	
+
+  except Exception:
+  	pass
 
 
 
