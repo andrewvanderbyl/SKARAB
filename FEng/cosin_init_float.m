@@ -333,6 +333,7 @@ function cosin_init_float(blk,varargin)
           'reg_retiming', 'on', ...
           'Position', [450 116 480 134]);
   add_line(blk,'add_convert1/1','Delay8/1');
+  
   reuse_block(blk, 'Delay10', 'xbsIndex_r4/Delay', ...
           'latency', 'bram_latency', ...
           'reg_retiming', 'on', ...
@@ -362,14 +363,26 @@ function cosin_init_float(blk,varargin)
   invert_gen([blk,'/invert0'],float_on);
   set_param([blk,'/invert0'], ...
           'Position', [800 80 850 142]);
-  add_line(blk,'Delay10/1','invert0/1');
+      
+  if float_on
+        reuse_block(blk, 'Delay11', 'xbsIndex_r4/Delay', ...
+          'latency', 'conv_latency', ...
+          'reg_retiming', 'on', ...
+          'Position', [590 81 610 99]);   
+        add_line(blk,'Delay10/1','Delay11/1');
+        add_line(blk,'Delay11/1','invert0/1');
+        
+  else
+        add_line(blk,'Delay10/1','invert0/1');
+  end
+  
   add_line(blk,'Constant5/1','invert0/3');
   
   if float_on
         reuse_block(blk, 'convert0', 'xbsIndex_r4/Convert', ...
           'arith_type', 'Floating-Point', ...
           'float_type', 'Single', ...
-          'latency','0',...
+          'latency','conv_latency',...
           'Position', [750 100 785 120]);
       
         add_line(blk, src0, 'convert0/1');
@@ -382,13 +395,26 @@ function cosin_init_float(blk,varargin)
   invert_gen([blk,'/invert1'],float_on);
   set_param([blk,'/invert1'], ...
           'Position', [800 160 850 222]);
-  add_line(blk,'Delay8/1','invert1/1');
-  
+      
+      
+  if float_on
+        reuse_block(blk, 'Delay9', 'xbsIndex_r4/Delay', ...
+          'latency', 'conv_latency', ...
+          'reg_retiming', 'on', ...
+          'Position', [590 116 610 134]);   
+        add_line(blk,'Delay8/1','Delay9/1');
+        add_line(blk,'Delay9/1','invert1/1');
+        
+  else
+        add_line(blk,'Delay8/1','invert1/1');
+  end
+      
+
   if float_on
         reuse_block(blk, 'convert1', 'xbsIndex_r4/Convert', ...
           'arith_type', 'Floating-Point', ...
           'float_type', 'Single', ...
-          'latency','0',...
+          'latency','conv_latency',...
           'Position', [750 180 785 200]);
       
         add_line(blk, src1, 'convert1/1');
@@ -433,8 +459,21 @@ function cosin_init_float(blk,varargin)
       add_line(blk,'gwout1/1','ws1/1');
   end
   
-  %misc
-  add_line(blk,'Delay/1','invert1/3');
+
+  
+  if float_on
+        reuse_block(blk, 'Delay1', 'xbsIndex_r4/Delay', ...
+          'latency', 'conv_latency', ...
+          'reg_retiming', 'on', ...
+          'Position', [590 336 610 354]);   
+        add_line(blk,'Delay/1','Delay1/1');
+        add_line(blk,'Delay1/1','invert1/3');
+        
+  else
+        %misc
+        add_line(blk,'Delay/1','invert1/3');
+  end
+
   
   %%%%%%%%%%%%%%%%  
   % output ports %
