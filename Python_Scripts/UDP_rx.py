@@ -11,6 +11,10 @@ import socket
 UDP_IP_ADDRESS = "127.0.0.1"
 UDP_PORT_NO = 11000
 
+#UDP_IP_ADDRESS = "192.168.1.162"
+#UDP_PORT_NO = 50000
+
+
 # Logger 
 logging.basicConfig(level=logging.DEBUG)
 LOGGER = logging.getLogger(__name__)
