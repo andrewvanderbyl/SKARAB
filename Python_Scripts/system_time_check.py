@@ -42,6 +42,7 @@ class system_time_rx:
 	
 	# Create array to hold rx addresses	
 	addr_rx = []
+	data_rx = []
 	
         while True:
 
@@ -51,36 +52,44 @@ class system_time_rx:
 		addr_len = len(addr_rx)
 		
 		if (addr_len == 0):
-			print "first"
+			#print "first"
 			ip = addr[0]
-			print ip
-			addr_rx.append(ip) 
+			#print ip
+			addr_rx.append(ip)
+			data_rx.append(data) 
+
 		else:
 			# extract IP only
 			ip = addr[0]
-			print ip
-			print addr_rx.count(ip)
-			if (addr_rx.count(ip) == True):
-				print "already there"
-			else:
+			#print ip
+			#print addr_rx.count(ip)
+			if (addr_rx.count(ip) != True):
 				# add the entry
-				print "second"
-				addr_rx.append(ip) 
-				print addr
+				#print "second"
+				addr_rx.append(ip)
+				data_rx.append(data) 
+				#print addr
+			else:
+				# Get index of entry and overwrite
+				data_rx[addr_rx.index(ip)] = data			
+				#print "Overwrite"		
+
+	
 		
 
-		
-		# Check incoming time data against time refernce (NTP server). Since this is run 			locally on the time server, check the local time
+		# Check incoming time data against time refernce (NTP server). 
+		# Since this is run locally on the time server, check the local time
 		NTP_time_now = time.ctime()
 		NTP_time_split = NTP_time_now.split(' ')
-		NTP_time = NTP_time_split[4] 	
+		NTP_time = NTP_time_split[3] 	
 		NTP_time = NTP_time.split(':')
 
 		# Separate received time data
 		rx_time_split = data.split(' ')
-		rx_time = rx_time_split[4] 	
+		rx_time = rx_time_split[3] 	
 		rx_time = rx_time.split(':')
-		
+
+				
 		# Compute difference 
 		diff_hr  = int(NTP_time[0])-int(rx_time[0])
 		diff_min = int(NTP_time[1])-int(rx_time[1])
@@ -89,16 +98,17 @@ class system_time_rx:
 		# Log any changes. This is done in case correction is later required to results
 		# TBD
 
-		# now print only the reults for know IP addresses
-		
-		# Clear the screen
-		#os.system('cls' if os.name == 'nt' else 'clear')
+		# Now print only the results for know IP addresses
 
-	  	print "RX Addr: ", addr
-	  	print "Time: ", data
-		print "Time Diff is %s:%s:%s" % (diff_hr, diff_min, diff_sec)
-		#print "Time difference is %s" % 
-	  	print "\n"  	   
+		# Clear the screen
+		os.system('cls' if os.name == 'nt' else 'clear')
+	
+		for i in range(len(addr_rx)):
+		  	print "RX Addr: ", addr_rx[i]
+		  	print "Time: ", data_rx[i]
+			print "Time Diff is %s:%s:%s" % (diff_hr, diff_min, diff_sec)
+			#print "Time difference is %s" % 
+		  	print "\n"  	   
 
 
 
