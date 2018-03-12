@@ -47,6 +47,25 @@ class system_time_rx:
 	diff_min = []
 	diff_sec = []	
 
+	# Capture event details for logging
+	# ---------------------------------
+        #Enter Event name
+        event = raw_input('Event Name: ')
+        print('Event: ', event)
+        print " "
+
+
+        #Enter Event name
+        Write_type = raw_input('Overwrite or Append? Options: O or A: ')
+        print " "
+	if Write_type == 'O':
+	    print "Overwrite Selected. If this file exists it will be OVERWRITTEN!\n\n"
+	elif Write_type == 'A':
+	    print "Append selected\n\n"
+	else:
+	    print "Default selected\n\n"
+
+
         while True:
 
             	data, addr = serverSock.recvfrom(1024)
@@ -132,7 +151,12 @@ class system_time_rx:
 		# Log any changes. This is done in case correction is later required to results
 		# TBD
 
+		#thread.start_new_thread(write_file,(event, current_date, current_datetime, Write_type, data, addr))
+
+
+
 		# Now print only the results for know IP addresses
+		# ------------------------------------------------
 
 		# Clear the screen
 		os.system('cls' if os.name == 'nt' else 'clear')
