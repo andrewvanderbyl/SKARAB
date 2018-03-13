@@ -55,8 +55,12 @@ class UDP_tx:
 			clientSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	
 			# Get time and send time	
-			clientSock.sendto(time.ctime(), (UDP_IP_ADDRESS, UDP_PORT_NO))
-		
+			# clientSock.sendto(time.ctime(), (UDP_IP_ADDRESS, UDP_PORT_NO))
+			time_data_str = str(time.ctime()) + "," + str(time.time())
+
+			clientSock.sendto(time_data_str, (UDP_IP_ADDRESS, UDP_PORT_NO))
+			print time_data_str
+
 			# Sleep for 'n' seconds
 			time.sleep(sleep_time)	
 

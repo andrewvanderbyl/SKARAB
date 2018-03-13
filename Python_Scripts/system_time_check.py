@@ -38,17 +38,22 @@ class system_time_rx:
         self.time_rx()
 
     def time_rx(self):
-	print "Listening for incoming time packets\n"
-	
-	# Create array to hold rx addresses	
-	addr_rx = []
-	data_rx = []
-	diff_hr = []
-	diff_min = []
-	diff_sec = []	
+        print "Listening for incoming time packets\n"
 
-	# Capture event details for logging
-	# ---------------------------------
+        # Create array to hold rx addresses
+        addr_rx = []
+        data_rx_raw = []
+        data_rx_time = []
+        data_rx_time_ticks = []
+
+
+        diff_hr = []
+        diff_min = []
+        diff_sec = []
+        diff = []
+
+        # Capture event details for logging
+        # ---------------------------------
         #Enter Event name
         event = raw_input('Event Name: ')
         print('Event: ', event)
@@ -58,114 +63,165 @@ class system_time_rx:
         #Enter Event name
         Write_type = raw_input('Overwrite or Append? Options: O or A: ')
         print " "
-	if Write_type == 'O':
-	    print "Overwrite Selected. If this file exists it will be OVERWRITTEN!\n\n"
-	elif Write_type == 'A':
-	    print "Append selected\n\n"
-	else:
-	    print "Default selected\n\n"
-
+        if Write_type == 'O':
+            print "Overwrite Selected. If this file exists it will be OVERWRITTEN!\n\n"
+        elif Write_type == 'A':
+            print "Append selected\n\n"
+        else:
+            print "Default selected\n\n"
 
         while True:
 
-            	data, addr = serverSock.recvfrom(1024)
+            data, addr = serverSock.recvfrom(1024)
+            #print "tp0"
+            #print data
+            #print "tp1"
 
-		# Check if the RX address is new or we have seen it before
-		addr_len = len(addr_rx)
-		
-		if (addr_len == 0):
-			#print "first"
-			ip = addr[0]
-			#print ip
-			addr_rx.append(ip)
-			data_rx.append(data) 
+            # Check if the RX address is new or we have seen it before
+            addr_len = len(addr_rx)
 
-			# Check incoming time data against time refernce (NTP server). 
-			# Since this is run locally on the time server, check the local time
-			NTP_time_now = time.ctime()
-			NTP_time_split = NTP_time_now.split(' ')
-			NTP_time = NTP_time_split[3] 	
-			NTP_time = NTP_time.split(':')
+            if (addr_len == 0):
+                #print "first"
+                ip = addr[0]
+                #print ip
+                addr_rx.append(ip)
+                data_rx_raw.append(data)
 
-			# Separate received time data
-			rx_time_split = data.split(' ')
-			rx_time = rx_time_split[3] 	
-			rx_time = rx_time.split(':')
-				
-			# Compute difference 
-			diff_hr.append(int(NTP_time[0])-int(rx_time[0]))
-			diff_min.append(int(NTP_time[1])-int(rx_time[1]))
-			diff_sec.append(int(NTP_time[2])-int(rx_time[2]))
+                # Check incoming time data against time refernce (NTP server).
+                # Since this is run locally on the time server, check the local time
+                #NTP_time_now = time.ctime()
+                #NTP_time_split = NTP_time_now.split(' ')
+                #NTP_time = NTP_time_split[3]
+                #NTP_time = NTP_time.split(':')
+                NTP_time_now_ticks = time.time()
+                NTP_time_now = time.ctime()
 
-		else:
-			# extract IP only
-			ip = addr[0]
-			#print ip
-			#print addr_rx.count(ip)
-			if (addr_rx.count(ip) != True):
-				# add the entry
-				addr_rx.append(ip)
-				data_rx.append(data) 
+                # Separate received time data
+                #rx_time_split = data.split(' ')
+                #rx_time = rx_time_split[3]
+                #rx_time = rx_time.split(':')
 
-				# Check incoming time data against time refernce (NTP server). 
-				# Since this is run locally on the time server, check the local time
-				NTP_time_now = time.ctime()
-				NTP_time_split = NTP_time_now.split(' ')
-				NTP_time = NTP_time_split[3] 	
-				NTP_time = NTP_time.split(':')
+                # Separate received time data
+                rx_time_split = data.split(',')
+                #print "tp0"
+                #print rx_time_split
+                #print "tp1"
 
-				# Separate received time data
-				rx_time_split = data.split(' ')
-				rx_time = rx_time_split[3] 	
-				rx_time = rx_time.split(':')
-				
-				# Compute difference 
-				diff_hr.append(int(NTP_time[0])-int(rx_time[0]))
-				diff_min.append(int(NTP_time[1])-int(rx_time[1]))
-				diff_sec.append(int(NTP_time[2])-int(rx_time[2]))
+                rx_time = rx_time_split[0]
+                rx_time_ticks = rx_time_split[1]
+
+                data_rx_time.append(rx_time)
+                data_rx_time_ticks.append(rx_time_ticks)
 
 
-			else:
-				addr_idx = addr_rx.index(ip)			
-				# Get index of entry and overwrite
-				data_rx[addr_idx] = data			
+                # Compute difference
+                #diff_hr.append(int(NTP_time[0])-int(rx_time[0]))
+                #diff_min.append(int(NTP_time[1])-int(rx_time[1]))
+                #diff_sec.append(int(NTP_time[2])-int(rx_time[2]))
+                diff.append(float(NTP_time_now_ticks) - float(rx_time_ticks))
 
-				# Check incoming time data against time refernce (NTP server). 
-				# Since this is run locally on the time server, check the local time
-				NTP_time_now = time.ctime()
-				NTP_time_split = NTP_time_now.split(' ')
-				NTP_time = NTP_time_split[3] 	
-				NTP_time = NTP_time.split(':')
+            else:
+                # extract IP only
+                ip = addr[0]
+                #print ip
+                #print addr_rx.count(ip)
+                if (addr_rx.count(ip) != True):
+                    # add the entry
+                    addr_rx.append(ip)
+                    data_rx_raw.append(data)
 
-				# Separate received time data
-				rx_time_split = data.split(' ')
-				rx_time = rx_time_split[3] 	
-				rx_time = rx_time.split(':')
-				
-				# Compute difference 
-				diff_hr[addr_idx] = (int(NTP_time[0])-int(rx_time[0]))
-				diff_min[addr_idx] = (int(NTP_time[1])-int(rx_time[1]))
-				diff_sec[addr_idx] = (int(NTP_time[2])-int(rx_time[2]))
+                    # Check incoming time data against time refernce (NTP server).
+                    # Since this is run locally on the time server, check the local time
+                    #NTP_time_now = time.ctime()
+                    #NTP_time_split = NTP_time_now.split(' ')
+                    #NTP_time = NTP_time_split[3]
+                    #NTP_time = NTP_time.split(':')
+                    NTP_time_now_ticks = time.time()
+                    NTP_time_now = time.ctime()
 
-		
-		# Log any changes. This is done in case correction is later required to results
-		# TBD
+                    # Separate received time data
+                    #rx_time_split = data.split(' ')
+                    #rx_time = rx_time_split[3]
+                    #rx_time = rx_time.split(':')
 
-		#thread.start_new_thread(write_file,(event, current_date, current_datetime, Write_type, data, addr))
+                    # Separate received time data
+                    rx_time_split = data.split(',')
+                    #print "tp2"
+                    #print rx_time_split
+                    #print "tp3"
+
+                    rx_time = rx_time_split[0]
+                    rx_time_ticks = rx_time_split[1]
+
+                    data_rx_time.append(rx_time)
+                    data_rx_time_ticks.append(rx_time_ticks)
+
+                    # Compute difference
+                    #diff_hr.append(int(NTP_time[0])-int(rx_time[0]))
+                    #diff_min.append(int(NTP_time[1])-int(rx_time[1]))
+                    #diff_sec.append(int(NTP_time[2])-int(rx_time[2]))
+                    diff.append(float(NTP_time_now_ticks) - float(rx_time_ticks))
+
+                else:
+                    addr_idx = addr_rx.index(ip)
+                    # Get index of entry and overwrite
+                    data_rx_raw[addr_idx] = data
+
+                    # Check incoming time data against time refernce (NTP server).
+                    # Since this is run locally on the time server, check the local time
+                    #NTP_time_now = time.ctime()
+                    #NTP_time_split = NTP_time_now.split(' ')
+                    #NTP_time = NTP_time_split[3]
+                    #NTP_time = NTP_time.split(':')
+                    NTP_time_now_ticks = time.time()
+                    NTP_time_now = time.ctime()
+
+                    # Separate received time data
+                    #rx_time_split = data.split(' ')
+                    #rx_time = rx_time_split[3]
+                    #rx_time = rx_time.split(':')
+
+                    # Separate received time data
+                    rx_time_split = data.split(',')
+                    #print "tp4"
+                    #print rx_time_split
+                    #print "tp5"
+                    rx_time = rx_time_split[0]
+                    rx_time_ticks = rx_time_split[1]
+
+                    data_rx_time[addr_idx] = rx_time
+                    data_rx_time_ticks[addr_idx] = rx_time_ticks
+
+                    # Compute difference
+                    #diff_hr[addr_idx] = (int(NTP_time[0])-int(rx_time[0]))
+                    #diff_min[addr_idx] = (int(NTP_time[1])-int(rx_time[1]))
+                    #diff_sec[addr_idx] = (int(NTP_time[2])-int(rx_time[2]))
+                    diff[addr_idx] = (float(NTP_time_now_ticks) - float(rx_time_ticks))
+
+            # Log any changes. This is done in case correction is later required to results
+            # TBD
+            #thread.start_new_thread(write_file,(event, current_date, current_datetime, Write_type, data, addr))
 
 
 
-		# Now print only the results for know IP addresses
-		# ------------------------------------------------
+            # Now print only the results for know IP addresses
+            # ------------------------------------------------
 
-		# Clear the screen
-		os.system('cls' if os.name == 'nt' else 'clear')
-	
-		for i in range(len(addr_rx)):
-		  	print "RX Addr: ", addr_rx[i]
-		  	print "Time: ", data_rx[i]
-			print "Time Diff is %s:%s:%s" % (diff_hr[i], diff_min[i], diff_sec[i])
-		  	print "\n"  	   
+            # Clear the screen
+            os.system('cls' if os.name == 'nt' else 'clear')
+
+            # Print local time
+            print "Local Time: %s" % NTP_time_now
+            print "Local Time Ticks: %s" % NTP_time_now_ticks
+            print ""
+
+            for i in range(len(addr_rx)):
+                print "RX Addr: %s", addr_rx[i]
+                print "Remote Time: %s", data_rx_time[i]
+                print "Remote Time Ticks: %s", data_rx_time_ticks[i]
+                #print "Time Diff is %s:%s:%s" % (diff_hr[i], diff_min[i], diff_sec[i])
+                print "Time Diff is %s" % diff[i]
+                print "\n"
 
 
 
