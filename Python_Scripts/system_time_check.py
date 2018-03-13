@@ -40,6 +40,11 @@ class system_time_rx:
     def time_rx(self):
         print "Listening for incoming time packets\n"
 
+        # Grab current time. This will be used as the race start time.
+        current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f")
+        current_datetime_split = current_datetime.split(' ')
+        current_date = current_datetime_split[0]
+
         # Create array to hold rx addresses
         addr_rx = []
         data_rx_raw = []
@@ -50,7 +55,7 @@ class system_time_rx:
         diff_hr = []
         diff_min = []
         diff_sec = []
-        diff = []
+        time_difference = []
 
         # Capture event details for logging
         # ---------------------------------
@@ -118,7 +123,14 @@ class system_time_rx:
                 #diff_hr.append(int(NTP_time[0])-int(rx_time[0]))
                 #diff_min.append(int(NTP_time[1])-int(rx_time[1]))
                 #diff_sec.append(int(NTP_time[2])-int(rx_time[2]))
-                diff.append(float(NTP_time_now_ticks) - float(rx_time_ticks))
+                time_difference.append(float(NTP_time_now_ticks) - float(rx_time_ticks))
+
+                # Log any changes. This is done in case correction is later required to results
+                addr_idx = addr_rx.index(ip)
+                thread.start_new_thread(write_file, (
+                event, current_date, NTP_time_now, NTP_time_now_ticks, Write_type, data_rx_raw[addr_idx],
+                addr_rx[addr_idx], data_rx_time[addr_idx], data_rx_time_ticks[addr_idx], time_difference[addr_idx]))
+
 
             else:
                 # extract IP only
@@ -160,7 +172,14 @@ class system_time_rx:
                     #diff_hr.append(int(NTP_time[0])-int(rx_time[0]))
                     #diff_min.append(int(NTP_time[1])-int(rx_time[1]))
                     #diff_sec.append(int(NTP_time[2])-int(rx_time[2]))
-                    diff.append(float(NTP_time_now_ticks) - float(rx_time_ticks))
+                    time_difference.append(float(NTP_time_now_ticks) - float(rx_time_ticks))
+
+                    # Log any changes. This is done in case correction is later required to results
+                    addr_idx = addr_rx.index(ip)
+                    thread.start_new_thread(write_file, (
+                        event, current_date, NTP_time_now, NTP_time_now_ticks, Write_type, data_rx_raw[addr_idx],
+                        addr_rx[addr_idx], data_rx_time[addr_idx], data_rx_time_ticks[addr_idx],
+                        time_difference[addr_idx]))
 
                 else:
                     addr_idx = addr_rx.index(ip)
@@ -196,13 +215,10 @@ class system_time_rx:
                     #diff_hr[addr_idx] = (int(NTP_time[0])-int(rx_time[0]))
                     #diff_min[addr_idx] = (int(NTP_time[1])-int(rx_time[1]))
                     #diff_sec[addr_idx] = (int(NTP_time[2])-int(rx_time[2]))
-                    diff[addr_idx] = (float(NTP_time_now_ticks) - float(rx_time_ticks))
+                    time_difference[addr_idx] = (float(NTP_time_now_ticks) - float(rx_time_ticks))
 
-            # Log any changes. This is done in case correction is later required to results
-            # TBD
-            #thread.start_new_thread(write_file,(event, current_date, current_datetime, Write_type, data, addr))
-
-
+                    # Log any changes. This is done in case correction is later required to results
+                    thread.start_new_thread(write_file, (event, current_date, NTP_time_now, NTP_time_now_ticks, Write_type, data_rx_raw[addr_idx], addr_rx[addr_idx], data_rx_time[addr_idx], data_rx_time_ticks[addr_idx], time_difference[addr_idx]))
 
             # Now print only the results for know IP addresses
             # ------------------------------------------------
@@ -211,8 +227,8 @@ class system_time_rx:
             os.system('cls' if os.name == 'nt' else 'clear')
 
             # Print local time
-            print "Local Time: %s" % NTP_time_now
-            print "Local Time Ticks: %s" % NTP_time_now_ticks
+            print "NTP Time: %s" % NTP_time_now
+            print "NTP Time Ticks: %s" % NTP_time_now_ticks
             print ""
 
             for i in range(len(addr_rx)):
@@ -220,8 +236,63 @@ class system_time_rx:
                 print "Remote Time: %s", data_rx_time[i]
                 print "Remote Time Ticks: %s", data_rx_time_ticks[i]
                 #print "Time Diff is %s:%s:%s" % (diff_hr[i], diff_min[i], diff_sec[i])
-                print "Time Diff is %s" % diff[i]
+                print "Time Difference is %s" % time_difference[i]
                 print "\n"
 
 
+# Global Methods
+# --------------
 
+def write_file(event, current_date, NTP_time_now, NTP_time_now_ticks, Write_type, data_rx_raw, addr_rx, data_rx_time, data_rx_time_ticks, time_difference):
+    print "Writing file"
+    # Save incoming data to file
+
+    try:
+         if Write_type == 'O':
+             # If write_type selected to overwrite, only do this the first time as otherwise all received data for the session will be clobbered.
+             # file = open(event + current_date,"w")
+             file = open(event + current_date,"a")
+
+             # Force 'Append after the first receive'
+             Write_type = 'A'
+             print "type O"
+
+         else:
+            file = open(event + current_date,"a")
+
+            file.write("Addr: " + str(addr_rx) + "\n")
+            file.write("NTP Time: %s" % NTP_time_now + "\n")
+            file.write("NTP Time Ticks: %s" % NTP_time_now_ticks + "\n")
+            file.write("Remote Time: %s" % str(data_rx_time) + "\n")
+            file.write("Remote Time Ticks: %s" % str(data_rx_time_ticks) + "\n")
+            file.write("Time Difference: %s" % str(time_difference) + "\n")
+            file.write("Raw RX data: %s" % str(data_rx_raw) + "\n")
+            file.write("\n\n")
+            file.close()
+
+            #data_len = len(addr_rx)
+
+            #for i in range(data_len):
+            #    file.write("Addr: " + str(addr_rx[i]) +"\n")
+            #    file.write("NTP Time: %s" % NTP_time_now +"\n")
+            #    file.write("NTP Time Ticks: %s" % NTP_time_now_ticks + "\n")
+            #    file.write("Remote Time: %s" % str(data_rx_time[i]) +"\n")
+            #    file.write("Remote Time Ticks: %s" % str(data_rx_time_ticks[i]) + "\n")
+            #    file.write("Time Difference: %s" % str(time_difference[i]) + "\n")
+            #    file.write("Raw RX data: %s" % str(data_rx_raw[i]) + "\n")
+            #    file.write("\n\n")
+            #    file.close()
+
+            #    print "Addr: " + str(addr_rx[i]) +"\n"
+            #    print "NTP Time: %s" % NTP_time_now +"\n"
+            #    print "NTP Time Ticks: %s" % NTP_time_now_ticks + "\n"
+            #    print "Remote Time: %s" % str(data_rx_time[i]) +"\n"
+            #    print "Remote Time Ticks: %s" % str(data_rx_time_ticks[i]) + "\n"
+            #    print "Time Difference: %s" % str(time_difference[i]) + "\n"
+            #    print "Raw RX data: %s" % str(data_rx_raw[i]) + "\n"
+            #    print "\n\n"
+
+    except Exception:
+        print "bailing"
+        print Exception.message
+        pass
