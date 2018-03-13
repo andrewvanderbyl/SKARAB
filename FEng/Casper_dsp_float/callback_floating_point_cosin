@@ -1,0 +1,28 @@
+onoff = get_param(gcb, 'floating_point');
+if strcmp(onoff,'on')
+    enable_fixpt = 'off'
+    set_param_state(gcb, 'float_type', 'on')
+    
+    f_type = get_param(gcb, 'float_type')
+    if strcmp(f_type,'Custom')
+        set_param_state(gcb, 'exp_width', 'on')
+        set_param_state(gcb, 'frac_width', 'on')
+    else
+        set_param_state(gcb, 'exp_width', 'off')
+        set_param_state(gcb, 'frac_width', 'off')
+    end
+    
+    
+else
+    enable_fixpt = 'on'
+    set_param_state(gcb, 'float_type', 'off')
+    set_param_state(gcb, 'exp_width', 'off')
+    set_param_state(gcb, 'frac_width', 'off')
+end
+
+set_param_state(gcb, 'n_bits', enable_fixpt)
+set_param_state(gcb, 'bin_pt', enable_fixpt)
+
+
+
+

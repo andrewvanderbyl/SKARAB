@@ -1,0 +1,8 @@
+f_type = get_param(gcb, 'float_type')
+if strcmp(f_type,'Custom')
+    set_param_state(gcb, 'exp_width', 'on')
+    set_param_state(gcb, 'frac_width', 'on')
+else
+    set_param_state(gcb, 'exp_width', 'off')
+    set_param_state(gcb, 'frac_width', 'off')
+end
