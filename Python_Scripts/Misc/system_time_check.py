@@ -14,6 +14,9 @@ UDP_IP_ADDRESS = "192.168.1.162"
 
 UDP_PORT_NO = 50000
 
+# Set flag to control time thread
+show_ntp_time_thread_flag = True
+
 
 # Logger 
 logging.basicConfig(level=logging.DEBUG)
@@ -75,12 +78,22 @@ class system_time_rx:
         else:
             print "Default selected\n\n"
 
+	# Wait for 2 seconds
+	time.sleep(1)
+
+        # Clear the screen
+        os.system('cls' if os.name == 'nt' else 'clear')
+
+	# Print waiting message
+	print "Waiting for incoming packets..."
+
+	#thread.start_new_thread(show_NTP_time, ())
+
         while True:
 
             data, addr = serverSock.recvfrom(1024)
-            #print "tp0"
-            #print data
-            #print "tp1"
+
+	    show_ntp_time_thread_flag = False
 
             # Check if the RX address is new or we have seen it before
             addr_len = len(addr_rx)
@@ -232,9 +245,9 @@ class system_time_rx:
             print ""
 
             for i in range(len(addr_rx)):
-                print "RX Addr: %s", addr_rx[i]
-                print "Remote Time: %s", data_rx_time[i]
-                print "Remote Time Ticks: %s", data_rx_time_ticks[i]
+                print "RX Addr: ", addr_rx[i]
+                print "Remote Time: ", data_rx_time[i]
+                print "Remote Time Ticks: ", data_rx_time_ticks[i]
                 #print "Time Diff is %s:%s:%s" % (diff_hr[i], diff_min[i], diff_sec[i])
                 print "Time Difference is %s" % time_difference[i]
                 print "\n"
@@ -296,3 +309,24 @@ def write_file(event, current_date, NTP_time_now, NTP_time_now_ticks, Write_type
         print "bailing"
         print Exception.message
         pass
+
+def show_NTP_time():
+
+	while True:
+		# Clear the screen
+		os.system('cls' if os.name == 'nt' else 'clear')
+
+		# Show time
+		print "NTP Time is: %s" % time.ctime()
+		print "Waiting for incoming time data..."
+		
+		if show_ntp_time_thread_flag == False:
+			break
+			print "Break"
+		else:
+			print "Sleep"			
+			time.sleep(1)
+
+
+print "Starting Time Monitor"
+st = system_time_rx()

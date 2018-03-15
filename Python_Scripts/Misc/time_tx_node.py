@@ -1,4 +1,5 @@
-from IPython import embed
+#!/usr/bin/env python
+#from IPython import embed
 import logging
 import time
 import datetime
@@ -16,7 +17,8 @@ sleep_time = 1
 logging.basicConfig(level=logging.DEBUG)
 LOGGER = logging.getLogger(__name__)
 
-class UDP_tx:
+
+class time_tx_class:
     def __init__(self, mode = 'cont', port=7148, log_handler = None, log_level = logging.INFO, spead_log_level = logging.DEBUG, **kwargs):
         # if log_handler == None:
         #     log_handler = log_handlers.DebugLogHandler(100)
@@ -61,6 +63,14 @@ class UDP_tx:
 			clientSock.sendto(time_data_str, (UDP_IP_ADDRESS, UDP_PORT_NO))
 			print time_data_str
 
+
 			# Sleep for 'n' seconds
 			time.sleep(sleep_time)	
+
+
+print "Starting Time transmit"
+tx = time_tx_class()
+
+
+
 
