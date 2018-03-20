@@ -82,19 +82,25 @@ function bus_addsub_init(blk, varargin)
                 % Set frac width and exp width for single precision
                 frac_width = 24;
                 exp_width = 8;
-                n_bits_a = frac_width + exp_width;
+                n_bits_a = repmat((frac_width + exp_width), 1, length(n_bits_a));
                 bin_pt_a = 0;
                 type_a = 0;
-                n_bits_b = frac_width + exp_width;
+                n_bits_b = repmat((frac_width + exp_width), 1, length(n_bits_b));
                 bin_pt_b = 0;
                 type_b = 0;
+                n_bits_out = repmat((frac_width + exp_width), 1, length(n_bits_out));
+                bin_pt_out = 0;
+                type_out = 0;
             case 2
-                n_bits_a = frac_width + exp_width;
+                n_bits_a = repmat((frac_width + exp_width), 1, length(n_bits_a));
                 bin_pt_a = 0;
                 type_a = 0;
-                n_bits_b = frac_width + exp_width;
+                n_bits_b = repmat((frac_width + exp_width), 1, length(n_bits_b));
                 bin_pt_b = 0;
                 type_b = 0;
+                n_bits_out = repmat((frac_width + exp_width), 1, length(n_bits_out));
+                bin_pt_out = 0;
+                type_out = 0;
         end
 
   else

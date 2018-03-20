@@ -155,12 +155,15 @@ function butterfly_direct_init(blk, varargin)
   else
       float_en = 'off';  
   end
-
+  
   if float_type == 2
       float_type_sel = 'custom';
   else
       float_type_sel = 'single';
+      exp_width = 8;
+      frac_width = 24;
   end
+
   
   
   % bin_pt_in == -1 is a special case for backwards compatibility
@@ -286,11 +289,21 @@ function butterfly_direct_init(blk, varargin)
       params = { params{:}, ...
         'input_bit_width', num2str(input_bit_width), ...
         'bin_pt_in', num2str(bin_pt_in)};
+        'floating_point', float_en, ...
+        'float_type', float_type_sel, ...
+        'exp_width', num2str(exp_width), ...
+        'frac_width', num2str(frac_width), ...  
+        
   elseif strcmp(twiddle_type, 'twiddle_stage_2'), 
       params = { params{:}, ...
         'FFTSize', num2str(FFTSize), ...
         'input_bit_width', num2str(input_bit_width), ...
         'bin_pt_in', num2str(bin_pt_in)};
+        'floating_point', float_en, ...
+        'float_type', float_type_sel, ...
+        'exp_width', num2str(exp_width), ...
+        'frac_width', num2str(frac_width), ...   
+  
   elseif strcmp(twiddle_type, 'twiddle_general'), 
       params = { params{:}, ...
         'FFTSize', num2str(FFTSize), ...
@@ -324,17 +337,6 @@ function butterfly_direct_init(blk, varargin)
   %
   % Add complex add/sub blocks.
   %
-  if floating_point == 1
-    float_en = 'on';
-  else
-    float_en = 'off';  
-  end
-
-  if float_type == 2
-    float_type_sel = 'custom';
-  else
-    float_type_sel = 'single';
-  end
       
   if strcmp(dsp48_adders, 'on'), add_implementation = 'DSP48 core';
   else add_implementation = 'behavioral HDL';

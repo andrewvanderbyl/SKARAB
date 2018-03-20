@@ -132,18 +132,17 @@ add_line(blk, 'ai/1', 'bus_create/3');
 
 if floating_point == 1
     float_en = 'on';
-    
-    if float_type == 2
-        float_type_sel = 'custom';
-    else
-        float_type_sel = 'single';
-        exp_width = 8;
-        frac_width = 24;
-    end
 else
     float_en = 'off';  
 end
 
+if float_type == 2
+    float_type_sel = 'custom';
+else
+    float_type_sel = 'single';
+    exp_width = 8;
+    frac_width = 24;
+end
 
 
 % Coefficient generator
@@ -194,7 +193,10 @@ else
     multiplier_implementation = 'behavioral HDL';
 end
 
+
+
 if floating_point
+    
     %multipliers
     reuse_block(blk, 'bus_mult', 'casper_library_bus/bus_mult', ...
         'n_bits_a', 'coeff_bit_width', ...
@@ -208,6 +210,8 @@ if floating_point
         'float_type', float_type_sel, ...
         'exp_width', num2str(exp_width), ...
         'frac_width', num2str(frac_width), ... 
+        'input_vec_a', num2str(n_inputs), ...
+        'input_vec_b', num2str(n_inputs), ...
         'multiplier_implementation', multiplier_implementation,...
         'mult_latency', 'mult_latency', 'add_latency', 'add_latency', 'conv_latency', '0', ...
         'max_fanout', 'max_fanout', 'fan_latency', num2str(ceil(log2(n_inputs))+1), ...
