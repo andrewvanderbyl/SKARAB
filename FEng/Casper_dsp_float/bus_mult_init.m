@@ -31,10 +31,12 @@ function bus_mult_init(blk, varargin)
     'n_bits_out', 12 ,  'bin_pt_out',   7,   'type_out', 1, ...
     'floating_point', 'off', ...
     'float_type', 'single', ...
-    'exp_width', 6, ...
-    'frac_width', 19, ...  
+    'exp_width', 8, ...
+    'frac_width', 24, ...  
     'input_vec_a', 1, ...
     'input_vec_b', 1, ...
+    'pipeline_cmult_en', 'off', ...
+    'pipeline_latency', 2 ...
     'overflow', 0,      'quantization', 0,   'misc', 'on', ...
     'mult_latency', 3,  'add_latency', 1 , 'conv_latency', 1, ...
     'max_fanout', 2, 'fan_latency', 0, ...
@@ -79,12 +81,60 @@ function bus_mult_init(blk, varargin)
   add_latency                = get_var('add_latency', 'defaults', defaults, varargin{:});
   conv_latency               = get_var('conv_latency', 'defaults', defaults, varargin{:});
   max_fanout                 = get_var('max_fanout', 'defaults', defaults, varargin{:});
+  pipeline_cmult_en          = get_var('pipeline_cmult_en', 'defaults', defaults, varargin{:});
+  pipeline_latency           = get_var('pipeline_latency', 'defaults', defaults, varargin{:});
   fan_latency                = get_var('fan_latency', 'defaults', defaults, varargin{:});
   misc                       = get_var('misc', 'defaults', defaults, varargin{:});
   multiplier_implementation  = get_var('multiplier_implementation', 'defaults', defaults, varargin{:});
 
   delete_lines(blk);
 
+  % sanity check for old block that has not been updated for floating point
+  if (strcmp(floating_point, 'on')|floating_point == 1)
+    floating_point = 1;
+  else
+    floating_point = 0;
+  end
+      
+  if (strcmp(pipeline_cmult_en, 'on'))|(pipeline_cmult_en == 1)
+    pipeline_cmult_en = 'on';
+  else
+    pipeline_cmult_en = 'off'; 
+  end
+  
+  % Check for floating point
+  if floating_point
+      float_en = 'on';
+      
+      if float_type == 2
+          float_type_sel = 'custom';
+
+          n_bits_a = repmat((frac_width + exp_width), 1, input_vec_a);
+          bin_pt_a = 0;
+          type_a = 0;
+          n_bits_b = repmat((frac_width + exp_width), input_vec_b,1);
+          bin_pt_b = 0;
+          type_b = 0;
+      else
+          float_type_sel = 'single';
+          exp_width = 8;
+          frac_width = 24;
+
+          n_bits_a = repmat((frac_width + exp_width), 1, input_vec_a);
+          bin_pt_a = 0;
+          type_a = 0;
+          n_bits_b = repmat((frac_width + exp_width), 1, input_vec_b);
+          bin_pt_b = 0;
+          type_b = 0;
+      end
+  else
+      float_en = 'off';  
+      float_type_sel = 'single';
+      exp_width = 8;
+      frac_width = 24;
+  end
+  
+  
   %default state, do nothing 
   if ((n_bits_a == 0 | n_bits_b == 0)&(~floating_point)),
     clean_blocks(blk);
@@ -111,34 +161,7 @@ function bus_mult_init(blk, varargin)
   end
 
   
-  % Check for floating point
-  if floating_point == 1
-      float_en = 'on';
-      
-      if float_type == 2
-          float_type_sel = 'custom';
 
-          n_bits_a = repmat((frac_width + exp_width), 1, input_vec_a);
-          bin_pt_a = 0;
-          type_a = 0;
-          n_bits_b = repmat((frac_width + exp_width), input_vec_b,1);
-          bin_pt_b = 0;
-          type_b = 0;
-      else
-          float_type_sel = 'single';
-          exp_width = 8;
-          frac_width = 24;
-
-          n_bits_a = repmat((frac_width + exp_width), 1, input_vec_a);
-          bin_pt_a = 0;
-          type_a = 0;
-          n_bits_b = repmat((frac_width + exp_width), 1, input_vec_b);
-          bin_pt_b = 0;
-          type_b = 0;
-      end
-  else
-      float_en = 'off';  
-  end
   
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -146,7 +169,7 @@ function bus_mult_init(blk, varargin)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
   if floating_point
-      lenba = input_vec_a; lenpa = length(0); lenta = length(0);
+      lenba = length(n_bits_a); lenpa = length(0); lenta = length(0);
       a = [lenba, lenpa, lenta];  
       unique_a = unique(a);
       compa = unique_a(length(unique_a));
@@ -449,6 +472,12 @@ function bus_mult_init(blk, varargin)
             'n_bits_a', num2str(n_bits_a(a_src(index))), 'bin_pt_a', num2str(bin_pt_a(a_src(index))), ...
             'n_bits_b', num2str(n_bits_b(b_src(index))), 'bin_pt_b', num2str(bin_pt_b(b_src(index))), ...
             'n_bits_ab', num2str(n_bits_out(index)), 'bin_pt_ab', num2str(bin_pt_out(index)), ...
+            'floating_point', float_en, ...
+            'float_type', float_type_sel, ...
+            'exp_width', num2str(exp_width), ...
+            'frac_width', num2str(frac_width), ... 
+            'pipeline_cmult_en', pipeline_cmult_en, ...
+            'pipeline_latency', num2str(pipeline_latency), ...  
             'quantization', quant, 'overflow', of, 'conjugated', 'off', ...
             'multiplier_implementation', multiplier_implementation, ...
             'in_latency', num2str(in_latency), 'mult_latency', num2str(mult_latency), ... 
@@ -483,17 +512,49 @@ function bus_mult_init(blk, varargin)
       end %for
 
       ypos_tmp = ypos + mult_d*(compb+compa) + 2*yinc;
+      
       if strcmp(misc, 'on'),
-        if strcmp(cmplx_a, 'on') && strcmp(cmplx_b, 'on'),
-          latency = ['mult_latency+add_latency+conv_latency+fan_latency'];
-        else,
-          latency = ['mult_latency+fan_latency'];
-        end
+          
+        %pipeline = 'on';
+        
+        if strcmp(pipeline_cmult_en,'on')
+            
+            if strcmp(cmplx_a, 'on') && strcmp(cmplx_b, 'on'),
+              latency = ['mult_latency+add_latency+fan_latency+pipeline_latency'];
+            else,
+              latency = ['mult_latency+fan_latency+pipeline_latency'];
+            end
+            
+            %if(eval(latency)<0)
+            %   error('Pipelin latency between mult and add cannot exceed sum of mult and add latency');
+            %end
 
-        reuse_block(blk, 'dmisc', 'xbsIndex_r4/Delay', ...
-          'latency', latency, 'reg_retiming', 'on', ...
-          'Position', [xpos-del_w/2 ypos_tmp-del_d/2 xpos+del_w/2 ypos_tmp+del_d/2]);
-        add_line(blk, 'misci/1', 'dmisc/1');
+            
+            reuse_block(blk, 'pipeline', 'casper_library_delays/pipeline', ...
+            'Position', [95 115 145 135], ...
+            'ShowName', 'off', ...
+            'latency', latency);
+            add_line(blk, 'misci/1', 'pipeline/1');  
+            
+%             reuse_block(blk, 'dmisc', 'xbsIndex_r4/Delay', ...
+%               'latency', latency, 'reg_retiming', 'on', ...
+%               'Position', [xpos-del_w/2 ypos_tmp-del_d/2 xpos+del_w/2 ypos_tmp+del_d/2]);
+%             add_line(blk, 'pipeline/1', 'dmisc/1');       
+
+        else
+            
+            if strcmp(cmplx_a, 'on') && strcmp(cmplx_b, 'on'),
+              latency = ['mult_latency+add_latency+fan_latency'];
+            else,
+              latency = ['mult_latency+fan_latency'];
+            end
+            
+            reuse_block(blk, 'dmisc', 'xbsIndex_r4/Delay', ...
+              'latency', latency, 'reg_retiming', 'on', ...
+              'Position', [xpos-del_w/2 ypos_tmp-del_d/2 xpos+del_w/2 ypos_tmp+del_d/2]);
+            add_line(blk, 'misci/1', 'dmisc/1');            
+        end
+      
       end
       xpos = xpos + xinc + mult_d/2;
       
@@ -501,6 +562,7 @@ function bus_mult_init(blk, varargin)
       % Fixed Point
       %%%%%%%%%%%%%
       
+     
      for index = 1:compo,
         clog([num2str(index),': type= ', num2str(type_out(index)), ...
         ' quantization= ', num2str(quantization(index)), ...
@@ -568,28 +630,31 @@ function bus_mult_init(blk, varargin)
             'use_behavioral_HDL', use_behavioral_HDL, 'use_embedded', use_embedded, ...
             'Position', [xpos-mult_w/2 ypos_tmp xpos+mult_w/2 ypos_tmp+mult_d-20]);
         end
+        
         ypos_tmp = ypos_tmp + mult_d;
         clog(['done'], 'bus_mult_init_debug');
 
         add_line(blk, ['a_debus/',num2str(a_src(index))], [mult_name,'/1']);
         add_line(blk, ['b_debus/',num2str(b_src(index))], [mult_name,'/2']);
-      end %for
+%         add_line(blk, [mult_name,'/1'], ['a*b_bussify/',num2str(index)]);
+     end %for
 
-      ypos_tmp = ypos + mult_d*(compb+compa) + 2*yinc;
-      if strcmp(misc, 'on'),
-        if strcmp(cmplx_a, 'on') && strcmp(cmplx_b, 'on'),
-          latency = ['mult_latency+add_latency+conv_latency+fan_latency'];
-        else,
-          latency = ['mult_latency+fan_latency'];
-        end
+     ypos_tmp = ypos + mult_d*(compb+compa) + 2*yinc;
+      
+     if strcmp(misc, 'on'),
+       if strcmp(cmplx_a, 'on') && strcmp(cmplx_b, 'on'),
+         latency = ['mult_latency+add_latency+conv_latency+fan_latency'];
+       else,
+         latency = ['mult_latency+fan_latency'];
+       end              
 
-        reuse_block(blk, 'dmisc', 'xbsIndex_r4/Delay', ...
-          'latency', latency, 'reg_retiming', 'on', ...
-          'Position', [xpos-del_w/2 ypos_tmp-del_d/2 xpos+del_w/2 ypos_tmp+del_d/2]);
-        add_line(blk, 'misci/1', 'dmisc/1');
-      end
-      xpos = xpos + xinc + mult_d/2;
+       reuse_block(blk, 'dmisc', 'xbsIndex_r4/Delay', ...
+         'latency', latency, 'reg_retiming', 'on', ...
+         'Position', [xpos-del_w/2 ypos_tmp-del_d/2 xpos+del_w/2 ypos_tmp+del_d/2]);
+       add_line(blk, 'misci/1', 'dmisc/1');           
 
+     end
+     
   end
   
 
@@ -598,14 +663,16 @@ function bus_mult_init(blk, varargin)
   %%%%%%%%%%%%%%
   % bus create %
   %%%%%%%%%%%%%%
-
+  xpos = xpos + xinc + mult_d/2;
   ypos_tmp = ypos + mult_d*compo/2; %reset ypos
  
   reuse_block(blk, 'a*b_bussify', 'casper_library_flow_control/bus_create', ...
     'inputNum', num2str(compo), ...
     'Position', [xpos-bus_create_w/2 ypos_tmp-mult_d*compo/2 xpos+bus_create_w/2 ypos_tmp+mult_d*compo/2]);
   
-  for index = 1:compo, add_line(blk, ['mult',num2str(index),'/1'], ['a*b_bussify/',num2str(index)]); end
+  for index = 1:compo
+      add_line(blk, ['mult',num2str(index),'/1'], ['a*b_bussify/',num2str(index)]); 
+  end
 
   %%%%%%%%%%%%%%%%%
   % output port/s %
@@ -620,11 +687,19 @@ function bus_mult_init(blk, varargin)
 
   ypos_tmp = ypos + mult_d*(compb+compa) + 2*yinc;
   if strcmp(misc, 'on'),
-    reuse_block(blk, 'misco', 'built-in/outport', ...
-      'Port', '2', ... 
-      'Position', [xpos-port_w/2 ypos_tmp-port_d/2 xpos+port_w/2 ypos_tmp+port_d/2]);
 
-    add_line(blk, 'dmisc/1', 'misco/1');
+      if strcmp(pipeline_cmult_en,'on')
+          reuse_block(blk, 'misco', 'built-in/outport', ...
+             'Port', '2', ... 
+             'Position', [xpos-port_w/2 ypos_tmp-port_d/2 xpos+port_w/2 ypos_tmp+port_d/2]);
+          add_line(blk, 'pipeline/1', 'misco/1');         
+      else
+          reuse_block(blk, 'misco', 'built-in/outport', ...
+             'Port', '2', ... 
+             'Position', [xpos-port_w/2 ypos_tmp-port_d/2 xpos+port_w/2 ypos_tmp+port_d/2]);
+          add_line(blk, 'dmisc/1', 'misco/1');                     
+      end
+
   end
   
   % When finished drawing blocks and lines, remove all unused blocks.

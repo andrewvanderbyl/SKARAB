@@ -52,14 +52,16 @@ function cmult_init(blk, varargin)
     'bin_pt_ab', 14, ...
     'quantization', 'Truncate', ...
     'overflow', 'Wrap', ...
-    'floating_point', 'off', ...
+    'floating_point', '0', ...
     'float_type', 'single', ...
-    'exp_width', 6, ...
-    'frac_width', 19, ...      
+    'exp_width', 8, ...
+    'frac_width', 24, ...      
     'mult_latency', 3, ...
     'add_latency', 1, ...
     'conv_latency', 1, ...
     'in_latency', 0, ...
+    'pipeline_cmult_en', 'off', ...
+    'pipeline_latency', 2 ...    
     'conjugated', 'off', ...
     'async', 'off', ...
     'pipelined_enable', 'on', ...
@@ -69,7 +71,7 @@ function cmult_init(blk, varargin)
   if same_state(blk, 'defaults', defaults, varargin{:}), return, end
 
   munge_block(blk,varargin);
-
+    
   n_bits_a                  = get_var('n_bits_a','defaults',defaults,varargin{:});
   n_bits_b                  = get_var('n_bits_b','defaults',defaults,varargin{:});
   n_bits_ab                 = get_var('n_bits_ab','defaults',defaults,varargin{:});
@@ -86,6 +88,8 @@ function cmult_init(blk, varargin)
   add_latency               = get_var('add_latency','defaults',defaults,varargin{:});
   conv_latency              = get_var('conv_latency','defaults',defaults,varargin{:});
   in_latency                = get_var('in_latency','defaults',defaults,varargin{:});
+  pipeline_cmult_en         = get_var('pipeline_cmult_en', 'defaults', defaults, varargin{:});
+  pipeline_latency          = get_var('pipeline_latency', 'defaults', defaults, varargin{:});  
   conjugated                = get_var('conjugated','defaults',defaults,varargin{:});
   async                     = get_var('async','defaults',defaults,varargin{:});
   pipelined_enable          = get_var('pipelined_enable','defaults',defaults,varargin{:});
@@ -93,6 +97,18 @@ function cmult_init(blk, varargin)
 
   delete_lines(blk);
   
+  % sanity check for old block that has not been updated for floating point
+  if (strcmp(floating_point, 'on')|floating_point == 1)
+    floating_point = 1;
+  else
+    floating_point = 0;
+  end
+  
+  if (strcmp(pipeline_cmult_en, 'on'))|(pipeline_cmult_en == 1)
+    pipeline_cmult_en = 'on';
+  else
+    pipeline_cmult_en = 'off';
+  end
   
   if floating_point
       preci_type = 'Full';
@@ -125,25 +141,23 @@ function cmult_init(blk, varargin)
 
   else
         preci_type = 'User defined';
+
+        if n_bits_a == 0 || n_bits_b == 0
+            clean_blocks(blk);
+            set_param(blk,'AttributesFormatString','');
+            save_state(blk, 'defaults', defaults, varargin{:});
+            return;
+        end
+
+          if (n_bits_a < bin_pt_a)
+              errordlg('Number of bits for a input must be greater than binary point position.'); return; end
+          if (n_bits_b < bin_pt_b)
+              errordlg('Number of bits for b input must be greater than binary point position.'); return; end
+          if (n_bits_ab < bin_pt_ab)
+              errordlg('Number of bits for ab input must be greater than binary point position.'); return; end
   end  
   
   
-  
-
-  if n_bits_a == 0 || n_bits_b == 0
-    clean_blocks(blk);
-    set_param(blk,'AttributesFormatString','');
-    save_state(blk, 'defaults', defaults, varargin{:});
-    return;
-  end
-
-  if (n_bits_a < bin_pt_a)
-      errordlg('Number of bits for a input must be greater than binary point position.'); return; end
-  if (n_bits_b < bin_pt_b)
-      errordlg('Number of bits for b input must be greater than binary point position.'); return; end
-  if (n_bits_ab < bin_pt_ab)
-      errordlg('Number of bits for ab input must be greater than binary point position.'); return; end
-
   %ports
 
   reuse_block(blk, 'a', 'built-in/Inport', 'Port', '1', 'Position', [5 148 35 162]);
@@ -163,7 +177,8 @@ function cmult_init(blk, varargin)
       'replication', '2', 'latency', num2str(latency), 'misc', 'off', ...
       'Position', [90 143 125 167]);
   add_line(blk, 'a/1', 'a_replicate/1'); 
- 
+
+  
   reuse_block(blk, 'b_replicate', 'casper_library_bus/bus_replicate', ...
       'replication', '2', 'latency', num2str(latency), 'misc', 'off', ...
       'Position', [90 328 125 352]);
@@ -200,9 +215,10 @@ function cmult_init(blk, varargin)
       'outputArithmeticType', mat2str(ones(1,4)), ...
       'Position', [180 291 230 384]);
   add_line(blk, 'b_replicate/1', 'b_expand/1'); 
+
   
   %multipliers
-
+  
   if strcmp(multiplier_implementation, 'behavioral HDL')
     use_behavioral_HDL = 'on';
     use_embedded = 'off';
@@ -215,7 +231,7 @@ function cmult_init(blk, varargin)
     else
     end
   end
-
+  
   if floating_point
       
       % Insert reinterpret block and connect to mult rere
@@ -288,14 +304,6 @@ function cmult_init(blk, varargin)
       'Position', [100 200 120 220]);
       add_line(blk, 'b_expand/3', 'reintp_bexp3/1');   
       
-      reuse_block(blk, 'imre', 'xbsIndex_r4/Mult', ...
-        'use_behavioral_HDL', use_behavioral_HDL, 'use_embedded', use_embedded, ...
-        'en', async, 'latency', num2str(mult_latency), 'precision', 'Full', ...
-        'Position', [290 267 340 318]);
-      add_line(blk, 'reintp_aexp3/1', 'imre/1');
-      add_line(blk, 'reintp_bexp3/1', 'imre/2');
-      % ---
-      
       % Insert reinterpret block and connect to mult rere
       reuse_block(blk, 'reintp_aexp4', 'xbsIndex_r4/Reinterpret', ...
       'force_arith_type', 'on', ...
@@ -303,8 +311,8 @@ function cmult_init(blk, varargin)
       'force_bin_pt', 'on', ...
       'bin_pt',num2str(frac_width), ...
       'Position', [100 200 120 220]);
-      add_line(blk, 'a_expand/4', 'reintp_aexp4/1');
-  
+      add_line(blk, 'a_expand/4', 'reintp_aexp4/1');      
+
       % Insert reinterpret block and connect to mult rere
       reuse_block(blk, 'reintp_bexp4', 'xbsIndex_r4/Reinterpret', ...
       'force_arith_type', 'on', ...
@@ -312,13 +320,24 @@ function cmult_init(blk, varargin)
       'force_bin_pt', 'on', ...
       'bin_pt',num2str(frac_width), ...
       'Position', [100 200 120 220]);
-      add_line(blk, 'b_expand/4', 'reintp_bexp4/1');   
+      add_line(blk, 'b_expand/4', 'reintp_bexp4/1');  
+      
+      reuse_block(blk, 'imre', 'xbsIndex_r4/Mult', ...
+        'use_behavioral_HDL', use_behavioral_HDL, 'use_embedded', use_embedded, ...
+        'en', async, 'latency', num2str(mult_latency), 'precision', 'Full', ...
+        'Position', [290 267 340 318]);
+        %add_line(blk, 'reintp_aexp3/1', 'reim/1');
+       add_line(blk, 'reintp_aexp4/1', 'imre/1');      
+       add_line(blk, 'reintp_bexp3/1', 'imre/2');
+      % ---
+     
 
       reuse_block(blk, 'reim', 'xbsIndex_r4/Mult', ...
         'use_behavioral_HDL', use_behavioral_HDL, 'use_embedded', use_embedded, ...
         'en', async, 'latency', num2str(mult_latency), 'precision', 'Full', ...
         'Position', [290 337 340 388]);
-      add_line(blk, 'reintp_aexp4/1', 'reim/1');
+      %add_line(blk, 'reintp_aexp4/1', 'imre/1');
+      add_line(blk, 'reintp_aexp3/1', 'reim/1');
       add_line(blk, 'reintp_bexp4/1', 'reim/2');     
       
   else
@@ -374,20 +393,90 @@ function cmult_init(blk, varargin)
     add_line(blk, 'en_replicate1/1', 'en_expand1/1'); 
   end
 
-  %add/subs
-  reuse_block(blk, 'addsub_re', 'xbsIndex_r4/AddSub', ...
-    'en', async, 'use_behavioral_HDL', 'on', 'pipelined', 'on', ...
-    'latency', num2str(add_latency), 'use_rpm', 'on', 'precision', 'Full', ...
-    'Position', [445 94 495 236]);
-  add_line(blk, 'rere/1', 'addsub_re/1');
-  add_line(blk, 'imim/1', 'addsub_re/2');
+  if strcmp(use_embedded,'on')
+      
+    %Pipeline between mult and add/sub if enabled
+    if strcmp(pipeline_cmult_en,'on')
+        reuse_block(blk, 'pipeline0', 'casper_library_delays/pipeline', ...
+        'Position', [95 115 145 135], ...
+        'ShowName', 'off', ...
+        'latency', num2str(pipeline_latency));
+        add_line(blk, 'rere/1', 'pipeline0/1');
 
-  reuse_block(blk, 'addsub_im', 'xbsIndex_r4/AddSub', ...
-    'en', async, 'use_behavioral_HDL', 'on', 'pipelined', 'on', ...
-    'latency', num2str(add_latency), 'use_rpm', 'on', 'precision', 'Full', ...
-    'Position', [445 259 495 401]);
-  add_line(blk, 'imre/1', 'addsub_im/1');
-  add_line(blk, 'reim/1', 'addsub_im/2');
+        reuse_block(blk, 'pipeline1', 'casper_library_delays/pipeline', ...
+        'Position', [95 115 145 135], ...
+        'ShowName', 'off', ...
+        'latency', num2str(pipeline_latency));
+        add_line(blk, 'imim/1', 'pipeline1/1');
+
+        reuse_block(blk, 'pipeline2', 'casper_library_delays/pipeline', ...
+        'Position', [95 115 145 135], ...
+        'ShowName', 'off', ...
+        'latency', num2str(pipeline_latency));
+        add_line(blk, 'imre/1', 'pipeline2/1');    
+
+        reuse_block(blk, 'pipeline3', 'casper_library_delays/pipeline', ...
+        'Position', [95 115 145 135], ...
+        'ShowName', 'off', ...
+        'latency', num2str(pipeline_latency));
+        add_line(blk, 'reim/1', 'pipeline3/1');  
+        
+        %add/subs
+        reuse_block(blk, 'addsub_re', 'xbsIndex_r4/AddSub', ...
+          'en', async, 'use_behavioral_HDL', 'off', 'pipelined', 'on', ...
+          'hw_selection','DSP48',...
+          'latency', num2str(add_latency), 'use_rpm', 'on', 'precision', 'Full', ...
+          'Position', [445 94 495 236]);
+        add_line(blk, 'pipeline0/1', 'addsub_re/1');
+        add_line(blk, 'pipeline1/1', 'addsub_re/2');
+
+        reuse_block(blk, 'addsub_im', 'xbsIndex_r4/AddSub', ...
+          'en', async, 'use_behavioral_HDL', 'off', 'pipelined', 'on', ...
+          'hw_selection','DSP48',...
+          'latency', num2str(add_latency), 'use_rpm', 'on', 'precision', 'Full', ...
+          'Position', [445 259 495 401]);
+        add_line(blk, 'pipeline2/1', 'addsub_im/1');
+        add_line(blk, 'pipeline3/1', 'addsub_im/2');           
+        
+        
+    else
+      %add/subs
+      reuse_block(blk, 'addsub_re', 'xbsIndex_r4/AddSub', ...
+        'en', async, 'use_behavioral_HDL', 'off', 'pipelined', 'on', ...
+        'hw_selection','DSP48',...
+        'latency', num2str(add_latency), 'use_rpm', 'on', 'precision', 'Full', ...
+        'Position', [445 94 495 236]);
+      add_line(blk, 'rere/1', 'addsub_re/1');
+      add_line(blk, 'imim/1', 'addsub_re/2');
+
+      reuse_block(blk, 'addsub_im', 'xbsIndex_r4/AddSub', ...
+        'en', async, 'use_behavioral_HDL', 'off', 'pipelined', 'on', ...
+        'hw_selection','DSP48',...
+        'latency', num2str(add_latency), 'use_rpm', 'on', 'precision', 'Full', ...
+        'Position', [445 259 495 401]);
+      add_line(blk, 'imre/1', 'addsub_im/1');
+      add_line(blk, 'reim/1', 'addsub_im/2');          
+        
+    end
+   
+     
+  else
+      %add/subs
+      reuse_block(blk, 'addsub_re', 'xbsIndex_r4/AddSub', ...
+        'en', async, 'use_behavioral_HDL', 'on', 'pipelined', 'on', ...
+        'latency', num2str(add_latency), 'use_rpm', 'on', 'precision', 'Full', ...
+        'Position', [445 94 495 236]);
+      add_line(blk, 'rere/1', 'addsub_re/1');
+      add_line(blk, 'imim/1', 'addsub_re/2');
+
+      reuse_block(blk, 'addsub_im', 'xbsIndex_r4/AddSub', ...
+        'en', async, 'use_behavioral_HDL', 'on', 'pipelined', 'on', ...
+        'latency', num2str(add_latency), 'use_rpm', 'on', 'precision', 'Full', ...
+        'Position', [445 259 495 401]);
+      add_line(blk, 'imre/1', 'addsub_im/1');
+      add_line(blk, 'reim/1', 'addsub_im/2');      
+  end
+
 
   % Set conjugation mode.
   if strcmp(conjugated, 'on')
@@ -460,7 +549,7 @@ function cmult_init(blk, varargin)
       % Insert reinterpret block and connect to ri_to_c
       reuse_block(blk, 'reintp_a', 'xbsIndex_r4/Reinterpret', ...
       'force_arith_type', 'on', ...
-      'arith_type', 'Floating-point', ...
+      'arith_type', 'Unsigned', ...
       'force_bin_pt', 'on', ...
       'bin_pt',num2str(0), ...
       'Position', [100 200 120 220]);
@@ -469,7 +558,7 @@ function cmult_init(blk, varargin)
       
       reuse_block(blk, 'reintp_b', 'xbsIndex_r4/Reinterpret', ...
       'force_arith_type', 'on', ...
-      'arith_type', 'Floating-point', ...
+      'arith_type', 'Unsigned', ...
       'force_bin_pt', 'on', ...
       'bin_pt',num2str(0), ...
       'Position', [100 200 120 220]);
@@ -522,12 +611,6 @@ function cmult_init(blk, varargin)
       add_line(blk,'convert_re/1','ri_to_c/1');
       add_line(blk,'convert_im/1','ri_to_c/2');
   end
-
-
-  
-  
-  
-
 
   reuse_block(blk, 'ab', 'built-in/Outport', ...
           'Port', '1', ...
