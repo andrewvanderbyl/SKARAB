@@ -47,6 +47,9 @@ parser.add_argument(
     '--vacc', dest='vacc', type=int, action='store', default=0,
     help='plot an accumulation of the incoming data')
 parser.add_argument(
+    '--remote', dest='remote', type=int, action='store', default=0,
+    help='plot an accumulation of the incoming data without launching a display window')
+parser.add_argument(
     '--integrate', dest='integrate', type=int, action='store', default=0,
     help='fft option - how many spectra should be integrated')
 parser.add_argument(
@@ -290,6 +293,70 @@ def plot_spectrum_vacc(figure, sub_plots, idata, ictr, pctr):
         figure.canvas.manager.window.after(10, plot_spectrum_vacc, figure, sub_plots,
                                            idata, ictr, pctr)
 
+def plot_spectrum_vacc_remote(idata, ictr, pctr):
+    print 'Vacc limit is %s', args.vacc
+    vacc_limit = args.vacc
+
+    # Put in loop until vacc complete
+    for ctr in vacc_limit:
+     
+        data = get_data()
+        ictr += 1
+        print 'ictr is %s', ictr
+
+        p0_data = numpy.abs(numpy.power(data['p0'],2))
+        p1_data = numpy.abs(numpy.power(data['p1'],2))
+
+        if idata is None:
+            idata = {0: [0] * len(p0_data), 1: [0] * len(p1_data)}
+        for ctr in range(0, len(p0_data)):
+            idata[0][ctr] += p0_data[ctr]
+            idata[1][ctr] += p1_data[ctr]
+    
+    if ictr == vacc_limit:
+        print 'Accumulation complete'        
+        from IPython import embed
+        embed() 
+     
+     
+    else:
+
+        if args.printvals:
+            print(idata)
+        if args.noplot:
+            return
+
+        # actually draw the plots
+        for ctr, integd in enumerate(idata.values()):
+            plt = sub_plots[ctr]
+            plt.cla()
+            plt.set_title('%s:%i, %i, %i' % (fpga.host, ctr, ictr, pctr))
+            plt.grid(True)
+            if args.linear:
+                plt.plot(integd)
+            else:
+                if numpy.sum(integd) > 0:
+                    plt.semilogy(integd)
+                else:
+                    plt.set_title('%s:%i, %i, %i - NO NONZERO DATA' % (
+                        fpga.host, ctr, ictr, pctr))
+        figure.canvas.draw()
+
+        from IPython import embed
+        embed()
+
+        idata = None
+        ictr = 0
+        pctr += 1
+
+        #if ictr == args.integrate and args.integrate > 0:
+        #    idata = None
+        #    ictr = 0
+        #    pctr += 1
+
+        figure.canvas.manager.window.after(10, plot_spectrum_vacc, figure, sub_plots,
+                                           idata, ictr, pctr)
+
 # print, no plot
 if args.printvals and args.noplot:
     import sys
@@ -314,6 +381,11 @@ if args.hist:
                          fig.add_subplot(2, 2, 4)))
         fig.canvas.manager.window.after(10, plot_hist, fig, subplots,
                                         plot_counter)
+elif args.remote:
+    integrated_data = None
+    integration_counter = 0
+
+                                    
 elif args.vacc:
     subplots.append(fig.add_subplot(2, 1, 1))
     subplots.append(fig.add_subplot(2, 1, 2))
