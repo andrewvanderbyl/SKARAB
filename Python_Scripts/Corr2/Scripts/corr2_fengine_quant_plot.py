@@ -12,10 +12,10 @@ import numpy
 import math
 
 # force the use of the TkAgg backend
-import matplotlib
-matplotlib.use('TkAgg')
+#import matplotlib
+#matplotlib.use('TkAgg')
 
-from matplotlib import pyplot
+#from matplotlib import pyplot
 
 from corr2 import utils
 
@@ -49,6 +49,9 @@ parser.add_argument(
 parser.add_argument(
     '--remote', dest='remote', type=int, action='store', default=0,
     help='plot an accumulation of the incoming data without launching a display window')
+parser.add_argument(
+    '--save', dest='save', action='store_true', default=False,
+    help='save idata to file as pol0 and pol1')
 parser.add_argument(
     '--integrate', dest='integrate', type=int, action='store', default=0,
     help='fft option - how many spectra should be integrated')
@@ -278,8 +281,8 @@ def plot_spectrum_vacc(figure, sub_plots, idata, ictr, pctr):
                         fpga.host, ctr, ictr, pctr))
         figure.canvas.draw()
 
-        from IPython import embed
-        embed()
+        #from IPython import embed
+        #embed()
 
         idata = None
         ictr = 0
@@ -294,11 +297,11 @@ def plot_spectrum_vacc(figure, sub_plots, idata, ictr, pctr):
                                            idata, ictr, pctr)
 
 def plot_spectrum_vacc_remote(idata, ictr, pctr):
-    print 'Vacc limit is %s', args.vacc
-    vacc_limit = args.vacc
+    print 'Vacc limit is %s', args.remote
+    vacc_limit = args.remote
 
     # Put in loop until vacc complete
-    for ctr in vacc_limit:
+    for ctr in range(vacc_limit):
      
         data = get_data()
         ictr += 1
@@ -315,6 +318,18 @@ def plot_spectrum_vacc_remote(idata, ictr, pctr):
     
     if ictr == vacc_limit:
         print 'Accumulation complete'        
+        
+        if args.save:
+            print "Saving data"            
+            import json
+            with open('pol0', 'w') as file:                                                          
+                file.write(json.dumps(idata[0]))
+                file.close()
+                
+            with open('pol1', 'w') as file:                                                          
+                file.write(json.dumps(idata[1]))
+                file.close()               
+        
         from IPython import embed
         embed() 
      
@@ -326,40 +341,11 @@ def plot_spectrum_vacc_remote(idata, ictr, pctr):
         if args.noplot:
             return
 
-        # actually draw the plots
-        for ctr, integd in enumerate(idata.values()):
-            plt = sub_plots[ctr]
-            plt.cla()
-            plt.set_title('%s:%i, %i, %i' % (fpga.host, ctr, ictr, pctr))
-            plt.grid(True)
-            if args.linear:
-                plt.plot(integd)
-            else:
-                if numpy.sum(integd) > 0:
-                    plt.semilogy(integd)
-                else:
-                    plt.set_title('%s:%i, %i, %i - NO NONZERO DATA' % (
-                        fpga.host, ctr, ictr, pctr))
-        figure.canvas.draw()
 
-        from IPython import embed
-        embed()
-
-        idata = None
-        ictr = 0
-        pctr += 1
-
-        #if ictr == args.integrate and args.integrate > 0:
-        #    idata = None
-        #    ictr = 0
-        #    pctr += 1
-
-        figure.canvas.manager.window.after(10, plot_spectrum_vacc, figure, sub_plots,
-                                           idata, ictr, pctr)
 
 # print, no plot
 if args.printvals and args.noplot:
-    import sys
+#    import sys
     while True:
         try:
             d = get_data()
@@ -371,22 +357,38 @@ if args.printvals and args.noplot:
     sys.exit(0)
 
 # set up the figure with a subplot to be plotted
-fig = pyplot.figure()
-subplots = []
-plot_counter = 0
+#fig = pyplot.figure()
+#subplots = []
+#plot_counter = 0
+
 if args.hist:
-        subplots.append((fig.add_subplot(2, 2, 1),
-                         fig.add_subplot(2, 2, 2)))
-        subplots.append((fig.add_subplot(2, 2, 3),
-                         fig.add_subplot(2, 2, 4)))
-        fig.canvas.manager.window.after(10, plot_hist, fig, subplots,
-                                        plot_counter)
+    # set up the figur  e with a subplot to be plotted
+    from matplotlib import pyplot    
+    fig = pyplot.figure()
+    subplots = []
+    plot_counter = 0
+
+    subplots.append((fig.add_subplot(2, 2, 1),
+                     fig.add_subplot(2, 2, 2)))
+    subplots.append((fig.add_subplot(2, 2, 3),
+                     fig.add_subplot(2, 2, 4)))
+    fig.canvas.manager.window.after(10, plot_hist, fig, subplots,
+                                    plot_counter)
 elif args.remote:
+    print 'Remote'
     integrated_data = None
     integration_counter = 0
-
+    plot_counter = 0
+    plot_spectrum_vacc_remote(integrated_data,integration_counter,plot_counter)
+    
                                     
 elif args.vacc:
+    # set up the figure with a subplot to be plotted
+    from matplotlib import pyplot    
+    fig = pyplot.figure()
+    subplots = []
+    plot_counter = 0
+
     subplots.append(fig.add_subplot(2, 1, 1))
     subplots.append(fig.add_subplot(2, 1, 2))
     integrated_data = None
@@ -394,7 +396,15 @@ elif args.vacc:
     fig.canvas.manager.window.after(10, plot_spectrum_vacc, fig, subplots,
                                     integrated_data, integration_counter,
                                     plot_counter)
+    pyplot.show()
+                                    
 else:
+    # set up the figure with a subplot to be plotted
+    from matplotlib import pyplot
+    fig = pyplot.figure()
+    subplots = []
+    plot_counter = 0
+
     subplots.append(fig.add_subplot(2, 1, 1))
     subplots.append(fig.add_subplot(2, 1, 2))
     integrated_data = None
@@ -402,8 +412,11 @@ else:
     fig.canvas.manager.window.after(10, plot_spectrum, fig, subplots,
                                     integrated_data, integration_counter,
                                     plot_counter)
-pyplot.show()
-print('Plot started.')
+    pyplot.show()
+    print('Plot started.')
+                            
+#pyplot.show()
+#print('Plot started.')
 
 # wait here so that the plot can be viewed
 print('Press Ctrl-C to exit...')
