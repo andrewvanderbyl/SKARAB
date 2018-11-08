@@ -16,7 +16,7 @@ if (strcmp(Input_class,'timeseries'))
        Spec(k+3,1) = Input_2.Data(i,1);
        Spec(k+4,1) = Input_3.Data(i,1);  
        
-       Sync(k+1,1) = Sync_in.Data(i,1);
+       %Sync(k+1,1) = Sync_in.Data(i,1);
        
        if dvalid_in.Data(i,1)
            Dvalid((k+1):((k+4)),1) = ones(4,1);    
@@ -38,7 +38,7 @@ elseif (strcmp(Input_class,'struct'))
        Spec(k+3,1) = Input_2.signals.values(i,1);
        Spec(k+4,1) = Input_3.signals.values(i,1);
        
-       Sync(k+1,1) = Sync_in.Data(i,1);
+       %Sync(k+1,1) = Sync_in.Data(i,1);
        
        if dvalid_in.Data(i,1)
            Dvalid((k+1):((k+4)),1) = ones(4,1);    
@@ -60,7 +60,7 @@ elseif (strcmp(Input_class,'double'))
        Spec(k+3,1) = Input_2(i);
        Spec(k+4,1) = Input_3(i);
        
-       Sync(k+1,1) = Sync_in.Data(i,1);
+       %Sync(k+1,1) = Sync_in.Data(i,1);
        
        if dvalid_in.Data(i,1)
            Dvalid((k+1):((k+4)),1) = ones(4,1);    
