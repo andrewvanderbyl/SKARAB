@@ -50,26 +50,43 @@ elseif (strcmp(Input_class,'struct'))
     end
     
 elseif (strcmp(Input_class,'double'))
+    
     Spec = zeros(4*length(Input_0),1);
     Sync = zeros(4*length(Input_0),1);
     Dvalid = zeros(4*length(Input_0),1);
 
     for i=1:length(Input_0)
-       Spec(k+1,1) = Input_0(i);
-       Spec(k+2,1) = Input_1(i);
-       Spec(k+3,1) = Input_2(i);
-       Spec(k+4,1) = Input_3(i);
-       
-%        Sync(k+1,1) = Sync_in.Data(i,1);
-        
-       if dvalid_in.Data(i,1)
-           Dvalid((k+1):((k+4)),1) = ones(4,1);    
-       else
-           Dvalid((k+1):((k+4)),1) = zeros(4,1); 
-       end
-       
-       k = k + 4;
+        if dvalid_in.Data(i,1)
+            Spec(k+1,1) = Input_0(i);
+            Spec(k+2,1) = Input_1(i);
+            Spec(k+3,1) = Input_2(i);
+            Spec(k+4,1) = Input_3(i);
+
+            k = k + 4;
+            Dvalid((k+1):((k+4)),1) = ones(4,1);    
+        else
+            Dvalid((k+1):((k+4)),1) = zeros(4,1); 
+        end    
     end
+        
+
+    
+%     for i=1:length(Input_0)
+%        Spec(k+1,1) = Input_0(i);
+%        Spec(k+2,1) = Input_1(i);
+%        Spec(k+3,1) = Input_2(i);
+%        Spec(k+4,1) = Input_3(i);
+%        
+% %        Sync(k+1,1) = Sync_in.Data(i,1);
+%         
+%        if dvalid_in.Data(i,1)
+%            Dvalid((k+1):((k+4)),1) = ones(4,1);    
+%        else
+%            Dvalid((k+1):((k+4)),1) = zeros(4,1); 
+%        end
+%        
+%        k = k + 4;
+%     end
 end
 
 
