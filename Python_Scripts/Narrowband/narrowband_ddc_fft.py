@@ -7,7 +7,7 @@ HOST = 'skarab020303-01'
 
 f = casperfpga.CasperFpga(HOST)
 
-f.get_system_information('/home/avanderbyl/fpgs/s_c_nbe_m1k_2019-01-14_1223.fpg')
+f.get_system_information('/home/avanderbyl/fpgs/s_c_nbe_m1k_2019-01-14_1546.fpg')
 
 # Setup mixer oscillator
 mix_freq = ((100e6)*np.power(2,27))/1712e6
