@@ -7,7 +7,7 @@ hosts = ['skarab020303-01','skarab020308-01','skarab02030A-01','skarab02030E-01'
 highest_time_msw = 0
 highest_time_lsw = 0
 
-filename = '/home/avanderbyl/fpgs/s_c_nbe_m1k_2019-05-28_1411.fpg'
+filename = '/home/avanderbyl/fpgs/s_c_nbe_m1k_2019-05-29_1006.fpg'
 
 class skarab_debug:
     """A simple example class"""
@@ -48,9 +48,9 @@ class all_skarab_debug:
         
     def get_fft_SS_data_compare (self, f0,f1,f2,f3):
         fft0 = f0.snapshots.nb_pfb_ss_fft2_ss.read(arm=False)['data'] 
-        fft1 = f0.snapshots.nb_pfb_ss_fft2_ss.read(arm=False)['data'] 
-        fft2 = f0.snapshots.nb_pfb_ss_fft2_ss.read(arm=False)['data'] 
-        fft3 = f0.snapshots.nb_pfb_ss_fft2_ss.read(arm=False)['data'] 
+        fft1 = f1.snapshots.nb_pfb_ss_fft2_ss.read(arm=False)['data'] 
+        fft2 = f2.snapshots.nb_pfb_ss_fft2_ss.read(arm=False)['data'] 
+        fft3 = f3.snapshots.nb_pfb_ss_fft2_ss.read(arm=False)['data'] 
         
         [re0, im0, ch0, fft0_sync, fft0_dv, fir0_sync] = self.unpack_fft(fft0)
         [re1, im1, ch1, fft1_sync, fft1_dv, fir1_sync] = self.unpack_fft(fft1)
@@ -266,49 +266,54 @@ class all_skarab_debug:
         
     def plot_fft_compare(self, real, imag, chan, fft_sync, fft_dv, fir_sync):
         
+        complx0 = real[0] + np.multiply(imag[0], 1j)
+        complx1 = real[1] + np.multiply(imag[1], 1j)
+        complx2 = real[2] + np.multiply(imag[2], 1j)
+        complx3 = real[3] + np.multiply(imag[3], 1j)
+        
         plt.figure(3)
         plt.clf()
-        plt.subplot(611)
+        plt.subplot(511)
         plt.plot(fft_sync[0])
         plt.plot(fft_sync[1])
         plt.plot(fft_sync[2])
         plt.plot(fft_sync[3])
-        plt.subplot(612)
+        plt.subplot(512)
         plt.plot(fft_dv[0])
         plt.plot(fft_dv[1])
         plt.plot(fft_dv[2])
         plt.plot(fft_dv[3])
-        plt.subplot(613)
+        plt.subplot(513)
         plt.plot(fir_sync[0])
         plt.plot(fir_sync[1])
         plt.plot(fir_sync[2])
         plt.plot(fir_sync[3])
-        plt.subplot(614)
+        plt.subplot(514)
         plt.plot(chan[0])
         plt.plot(chan[1])
         plt.plot(chan[2])
         plt.plot(chan[3])
-        plt.subplot(615)
-        plt.plot(real[0])
-        plt.plot(real[1])
-        plt.plot(real[2])
-        plt.plot(real[3])
-        plt.subplot(616)
-        plt.plot(imag[0])
-        plt.plot(imag[1])
-        plt.plot(imag[2])
-        plt.plot(imag[3])
+        plt.subplot(515)
+        plt.plot(np.square(np.abs(complx0)))
+        plt.plot(np.square(np.abs(complx1)))
+        plt.plot(np.square(np.abs(complx2)))
+        plt.plot(np.square(np.abs(complx3)))
 
 
     def plot_nb_sync_compare(self, nb_sync_re, nb_sync_im, nb_sync_sync, nb_sync_dv, nb_sync_ch, nb_sync_cnt):
         
-        plt.figure(5)
+        complx0 = nb_sync_re[0] + np.multiply(nb_sync_im[0], 1j)
+        complx1 = nb_sync_re[1] + np.multiply(nb_sync_im[1], 1j)
+        complx2 = nb_sync_re[2] + np.multiply(nb_sync_im[2], 1j)
+        complx3 = nb_sync_re[3] + np.multiply(nb_sync_im[3], 1j)
+        
+        plt.figure(4)
         plt.clf()
         plt.subplot(511)
-        plt.plot(nb_sync_re[0])
-        plt.plot(nb_sync_re[1])
-        plt.plot(nb_sync_re[2])
-        plt.plot(nb_sync_re[3])
+        plt.plot(np.square(np.abs(complx0)))
+        plt.plot(np.square(np.abs(complx1)))
+        plt.plot(np.square(np.abs(complx2)))
+        plt.plot(np.square(np.abs(complx3)))
         plt.subplot(512)
         plt.plot(nb_sync_sync[0])
         plt.plot(nb_sync_sync[1])
@@ -333,18 +338,17 @@ class all_skarab_debug:
         
     def plot_quant_compare(self, real, imag):
         
-        plt.figure(6)
+        complx0 = real[0] + np.multiply(imag[0], 1j)
+        complx1 = real[1] + np.multiply(imag[1], 1j)
+        complx2 = real[2] + np.multiply(imag[2], 1j)
+        complx3 = real[3] + np.multiply(imag[3], 1j)
+        
+        plt.figure(5)
         plt.clf()
-        plt.subplot(211)
-        plt.plot(real[0])
-        plt.plot(real[1])
-        plt.plot(real[2])
-        plt.plot(real[3])
-        plt.subplot(212)
-        plt.plot(imag[0])
-        plt.plot(imag[1])        
-        plt.plot(imag[2])        
-        plt.plot(imag[3])
+        plt.plot(np.square(np.abs(complx0)))
+        plt.plot(np.square(np.abs(complx1)))
+        plt.plot(np.square(np.abs(complx2)))
+        plt.plot(np.square(np.abs(complx3)))
 
 
 #==============================================================================
@@ -439,7 +443,7 @@ for x in hosts:
     f.snapshots.snap_adc2_ss.arm(man_trig=False, man_valid=False)
     
     f.snapshots.nb_pfb_ss_fft2_ss.arm(man_trig=False, man_valid=False)
-    f.snapshots.nb_pfb_ss_nb_sync_ss.arm(man_trig=False, man_valid=False)
+    #f.snapshots.nb_pfb_ss_nb_sync_ss.arm(man_trig=False, man_valid=False)
     
     f.snapshots.snap_quant0_ss.arm(man_trig=False, man_valid=False)
     
@@ -555,10 +559,13 @@ f3.get_system_information(filename)
 # Read FFT offset calculations for each Skarab
 s0 = skarab_debug()
 s0.get_fft_offset(f0)
+
 s1 = skarab_debug()
 s1.get_fft_offset(f1)
+
 s2 = skarab_debug()
 s2.get_fft_offset(f2)
+
 s3 = skarab_debug()
 s3.get_fft_offset(f3)
 
@@ -566,8 +573,8 @@ compare_all = all_skarab_debug()
 
 # Grab SS Data for all skarabs
 compare_all.get_adc_SS_data_compare(f0,f1,f2,f3)
-compare_all.get_fft_SS_data_compare(f0,f1,f2,f3)
-compare_all.get_nb_sync_SS_data_compare(f0,f1,f2,f3)
+#compare_all.get_fft_SS_data_compare(f0,f1,f2,f3)
+#compare_all.get_nb_sync_SS_data_compare(f0,f1,f2,f3)
 compare_all.get_quant_SS_data_compare(f0,f1,f2,f3)
 
 # Get Sync Counts
