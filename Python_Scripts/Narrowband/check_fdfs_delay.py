@@ -3,12 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from IPython import embed
 
-hosts = ['skarab020303-01','skarab020308-01','skarab02030A-01','skarab02030E-01']
-highest_time_msw = 0
-highest_time_lsw = 0
-
-filename = '/home/avanderbyl/fpgs/s_c_nbe_m1k_2019-05-29_1006.fpg'
-
+#==============================================================================
+#   Classes and methods
+#==============================================================================
 class skarab_debug:
     """A simple example class"""
     i = 12345
@@ -24,20 +21,16 @@ class skarab_debug:
         print f.registers.dds_fft_phase_offset.read()
 
 class all_skarab_debug: 
-    def get_adc_SS_data_compare (self, f0,f1,f2,f3):
+    def adc_SS_data_compare (self, f0,f1,f2,f3):
         
-        adc0 = f0.snapshots.snap_adc2_ss.read(arm=False)['data']
-        adc1 = f1.snapshots.snap_adc2_ss.read(arm=False)['data']
-        adc2 = f2.snapshots.snap_adc2_ss.read(arm=False)['data']
-        adc3 = f3.snapshots.snap_adc2_ss.read(arm=False)['data']
+        adc0 = f0.snapshots.snap_adc_ss.read(arm=False)['data']
+        adc1 = f1.snapshots.snap_adc_ss.read(arm=False)['data']
+        adc2 = f2.snapshots.snap_adc_ss.read(arm=False)['data']
+        adc3 = f3.snapshots.snap_adc_ss.read(arm=False)['data']
 
-        print 'Host:', f0.host               
         [adc0_in, adc0_0, adc0_sync, adc0_dv] = self.unpack_adc(adc0)
-        print 'Host:', f1.host     
         [adc1_in, adc1_0, adc1_sync, adc1_dv] = self.unpack_adc(adc1)
-        print 'Host:', f2.host     
         [adc2_in, adc2_0, adc2_sync, adc2_dv] = self.unpack_adc(adc2)
-        print 'Host:', f3.host     
         [adc3_in, adc3_0, adc3_sync, adc3_dv] = self.unpack_adc(adc3)
         
         adc_sync = [adc0_sync, adc1_sync, adc2_sync, adc3_sync]
@@ -46,11 +39,27 @@ class all_skarab_debug:
         self.plot_adc_compare(adc0_in, adc0_0, adc1_in, adc1_0, adc2_in, adc2_0, adc3_in, adc3_0, adc_sync, adc_dv)
         
         
-    def get_fft_SS_data_compare (self, f0,f1,f2,f3):
-        fft0 = f0.snapshots.nb_pfb_ss_fft2_ss.read(arm=False)['data'] 
-        fft1 = f1.snapshots.nb_pfb_ss_fft2_ss.read(arm=False)['data'] 
-        fft2 = f2.snapshots.nb_pfb_ss_fft2_ss.read(arm=False)['data'] 
-        fft3 = f3.snapshots.nb_pfb_ss_fft2_ss.read(arm=False)['data'] 
+    def pfbin_SS_data_compare (self, f0,f1,f2,f3):
+        pfbin0 = f0.snapshots.snap_pfbin_ss.read(arm=False)['data'] 
+        pfbin1 = f1.snapshots.snap_pfbin_ss.read(arm=False)['data'] 
+        pfbin2 = f2.snapshots.snap_pfbin_ss.read(arm=False)['data'] 
+        pfbin3 = f3.snapshots.snap_pfbin_ss.read(arm=False)['data'] 
+        
+        [pfbin0_input, pfbin0_0, pfbin0_sync, pfbin0_dv] = self.unpack_pfbin(pfbin0)
+        [pfbin1_input, pfbin1_0, pfbin1_sync, pfbin1_dv] = self.unpack_pfbin(pfbin1)
+        [pfbin2_input, pfbin2_0, pfbin2_sync, pfbin2_dv] = self.unpack_pfbin(pfbin2)
+        [pfbin3_input, pfbin3_0, pfbin3_sync, pfbin3_dv] = self.unpack_pfbin(pfbin3)
+        
+        pfb_sync = [pfbin0_sync, pfbin1_sync, pfbin2_sync, pfbin3_sync]
+        pfb_dv = [pfbin0_dv, pfbin1_dv, pfbin2_dv, pfbin3_dv]  
+        
+        self.plot_pfbin_compare(pfbin0_input, pfbin0_0, pfbin1_input, pfbin1_0, pfbin2_input, pfbin2_0, pfbin3_input, pfbin3_0, pfb_sync, pfb_dv)    
+        
+    def fft_SS_data_compare (self, f0,f1,f2,f3):
+        fft0 = f0.snapshots.nb_pfb_ss_fft_ss.read(arm=False)['data'] 
+        fft1 = f1.snapshots.nb_pfb_ss_fft_ss.read(arm=False)['data'] 
+        fft2 = f2.snapshots.nb_pfb_ss_fft_ss.read(arm=False)['data'] 
+        fft3 = f3.snapshots.nb_pfb_ss_fft_ss.read(arm=False)['data'] 
         
         [re0, im0, ch0, fft0_sync, fft0_dv, fir0_sync] = self.unpack_fft(fft0)
         [re1, im1, ch1, fft1_sync, fft1_dv, fir1_sync] = self.unpack_fft(fft1)
@@ -67,7 +76,7 @@ class all_skarab_debug:
         self.plot_fft_compare(real, imag, chan, fft_sync, fft_dv, fir_sync)
 
 
-    def get_nb_sync_SS_data_compare (self, f0,f1,f2,f3):
+    def nb_sync_SS_data_compare (self, f0,f1,f2,f3):
         nb0_sync = f0.snapshots.nb_pfb_ss_nb_sync_ss.read(arm=False)['data']
         nb1_sync = f1.snapshots.nb_pfb_ss_nb_sync_ss.read(arm=False)['data']
         nb2_sync = f2.snapshots.nb_pfb_ss_nb_sync_ss.read(arm=False)['data']
@@ -88,7 +97,7 @@ class all_skarab_debug:
                         
         self.plot_nb_sync_compare(nb_sync_re, nb_sync_im, nb_sync_sync, nb_sync_dv, nb_sync_ch, nb_sync_cnt)
         
-    def get_quant_SS_data_compare (self, f0,f1,f2,f3):
+    def quant_SS_data_compare (self, f0,f1,f2,f3):
         q0 = f0.snapshots.snap_quant0_ss.read(arm=False)['data']
         q1 = f1.snapshots.snap_quant0_ss.read(arm=False)['data']
         q2 = f2.snapshots.snap_quant0_ss.read(arm=False)['data']
@@ -135,6 +144,38 @@ class all_skarab_debug:
                     [adc_0[x], adc_1[x], adc_2[x], adc_3[x], adc_4[x], adc_5[x], adc_6[x], adc_7[x]])
         
         return (adc_input, adc_0, adc_sync, adc_dv)    
+
+    def unpack_pfbin(self, pfbin):
+        # pfbin
+        pfbin_0 = pfbin['p0_d0']
+        pfbin_1 = pfbin['p0_d1']
+        pfbin_2 = pfbin['p0_d2']
+        pfbin_3 = pfbin['p0_d3']
+        pfbin_4 = pfbin['p0_d4']
+        pfbin_5 = pfbin['p0_d5']
+        pfbin_6 = pfbin['p0_d6']
+        pfbin_7 = pfbin['p0_d7']
+        pfbin_sync = pfbin['sync']
+        pfbin_dv = pfbin['dv']  
+        pfbin_trig = pfbin['trig']
+        pfbin_trig_time = pfbin['trig_time']
+
+        print 'PFB trig time'  
+        print pfbin_trig[0:10]
+        print pfbin_trig_time[0:10]
+        print 'curr_time_pfb_msw:', f.registers.ss_time_trig2_cap_curr_time_pfb_msw.read()
+        print 'curr_time_pfb_lsw:', f.registers.ss_time_trig2_cap_curr_time_pfb_lsw.read()
+        print 'cap_time_pfb_msw:', f.registers.ss_time_trig2_cap_time_pfb_msw.read()
+        print 'cap_time_pfb_lsw:', f.registers.ss_time_trig2_cap_time_pfb_lsw.read()
+        print 'time_sum_pfb:', f.registers.ss_time_trig2_cap_trig_pfb.read()
+        
+        pfbin_input = []
+            
+        for x in range(0, len(pfbin_0)):
+            pfbin_input.extend(
+                    [pfbin_0[x], pfbin_1[x], pfbin_2[x], pfbin_3[x], pfbin_4[x], pfbin_5[x], pfbin_6[x], pfbin_7[x]])
+        
+        return (pfbin_input, pfbin_0, pfbin_sync, pfbin_dv)  
 
     def unpack_fft(self, fft):
 
@@ -264,6 +305,40 @@ class all_skarab_debug:
         plt.plot(adc_dv[3])
         
         
+    def plot_pfbin_compare(self, pfbin0_input, pfbin0_0, pfbin1_input, pfbin1_0, pfbin2_input, pfbin2_0, pfbin3_input, pfbin3_0, pfb_sync, pfb_dv):
+        
+        plt.figure(3)
+        plt.clf()
+        plt.subplot(411)
+        plt.plot(pfbin0_input)
+        plt.plot(pfbin1_input)
+        plt.subplot(412)
+        plt.plot(pfbin2_input)
+        plt.plot(pfbin3_input)
+        
+        plt.subplot(413)
+        plt.plot(pfbin0_0)
+        plt.plot(pfbin1_0)
+        plt.subplot(414)
+        plt.plot(pfbin2_0)
+        plt.plot(pfbin3_0)
+        
+        plt.figure(4)
+        plt.clf()
+        plt.subplot(411)
+        plt.plot(pfb_sync[0])
+        plt.plot(pfb_sync[1])
+        plt.subplot(412)
+        plt.plot(pfb_sync[2])
+        plt.plot(pfb_sync[3])
+        
+        plt.subplot(413)
+        plt.plot(pfb_dv[0])
+        plt.plot(pfb_dv[1])
+        plt.subplot(414)
+        plt.plot(pfb_dv[2])
+        plt.plot(pfb_dv[3])
+        
     def plot_fft_compare(self, real, imag, chan, fft_sync, fft_dv, fir_sync):
         
         complx0 = real[0] + np.multiply(imag[0], 1j)
@@ -271,7 +346,7 @@ class all_skarab_debug:
         complx2 = real[2] + np.multiply(imag[2], 1j)
         complx3 = real[3] + np.multiply(imag[3], 1j)
         
-        plt.figure(3)
+        plt.figure(5)
         plt.clf()
         plt.subplot(511)
         plt.plot(fft_sync[0])
@@ -307,7 +382,7 @@ class all_skarab_debug:
         complx2 = nb_sync_re[2] + np.multiply(nb_sync_im[2], 1j)
         complx3 = nb_sync_re[3] + np.multiply(nb_sync_im[3], 1j)
         
-        plt.figure(4)
+        plt.figure(6)
         plt.clf()
         plt.subplot(511)
         plt.plot(np.square(np.abs(complx0)))
@@ -343,7 +418,7 @@ class all_skarab_debug:
         complx2 = real[2] + np.multiply(imag[2], 1j)
         complx3 = real[3] + np.multiply(imag[3], 1j)
         
-        plt.figure(5)
+        plt.figure(7)
         plt.clf()
         plt.plot(np.square(np.abs(complx0)))
         plt.plot(np.square(np.abs(complx1)))
@@ -352,8 +427,17 @@ class all_skarab_debug:
 
 
 #==============================================================================
+# End of classes and methods
+#==============================================================================
         
 
+
+
+hosts = ['skarab020303-01','skarab020308-01','skarab02030A-01','skarab02030E-01']
+highest_time_msw = 0
+highest_time_lsw = 0
+
+filename = '/home/avanderbyl/fpgs/s_c_nbe_m1k_2019-05-29_1553.fpg'
 
 for x in hosts:
     print '--------------------------------------------------------------------'
@@ -414,12 +498,13 @@ for x in hosts:
         f.registers.phase0.write(initial=0.0)
         f.registers.phase0.write(delta=0.0)
         
-#        print f.registers.delay_whole0.read()
-#        print f.registers.delay_frac0.read()
-#        print f.registers.delta_delay_whole0.read()
-#        print f.registers.delta_delay_frac0.read()
-#        print f.registers.phase0.read()
-#        print f.registers.phase0.read()        
+        print f.registers.delay_whole0.read()
+        print f.registers.delay_frac0.read()
+        print f.registers.delta_delay_whole0.read()
+        print f.registers.delta_delay_frac0.read()
+        print f.registers.phase0.read()
+        print f.registers.phase0.read()  
+        
     else:
         print "Setting Delays"
         print x
@@ -430,19 +515,22 @@ for x in hosts:
         f.registers.phase0.write(initial=0.0)
         f.registers.phase0.write(delta=0.0)
         
-#        print f.registers.delay_whole0.read()
-#        print f.registers.delay_frac0.read()
-#        print f.registers.delta_delay_whole0.read()
-#        print f.registers.delta_delay_frac0.read()
-#        print f.registers.phase0.read()
-#        print f.registers.phase0.read()   
+        print f.registers.delay_whole0.read()
+        print f.registers.delay_frac0.read()
+        print f.registers.delta_delay_whole0.read()
+        print f.registers.delta_delay_frac0.read()
+        print f.registers.phase0.read()
+        print f.registers.phase0.read()   
 
 
-    print 'Arming Snapshots'    
+    print 'Arming Snapshots'      
+    print '================'  
 
-    f.snapshots.snap_adc2_ss.arm(man_trig=False, man_valid=False)
+    f.snapshots.snap_adc_ss.arm(man_trig=False, man_valid=False)
+    f.snapshots.snap_pfbin_ss.arm(man_trig=False, man_valid=False)
     
-    f.snapshots.nb_pfb_ss_fft2_ss.arm(man_trig=False, man_valid=False)
+    
+    f.snapshots.nb_pfb_ss_fft_ss.arm(man_trig=False, man_valid=False)
     #f.snapshots.nb_pfb_ss_nb_sync_ss.arm(man_trig=False, man_valid=False)
     
     f.snapshots.snap_quant0_ss.arm(man_trig=False, man_valid=False)
@@ -487,7 +575,7 @@ for x in hosts:
     # Set time soure to time80_48
     f.registers.control.write(local_time_source=1)
 
-    # Read back time (msw)
+    # Read back current time 
     curr_time_msw = f.registers.local_time_msw.read()
     curr_time_lsw = f.registers.local_time_lsw.read()
     
@@ -503,6 +591,7 @@ for x in hosts:
         highest_time_lsw = curr_time_lsw
 
     print 'Arming Done' 
+    print '==========='
     f.registers.tl_cd0_control0.write(arm='pulse')    
     f.registers.tl_cd0_control0.write(load_immediate='pulse')    
     f.registers.control.write(cnt_rst='pulse')
@@ -534,9 +623,9 @@ for x in hosts:
     print 'ss_trig_time_in_msw:', f.registers.ss_trig_time_in_msw.read()
     print 'ss_trig_time_in_lsw:', f.registers.ss_trig_time_in_lsw.read()
 
-   
+    print 'Arming time trigger'
     f.registers.arm_ss_ts_rst.write(rst='pulse')
-    f.registers.ts_ss_lock.write(en=1)
+    f.registers.ts_ss_lock.write(en=0)
     f.registers.arm_ts_ss_lock.write(en='pulse')
     
     print 'curr_time_msw:', f.registers.local_time_msw.read()
@@ -572,12 +661,14 @@ s3.get_fft_offset(f3)
 compare_all = all_skarab_debug()
 
 # Grab SS Data for all skarabs
-compare_all.get_adc_SS_data_compare(f0,f1,f2,f3)
-#compare_all.get_fft_SS_data_compare(f0,f1,f2,f3)
-#compare_all.get_nb_sync_SS_data_compare(f0,f1,f2,f3)
-compare_all.get_quant_SS_data_compare(f0,f1,f2,f3)
+compare_all.adc_SS_data_compare(f0,f1,f2,f3)
+compare_all.fft_SS_data_compare(f0,f1,f2,f3)
+compare_all.pfbin_SS_data_compare(f0,f1,f2,f3)
+#compare_all.nb_sync_SS_data_compare(f0,f1,f2,f3)
+#compare_all.quant_SS_data_compare(f0,f1,f2,f3)
 
 # Get Sync Counts
+print 'Grab Sync Counts'
 print 'cd_status0:', f0.registers.cd_status.read()
 print 'cd_status1:', f1.registers.cd_status.read()
 print 'cd_status2:', f2.registers.cd_status.read()
@@ -585,10 +676,38 @@ print 'cd_status3:', f3.registers.cd_status.read()
 print '***'
 print ''
 
+print 'mix_sync_cnt0:', f0.registers.DDC_mix_sync_cnt.read()
+print 'mix_sync_cnt1:', f1.registers.DDC_mix_sync_cnt.read()
+print 'mix_sync_cnt2:', f2.registers.DDC_mix_sync_cnt.read()
+print 'mix_sync_cnt3:', f3.registers.DDC_mix_sync_cnt.read()
+print '***'
+print ''
+
+print 'mix_sync_cnt0:', f0.registers.DDC_ddc_sync_cnt.read()
+print 'mix_sync_cnt1:', f1.registers.DDC_ddc_sync_cnt.read()
+print 'mix_sync_cnt2:', f2.registers.DDC_ddc_sync_cnt.read()
+print 'mix_sync_cnt3:', f3.registers.DDC_ddc_sync_cnt.read()
+print '***'
+print ''
+
 print 'ddc_status0:', f0.registers.ddc_status.read()
 print 'ddc_status1:', f1.registers.ddc_status.read()
 print 'ddc_status2:', f2.registers.ddc_status.read()
 print 'ddc_status3:', f3.registers.ddc_status.read()
+print '***'
+print ''
+
+print 'fir_sync_cnt0:', f0.registers.nb_pfb_fir_sync_cnt.read()
+print 'fir_sync_cnt1:', f1.registers.nb_pfb_fir_sync_cnt.read()
+print 'fir_sync_cnt2:', f2.registers.nb_pfb_fir_sync_cnt.read()
+print 'fir_sync_cnt3:', f3.registers.nb_pfb_fir_sync_cnt.read()
+print '***'
+print ''
+
+print 'fft_sync_cnt0:', f0.registers.nb_pfb_fft_sync_cnt.read()
+print 'fft_sync_cnt1:', f1.registers.nb_pfb_fft_sync_cnt.read()
+print 'fft_sync_cnt2:', f2.registers.nb_pfb_fft_sync_cnt.read()
+print 'fft_sync_cnt3:', f3.registers.nb_pfb_fft_sync_cnt.read()
 print '***'
 print ''
 
@@ -611,155 +730,5 @@ print 'quant_sync_cnt1:', f1.registers.quant_sync_cnt.read()
 print 'quant_sync_cnt2:', f2.registers.quant_sync_cnt.read()
 print 'quant_sync_cnt3:', f3.registers.quant_sync_cnt.read()
 
-#s0.unpack_and_plot_adc(adc0)
 plt.show()
 
-#for x in hosts:
-#    print '*******************************************************************'
-#    print x
-#    
-#    f = casperfpga.CasperFpga(x)
-#    f.get_system_information('/home/avanderbyl/fpgs/s_c_nbe_m1k_2019-05-24_1545.fpg')
-#    
-##    print 'FDFS offset values'
-##    print f.registers.dds_fft_bin.read()
-##    print f.registers.dds_fft_phase_offset.read()
-#                
-#    # Grab ADC data and Quant data as a sanity check    
-#    #-----------------------------------------------
-#    adc2 = f.snapshots.snap_adc2_ss.read(arm=False)['data']
-#       
-#    fft2 = f.snapshots.nb_pfb_ss_fft2_ss.read(arm=False)['data']
-#        
-#    quant0_ss = f.snapshots.snap_quant0_ss.read(arm=False)['data']
-#    
-#    inputs = f.snapshots.phase_compensation0_delay_gen_ss_inputs_ss.read(arm=False)['data']
-#    delay_calc = f.snapshots.phase_compensation0_delay_gen_delay_gen_delay_calc_calc_ss.read(arm=False)['data']
-#    delay_coeff = f.snapshots.phase_compensation0_delay_gen_delay_gen_delay_calc_calc1_ss.read(arm=False)['data']
-#    fd_fs = f.snapshots.phase_compensation0_fd_fs_ss_fd_fs_ss.read(arm=False)['data']
-#    fd_fs1 = f.snapshots.phase_compensation0_fd_fs_ss_fd_fs1_ss.read(arm=False)['data']
-#    
-#
-#    # ADC
-#    adc2_0 = adc2['p0_d0']
-#    adc2_1 = adc2['p0_d1']
-#    adc2_2 = adc2['p0_d2']
-#    adc2_3 = adc2['p0_d3']
-#    adc2_4 = adc2['p0_d4']
-#    adc2_5 = adc2['p0_d5']
-#    adc2_6 = adc2['p0_d6']
-#    adc2_7 = adc2['p0_d7']
-#    adc2_sync = adc2['sync']
-#    adc2_dv = adc2['dv']  
-#    adc2_trig = adc2['trig']
-#    adc2_trig_time = adc2['trig_time']
-#
-#    print 'ADC trig time'  
-#    print adc2_trig[0:10]
-#    print adc2_trig_time[0:10]
-#    print 'curr_time_adc' 
-#    print f.registers.ss_time_trig_cap_curr_time_adc.read()
-#    print 'cap_time_adc' 
-#    print f.registers.ss_time_trig_cap_time_adc.read()
-#    print 'cap_trig_adc' 
-#    print f.registers.ss_time_trig_cap_trig_adc.read()
-#     
-#    #------------------------------------------------------------------------------
-#    adc2_input = []
-#            
-#    for x in range(0, len(adc2_0)):
-#        adc2_input.extend(
-#            [adc2_0[x], adc2_1[x], adc2_2[x], adc2_3[x], adc2_4[x], adc2_5[x], adc2_6[x], adc2_7[x]])
-#        
-#    #------------------------------------------------------------------------------
-#        
-#    # FFT: 2
-#    fft_ch2 = fft2['fft_ch']
-#    fft_re2 = fft2['fft_re']
-#    fft_im2 = fft2['fft_im']
-#    fft_dv2 = fft2['fft_dv']
-#    fft_fs2 = fft2['fft_fs']
-#    fft_tl2 = fft2['fft_tl']
-#    fft_sync2 = fft2['fft_sync']
-#    fft_of2 = fft2['fft_of']
-#    fft_tready2 = fft2['fft_tready']
-#    fft_tlast_miss2 = fft2['tlast_miss']
-#    fft_tlast_unexp2 = fft2['tlast_unexp']
-#    fir_sync2 = fft2['fir_sync']
-#    fft_trig = fft2['trig']
-#    fft_trig_time = fft2['trig_time']
-#        
-#    #------------------------------------------------------------------------------
-#
-#    # ****  QUANT  ****
-#    q0_r0 = quant0_ss['real0']
-#    q0_i0 = quant0_ss['imag0']
-#    q0_r1 = quant0_ss['real1']
-#    q0_i1 = quant0_ss['imag1']
-#    q0_r2 = quant0_ss['real2']
-#    q0_i2 = quant0_ss['imag2']
-#    q0_r3 = quant0_ss['real3']
-#    q0_i3 = quant0_ss['imag3']
-#    q0_trig = quant0_ss['trig']
-#    q0_trig_time = quant0_ss['trig_time']
-#        
-#           
-#    q0_real = []
-#    q0_imag = []
-#            
-#    for x in range(0, len(q0_r0)):
-#        q0_real.extend(
-#            [q0_r0[x], q0_r1[x], q0_r2[x], q0_r3[x]])
-#        
-#    for x in range(0, len(q0_i0)):
-#        q0_imag.extend(
-#            [q0_i0[x], q0_i1[x], q0_i2[x], q0_i3[x]])
-#    q0_complx_sq = q0_real + np.multiply(q0_imag, 1j)
-#        
-#    #------------------------------------------------------------------------------
-#
-#    # ****  fd_fs  ****
-#    fd_fs_sync = fd_fs['sync']
-#    fd_fs_x = fd_fs['x']
-#    fd_fs_a0 = fd_fs['a0']
-#    fd_fs_a1 = fd_fs['a1']
-#    fd_fs_cos = fd_fs['cos']
-#
-#    # ****  fd_fs1  ****
-#    fd_fs_cos1 = fd_fs1['cos']
-#    fd_fs_sin1 = fd_fs1['sin']
-#    b_real = fd_fs1['b_real']
-#    b_imag = fd_fs1['b_imag']
-#    out_real = fd_fs1['out_real']
-#    out_imag = fd_fs1['out_imag']
-
-#    plt.figure(13)
-#    plt.clf()    
-#    plt.subplot(511)
-#    plt.plot(fd_fs_sync)
-#    plt.subplot(512)
-#    plt.plot(fd_fs_x)
-#    plt.subplot(513)
-#    plt.plot(fd_fs_a0)
-#    plt.subplot(514)
-#    plt.plot(fd_fs_a1)
-#    plt.subplot(515)
-#    plt.plot(fd_fs_cos)
-#        
-#        
-#    plt.figure(14)
-#    plt.clf()    
-#    plt.subplot(611)
-#    plt.plot(fd_fs_cos1)
-#    plt.subplot(612)
-#    plt.plot(fd_fs_sin1)
-#    plt.subplot(613)
-#    plt.plot(b_real)
-#    plt.subplot(614)
-#    plt.plot(b_imag)
-#    plt.subplot(615)
-#    plt.plot(out_real)
-#    plt.subplot(616)
-#    plt.plot(out_imag)  
-#    
-#    plt.show() 
