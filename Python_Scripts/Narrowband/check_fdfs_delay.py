@@ -54,6 +54,55 @@ class all_skarab_debug:
         pfb_dv = [pfbin0_dv, pfbin1_dv, pfbin2_dv, pfbin3_dv]  
         
         self.plot_pfbin_compare(pfbin0_input, pfbin0_0, pfbin1_input, pfbin1_0, pfbin2_input, pfbin2_0, pfbin3_input, pfbin3_0, pfb_sync, pfb_dv)    
+
+    def mix_SS_data_compare (self, f0,f1,f2,f3):
+        mix0 = f0.snapshots.DDC_snap_mix_ss.read(arm=False)['data'] 
+        mix1 = f1.snapshots.DDC_snap_mix_ss.read(arm=False)['data'] 
+        mix2 = f2.snapshots.DDC_snap_mix_ss.read(arm=False)['data'] 
+        mix3 = f3.snapshots.DDC_snap_mix_ss.read(arm=False)['data'] 
+        
+        [mix0_out, mix0_0, mix0_sync, mix0_dv] = self.unpack_mix(mix0)
+        [mix1_out, mix1_0, mix1_sync, mix1_dv] = self.unpack_mix(mix1)
+        [mix2_out, mix2_0, mix2_sync, mix2_dv] = self.unpack_mix(mix2)
+        [mix3_out, mix3_0, mix3_sync, mix3_dv] = self.unpack_mix(mix3)
+        
+        mix_sync = [mix0_sync, mix1_sync, mix2_sync, mix3_sync]
+        mix_dv = [mix0_dv, mix1_dv, mix2_dv, mix3_dv]  
+        
+        self.plot_mix_compare(mix0_out, mix0_0, mix1_out, mix1_0, mix2_out, mix2_0, mix3_out, mix3_0, mix_sync, mix_dv)    
+        
+    def ddc_SS_data_compare (self, f0,f1,f2,f3):
+        ddc0 = f0.snapshots.DDC_snap_ddc_ss.read(arm=False)['data'] 
+        ddc1 = f1.snapshots.DDC_snap_ddc_ss.read(arm=False)['data'] 
+        ddc2 = f2.snapshots.DDC_snap_ddc_ss.read(arm=False)['data'] 
+        ddc3 = f3.snapshots.DDC_snap_ddc_ss.read(arm=False)['data'] 
+        
+        [ddc0_out, ddc0_sync, ddc0_dv] = self.unpack_ddc(ddc0)
+        [ddc1_out, ddc1_sync, ddc1_dv] = self.unpack_ddc(ddc1)
+        [ddc2_out, ddc2_sync, ddc2_dv] = self.unpack_ddc(ddc2)
+        [ddc3_out, ddc3_sync, ddc3_dv] = self.unpack_ddc(ddc3)
+        
+        ddc_sync = [ddc0_sync, ddc1_sync, ddc2_sync, ddc3_sync]
+        ddc_dv = [ddc0_dv, ddc1_dv, ddc2_dv, ddc3_dv]  
+        
+        self.plot_ddc_compare(ddc0_out, ddc1_out, ddc2_out, ddc3_out, ddc_sync, ddc_dv)    
+
+    def fir_SS_data_compare (self, f0,f1,f2,f3):
+        fir0 = f0.snapshots.nb_pfb_ss_fir_out_ss.read(arm=False)['data'] 
+        fir1 = f1.snapshots.nb_pfb_ss_fir_out_ss.read(arm=False)['data'] 
+        fir2 = f2.snapshots.nb_pfb_ss_fir_out_ss.read(arm=False)['data'] 
+        fir3 = f3.snapshots.nb_pfb_ss_fir_out_ss.read(arm=False)['data'] 
+        
+        [fir0_out, fir0_sync, fir0_dv, fir0_tlast] = self.unpack_fir(fir0)
+        [fir1_out, fir1_sync, fir1_dv, fir1_tlast] = self.unpack_fir(fir1)
+        [fir2_out, fir2_sync, fir2_dv, fir2_tlast] = self.unpack_fir(fir2)
+        [fir3_out, fir3_sync, fir3_dv, fir3_tlast] = self.unpack_fir(fir3)
+        
+        fir_sync = [fir0_sync, fir1_sync, fir2_sync, fir3_sync]
+        fir_dv = [fir0_dv, fir1_dv, fir2_dv, fir3_dv]  
+        fir_tlast = [fir0_tlast, fir1_tlast, fir2_tlast, fir3_tlast]
+        
+        self.plot_fir_compare(fir0_out, fir1_out, fir2_out, fir3_out, fir_sync, fir_dv, fir_tlast)             
         
     def fft_SS_data_compare (self, f0,f1,f2,f3):
         fft0 = f0.snapshots.nb_pfb_ss_fft_ss.read(arm=False)['data'] 
@@ -131,11 +180,11 @@ class all_skarab_debug:
         print 'ADC trig time'  
         print adc_trig[0:10]
         print adc_trig_time[0:10]
-        print 'curr_time_adc_msw:', f.registers.ss_time_trig_cap_curr_time_adc_msw.read()
-        print 'curr_time_adc_lsw:', f.registers.ss_time_trig_cap_curr_time_adc_lsw.read()
-        print 'cap_time_adc_msw:', f.registers.ss_time_trig_cap_time_adc_msw.read()
-        print 'cap_time_adc_lsw:', f.registers.ss_time_trig_cap_time_adc_lsw.read()
-        print 'time_sum_adc:', f.registers.ss_time_trig_cap_trig_adc.read()
+        print 'curr_time_adc_msw:', f.registers.ss_time_trig_adc_cap_curr_time_adc_msw.read()
+        print 'curr_time_adc_lsw:', f.registers.ss_time_trig_adc_cap_curr_time_adc_lsw.read()
+        print 'cap_time_adc_msw:', f.registers.ss_time_trig_adc_cap_time_adc_msw.read()
+        print 'cap_time_adc_lsw:', f.registers.ss_time_trig_adc_cap_time_adc_lsw.read()
+        print 'trig_time_adc:', f.registers.ss_time_trig_adc_cap_trig_adc.read()
         
         adc_input = []
             
@@ -163,11 +212,11 @@ class all_skarab_debug:
         print 'PFB trig time'  
         print pfbin_trig[0:10]
         print pfbin_trig_time[0:10]
-        print 'curr_time_pfb_msw:', f.registers.ss_time_trig2_cap_curr_time_pfb_msw.read()
-        print 'curr_time_pfb_lsw:', f.registers.ss_time_trig2_cap_curr_time_pfb_lsw.read()
-        print 'cap_time_pfb_msw:', f.registers.ss_time_trig2_cap_time_pfb_msw.read()
-        print 'cap_time_pfb_lsw:', f.registers.ss_time_trig2_cap_time_pfb_lsw.read()
-        print 'time_sum_pfb:', f.registers.ss_time_trig2_cap_trig_pfb.read()
+        print 'curr_time_pfb_msw:', f.registers.ss_time_trig_pfbin_cap_curr_time_pfb_msw.read()
+        print 'curr_time_pfb_lsw:', f.registers.ss_time_trig_pfbin_cap_curr_time_pfb_lsw.read()
+        print 'cap_time_pfb_msw:', f.registers.ss_time_trig_pfbin_cap_time_pfb_msw.read()
+        print 'cap_time_pfb_lsw:', f.registers.ss_time_trig_pfbin_cap_time_pfb_lsw.read()
+        print 'trig_time_pfb:', f.registers.ss_time_trig_pfbin_cap_trig_pfb.read()
         
         pfbin_input = []
             
@@ -176,6 +225,81 @@ class all_skarab_debug:
                     [pfbin_0[x], pfbin_1[x], pfbin_2[x], pfbin_3[x], pfbin_4[x], pfbin_5[x], pfbin_6[x], pfbin_7[x]])
         
         return (pfbin_input, pfbin_0, pfbin_sync, pfbin_dv)  
+
+
+    def unpack_mix(self, mix):
+        # pfbin
+        mix_0 = mix['p0_d0']
+        mix_1 = mix['p0_d1']
+        mix_2 = mix['p0_d2']
+        mix_3 = mix['p0_d3']
+        mix_4 = mix['p0_d4']
+        mix_5 = mix['p0_d5']
+        mix_6 = mix['p0_d6']
+        mix_7 = mix['p0_d7']
+        mix_sync = mix['sync']
+        mix_dv = mix['dv']  
+        mix_trig = mix['trig']
+        mix_trig_time = mix['trig_time']
+
+        print 'Mix trig time'  
+        print mix_trig[0:10]
+        print mix_trig_time[0:10]
+        print 'curr_time_mix_msw:', f.registers.DDC_ss_time_trig_cap_curr_time_mix_msw.read()
+        print 'curr_time_mix_lsw:', f.registers.DDC_ss_time_trig_cap_curr_time_mix_lsw.read()
+        print 'cap_time_mix_msw:', f.registers.DDC_ss_time_trig_cap_time_mix_msw.read()
+        print 'cap_time_mix_lsw:', f.registers.DDC_ss_time_trig_cap_time_mix_lsw.read()
+        print 'trig_time_mix:', f.registers.DDC_ss_time_trig_cap_trig_mix.read()
+        
+        mix_out = []
+            
+        for x in range(0, len(mix_0)):
+            mix_out.extend(
+                    [mix_0[x], mix_1[x], mix_2[x], mix_3[x], mix_4[x], mix_5[x], mix_6[x], mix_7[x]])
+        
+        return (mix_out, mix_0, mix_sync, mix_dv)  
+
+    def unpack_ddc(self, ddc):
+        # pfbin
+        ddc_out = ddc['p0']
+        ddc_sync = ddc['sync']
+        ddc_dv = ddc['dv']  
+        ddc_trig = ddc['trig']
+        ddc_trig_time = ddc['trig_time']
+
+        print 'DDC trig time'  
+        print ddc_trig[0:10]
+        print ddc_trig_time[0:10]
+        print 'curr_time_ddc_msw:', f.registers.DDC_ss_time_trig1_cap_curr_time_ddc_msw.read()
+        print 'curr_time_ddc_lsw:', f.registers.DDC_ss_time_trig1_cap_curr_time_ddc_lsw.read()
+        print 'cap_time_ddc_msw:', f.registers.DDC_ss_time_trig1_cap_time_ddc_msw.read()
+        print 'cap_time_ddc_lsw:', f.registers.DDC_ss_time_trig1_cap_time_ddc_lsw.read()
+        print 'trig_time_ddc:', f.registers.DDC_ss_time_trig1_cap_trig_ddc.read()
+        
+       
+        return (ddc_out, ddc_sync, ddc_dv)  
+
+
+    def unpack_fir(self, fir):
+        # pfbin
+        fir_out = fir['fir']
+        fir_sync = fir['sync']
+        fir_tlast = fir['tlast']
+        fir_dv = fir['dv']  
+        fir_trig = fir['trig']
+        fir_trig_time = fir['trig_time']
+
+        print 'FIR trig time'  
+        print fir_trig[0:10]
+        print fir_trig_time[0:10]
+        print 'curr_time_fir_msw:', f.registers.nb_pfb_ss_time_trig_fir_cap_curr_time_fir_msw.read()
+        print 'curr_time_fir_lsw:', f.registers.nb_pfb_ss_time_trig_fir_cap_curr_time_fir_lsw.read()
+        print 'cap_time_fir_msw:', f.registers.nb_pfb_ss_time_trig_fir_cap_time_fir_msw.read()
+        print 'cap_time_fir_lsw:', f.registers.nb_pfb_ss_time_trig_fir_cap_time_fir_lsw.read()
+        print 'trig_time_fir:', f.registers.nb_pfb_ss_time_trig_fir_cap_trig_fir.read()
+        
+       
+        return (fir_out, fir_sync, fir_dv, fir_tlast)  
 
     def unpack_fft(self, fft):
 
@@ -194,19 +318,18 @@ class all_skarab_debug:
         fft_trig = fft['trig']
         fft_trig_time = fft['trig_time']
         
-        print 'fir trig time'    
+        print 'fft trig time'    
         print fft_trig[0:10]
         print fft_trig_time[0:10]
         
-        print 'curr_time_fft_msw:', f.registers.nb_pfb_ss_time_trig_cap_curr_time_fft_msw.read()
-        print 'curr_time_fft_lsw:', f.registers.nb_pfb_ss_time_trig_cap_curr_time_fft_lsw.read()
+        print 'curr_time_fft_msw:', f.registers.nb_pfb_ss_time_trig_fft_cap_curr_time_fft_msw.read()
+        print 'curr_time_fft_lsw:', f.registers.nb_pfb_ss_time_trig_fft_cap_curr_time_fft_lsw.read()
 
-        print 'cap_time_fft_msw:',  f.registers.nb_pfb_ss_time_trig_cap_time_fft_msw.read()
-        print 'cap_time_fft_lsw:', f.registers.nb_pfb_ss_time_trig_cap_time_fft_lsw.read()
+        print 'cap_time_fft_msw:',  f.registers.nb_pfb_ss_time_trig_fft_cap_time_fft_msw.read()
+        print 'cap_time_fft_lsw:', f.registers.nb_pfb_ss_time_trig_fft_cap_time_fft_lsw.read()
         
-        print 'time_sum_fft:', f.registers.nb_pfb_ss_time_trig_cap_trig_fft.read()
-        
-        
+        print 'trig_time_fft:', f.registers.nb_pfb_ss_time_trig_fft_cap_trig_fft.read()
+
         return (fft_re, fft_im, fft_ch, fft_sync, fft_dv, fir_sync)
         
     def unpack_nb_sync(self, nb_sync):
@@ -223,13 +346,13 @@ class all_skarab_debug:
         print 'NB Sync trig time'  
         print nb_sync_trig[0:10]
         print nb_sync_trig_time[0:10]        
-        print 'curr_time_syncgen_msw:', f.registers.nb_pfb_ss_time_trig1_cap_curr_time_syncgen_msw.read()
-        print 'curr_time_syncgen_lsw:', f.registers.nb_pfb_ss_time_trig1_cap_curr_time_syncgen_lsw.read()
+        print 'curr_time_syncgen_msw:', f.registers.nb_pfb_ss_time_trig_syncgen_cap_curr_time_syncgen_msw.read()
+        print 'curr_time_syncgen_lsw:', f.registers.nb_pfb_ss_time_trig_syncgen_cap_curr_time_syncgen_lsw.read()
         
-        print 'cap_time_syncgen_msw:', f.registers.nb_pfb_ss_time_trig1_cap_time_syncgen_msw.read()
-        print 'cap_time_syncgen_lsw:', f.registers.nb_pfb_ss_time_trig1_cap_time_syncgen_lsw.read()
+        print 'cap_time_syncgen_msw:', f.registers.nb_pfb_ss_time_trig_syncgen_cap_time_syncgen_msw.read()
+        print 'cap_time_syncgen_lsw:', f.registers.nb_pfb_ss_time_trig_syncgen_cap_time_syncgen_lsw.read()
         
-        print 'time_sum_syncgen:', f.registers.nb_pfb_ss_time_trig1_cap_trig_syncgen.read()
+        print 'time_sum_syncgen:', f.registers.nb_pfb_ss_time_trig_syncgen_cap_trig_syncgen.read()
        
         return (nb_sync_re, nb_sync_im, nb_sync_sync, nb_sync_dv, nb_sync_ch, nb_sync_cnt)    
     
@@ -249,13 +372,13 @@ class all_skarab_debug:
         print 'Qaunt trig time'  
         print q_trig[0:10]
         print q_trig_time[0:10]        
-        print 'curr_time_quant_msw:', f.registers.ss_time_trig1_cap_curr_time_quant_msw.read()
-        print 'curr_time_quant_lsw:', f.registers.ss_time_trig1_cap_curr_time_quant_lsw.read()
+        print 'curr_time_quant_msw:', f.registers.ss_time_trig_quant_cap_curr_time_quant_msw.read()
+        print 'curr_time_quant_lsw:', f.registers.ss_time_trig_quant_cap_curr_time_quant_lsw.read()
         
-        print 'cap_time_quant_msw:', f.registers.ss_time_trig1_cap_time_quant_msw.read()
-        print 'cap_time_quant_lsw:', f.registers.ss_time_trig1_cap_time_quant_lsw.read()
+        print 'cap_time_quant_msw:', f.registers.ss_time_trig_quant_cap_time_quant_msw.read()
+        print 'cap_time_quant_lsw:', f.registers.ss_time_trig_quant_cap_time_quant_lsw.read()
         
-        print 'time_sum_quant:', f.registers.ss_time_trig1_cap_trig_quant.read()
+        print 'time_sum_quant:', f.registers.ss_time_trig_quant_cap_trig_quant.read()
         
         q0_real = []
         q0_imag = []
@@ -304,7 +427,6 @@ class all_skarab_debug:
         plt.plot(adc_dv[2])
         plt.plot(adc_dv[3])
         
-        
     def plot_pfbin_compare(self, pfbin0_input, pfbin0_0, pfbin1_input, pfbin1_0, pfbin2_input, pfbin2_0, pfbin3_input, pfbin3_0, pfb_sync, pfb_dv):
         
         plt.figure(3)
@@ -337,7 +459,90 @@ class all_skarab_debug:
         plt.plot(pfb_dv[1])
         plt.subplot(414)
         plt.plot(pfb_dv[2])
-        plt.plot(pfb_dv[3])
+        plt.plot(pfb_dv[3])        
+ 
+    def plot_mix_compare(self, mix0_out, mix0_0, mix1_out, mix1_0, mix2_out, mix2_0, mix3_out, mix3_0, mix_sync, mix_dv):
+        
+        plt.figure(5)
+        plt.clf()
+        plt.subplot(411)
+        plt.plot(mix0_out)
+        plt.plot(mix1_out)
+        plt.subplot(412)
+        plt.plot(mix2_out)
+        plt.plot(mix3_out)
+        
+        plt.subplot(413)
+        plt.plot(mix0_0)
+        plt.plot(mix1_0)
+        plt.subplot(414)
+        plt.plot(mix2_0)
+        plt.plot(mix3_0)
+        
+        plt.figure(6)
+        plt.clf()
+        plt.subplot(411)
+        plt.plot(mix_sync[0])
+        plt.plot(mix_sync[1])
+        plt.subplot(412)
+        plt.plot(mix_sync[2])
+        plt.plot(mix_sync[3])
+        
+        plt.subplot(413)
+        plt.plot(mix_dv[0])
+        plt.plot(mix_dv[1])
+        plt.subplot(414)
+        plt.plot(mix_dv[2])
+        plt.plot(mix_dv[3])       
+        
+        
+    def plot_ddc_compare(self, ddc0_out, ddc1_out, ddc2_out, ddc3_out, ddc_sync, ddc_dv):
+        
+        plt.figure(7)
+        plt.clf()
+        plt.subplot(311)
+        plt.plot(ddc0_out)
+        plt.plot(ddc1_out)
+        
+        plt.subplot(312)
+        plt.plot(ddc2_out)
+        plt.plot(ddc3_out)
+        
+        plt.subplot(313)
+        plt.plot(ddc_sync)
+        plt.plot(ddc_dv)
+
+
+        
+    def plot_fir_compare(self, fir0_out, fir1_out, fir2_out, fir3_out, fir_sync, fir_dv, fir_tlast):
+        
+        plt.figure(8)
+        plt.clf()
+        plt.subplot(511)
+        plt.plot(fir0_out)
+        plt.plot(fir1_out)
+        plt.subplot(512)
+        plt.plot(fir2_out)
+        plt.plot(fir3_out)
+               
+        plt.subplot(513)
+        plt.plot(fir_sync[0])
+        plt.plot(fir_sync[1])
+        plt.plot(fir_sync[0])
+        plt.plot(fir_sync[1])
+
+        plt.subplot(514)
+        plt.plot(fir_dv[2])
+        plt.plot(fir_dv[3])     
+        plt.plot(fir_dv[0])
+        plt.plot(fir_dv[1])
+        
+        plt.subplot(515)
+        plt.plot(fir_tlast[2])
+        plt.plot(fir_tlast[3])     
+        plt.plot(fir_tlast[0])
+        plt.plot(fir_tlast[1])
+        
         
     def plot_fft_compare(self, real, imag, chan, fft_sync, fft_dv, fir_sync):
         
@@ -346,7 +551,7 @@ class all_skarab_debug:
         complx2 = real[2] + np.multiply(imag[2], 1j)
         complx3 = real[3] + np.multiply(imag[3], 1j)
         
-        plt.figure(5)
+        plt.figure(9)
         plt.clf()
         plt.subplot(511)
         plt.plot(fft_sync[0])
@@ -382,7 +587,7 @@ class all_skarab_debug:
         complx2 = nb_sync_re[2] + np.multiply(nb_sync_im[2], 1j)
         complx3 = nb_sync_re[3] + np.multiply(nb_sync_im[3], 1j)
         
-        plt.figure(6)
+        plt.figure(10)
         plt.clf()
         plt.subplot(511)
         plt.plot(np.square(np.abs(complx0)))
@@ -418,7 +623,7 @@ class all_skarab_debug:
         complx2 = real[2] + np.multiply(imag[2], 1j)
         complx3 = real[3] + np.multiply(imag[3], 1j)
         
-        plt.figure(7)
+        plt.figure(11)
         plt.clf()
         plt.plot(np.square(np.abs(complx0)))
         plt.plot(np.square(np.abs(complx1)))
@@ -437,7 +642,7 @@ hosts = ['skarab020303-01','skarab020308-01','skarab02030A-01','skarab02030E-01'
 highest_time_msw = 0
 highest_time_lsw = 0
 
-filename = '/home/avanderbyl/fpgs/s_c_nbe_m1k_2019-05-29_1553.fpg'
+filename = '/home/avanderbyl/fpgs/s_c_nbe_m1k_2019-05-30_2132.fpg'
 
 for x in hosts:
     print '--------------------------------------------------------------------'
@@ -489,6 +694,7 @@ for x in hosts:
 	
 
     if x == 'skarab020303-01':  
+        print ' ' 
         print "Setting Delays"
         print x
         f.registers.delay_whole0.write(initial=0)
@@ -506,6 +712,7 @@ for x in hosts:
         print f.registers.phase0.read()  
         
     else:
+        print ' ' 
         print "Setting Delays"
         print x
         f.registers.delay_whole0.write(initial=0)
@@ -523,15 +730,20 @@ for x in hosts:
         print f.registers.phase0.read()   
 
 
+    print ' ' 
     print 'Arming Snapshots'      
     print '================'  
 
     f.snapshots.snap_adc_ss.arm(man_trig=False, man_valid=False)
     f.snapshots.snap_pfbin_ss.arm(man_trig=False, man_valid=False)
-    
-    
+    f.snapshots.DDC_snap_mix_ss.arm(man_trig=False, man_valid=False)    
+    f.snapshots.DDC_snap_ddc_ss.arm(man_trig=False, man_valid=False)   
+    f.snapshots.nb_pfb_ss_fir_out_ss.arm(man_trig=False, man_valid=False)     
     f.snapshots.nb_pfb_ss_fft_ss.arm(man_trig=False, man_valid=False)
-    #f.snapshots.nb_pfb_ss_nb_sync_ss.arm(man_trig=False, man_valid=False)
+    f.snapshots.nb_pfb_ss_nb_sync_ss.arm(man_trig=False, man_valid=False)    
+    f.snapshots.nb_pfb_ss_nb_ss.arm(man_trig=False, man_valid=False)
+    f.snapshots.nb_pfb_ss_nb1_ss.arm(man_trig=False, man_valid=False)
+    
     
     f.snapshots.snap_quant0_ss.arm(man_trig=False, man_valid=False)
     
@@ -540,35 +752,42 @@ for x in hosts:
     f.snapshots.phase_compensation0_delay_gen_delay_gen_delay_calc_calc1_ss.arm(man_trig=False, man_valid=False)
     f.snapshots.phase_compensation0_fd_fs_ss_fd_fs_ss.arm(man_trig=False, man_valid=False)
     f.snapshots.phase_compensation0_fd_fs_ss_fd_fs1_ss.arm(man_trig=False, man_valid=False)
-
-    print 'Grab all local times'
-    print '===================='
-    print 'Capture Time'
-    # Tigger to capture 
-    f.registers.control.write(local_time_capture='pulse')
-
-    print 'Source: Spead Timestamp'
-    f.registers.control.write(local_time_source=0)
-    print f.registers.local_time_msw.read()
-    print f.registers.local_time_lsw.read()
-
-    print 'Source: time80_48 Timestamp'
-    f.registers.control.write(local_time_source=1)
-    print f.registers.local_time_msw.read()
-    print f.registers.local_time_lsw.read()
-
-    print 'Source: PFB Time Timestamp'
-    f.registers.control.write(local_time_source=2)
-    print f.registers.local_time_msw.read()
-    print f.registers.local_time_lsw.read()
-
-    print 'Source: Pack Sync Timestamp'
-    f.registers.control.write(local_time_source=3)
-    print f.registers.local_time_msw.read()
-    print f.registers.local_time_lsw.read()
-
+    
+    print ' ' 
+    print 'Arming Done' 
+    print '==========='
+    
+#    print ' ' 
+#    print 'Grab all local times'
+#    print '===================='
+#    print 'Capture Time'
+#    # Tigger to capture 
+#    f.registers.control.write(local_time_capture='pulse')
+#
+#    print 'Source: Spead Timestamp'
+#    f.registers.control.write(local_time_source=0)
+#    print f.registers.local_time_msw.read()
+#    print f.registers.local_time_lsw.read()
+#
+#    print 'Source: time80_48 Timestamp'
+#    f.registers.control.write(local_time_source=1)
+#    print f.registers.local_time_msw.read()
+#    print f.registers.local_time_lsw.read()
+#
+#    print 'Source: PFB Time Timestamp'
+#    f.registers.control.write(local_time_source=2)
+#    print f.registers.local_time_msw.read()
+#    print f.registers.local_time_lsw.read()
+#
+#    print 'Source: Pack Sync Timestamp'
+#    f.registers.control.write(local_time_source=3)
+#    print f.registers.local_time_msw.read()
+#    print f.registers.local_time_lsw.read()
+#
+    print ' ' 
     print 'Setting up ss time trig for SS'
     print '=============================='
+    print ' ' 
     # Tigger to capture 
     f.registers.control.write(local_time_capture='pulse')
 
@@ -579,9 +798,9 @@ for x in hosts:
     curr_time_msw = f.registers.local_time_msw.read()
     curr_time_lsw = f.registers.local_time_lsw.read()
     
-    
     print 'curr_time_msw:', curr_time_msw
     print 'curr_time_lsw:', curr_time_lsw
+    print ' ' 
     
     #Determine which board has the h
     if highest_time_msw < curr_time_msw: 
@@ -590,16 +809,17 @@ for x in hosts:
     if highest_time_lsw < curr_time_lsw: 
         highest_time_lsw = curr_time_lsw
 
-    print 'Arming Done' 
-    print '==========='
+
     f.registers.tl_cd0_control0.write(arm='pulse')    
     f.registers.tl_cd0_control0.write(load_immediate='pulse')    
     f.registers.control.write(cnt_rst='pulse')
     f.registers.control.write(sys_rst='pulse')
 
 #==============================================================================
-print '***********************************************************************'
+print '************************************'
 print 'Write the trigger time to all boards'
+print '************************************'
+
 
 for x in hosts:
     print x
@@ -608,7 +828,7 @@ for x in hosts:
     f.get_system_information(filename)
     # Now add time to just captured time. This needs to be far enough ahead that 
     # no FEng will there yet.
-    trig_time_msw = highest_time_msw['data']['timestamp_msw']+ 5
+    trig_time_msw = highest_time_msw['data']['timestamp_msw']+ 7
     trig_time_lsw = highest_time_lsw['data']['timestamp_lsw']+ 2**9
 
     # Now write trigger time
@@ -628,10 +848,17 @@ for x in hosts:
     f.registers.ts_ss_lock.write(en=0)
     f.registers.arm_ts_ss_lock.write(en='pulse')
     
+    if f.registers.ts_ss_lock.read()['data']['en'] == 1:
+        print 'Trigger source: Time trigger'
+    else:
+        print 'Trigger source: Sync'
+            
+    
     print 'curr_time_msw:', f.registers.local_time_msw.read()
     print 'curr_time_lsw:', f.registers.local_time_lsw.read()
 
 print '***********************************************************************'
+print ' ' 
 
 f0 = casperfpga.CasperFpga(hosts[0])
 f0.get_system_information(filename)
@@ -646,6 +873,10 @@ f3 = casperfpga.CasperFpga(hosts[3])
 f3.get_system_information(filename)
 
 # Read FFT offset calculations for each Skarab
+print ' ' 
+print 'Check FDFS values' 
+print '-----------------' 
+print ' ' 
 s0 = skarab_debug()
 s0.get_fft_offset(f0)
 
@@ -661,14 +892,19 @@ s3.get_fft_offset(f3)
 compare_all = all_skarab_debug()
 
 # Grab SS Data for all skarabs
-compare_all.adc_SS_data_compare(f0,f1,f2,f3)
-compare_all.fft_SS_data_compare(f0,f1,f2,f3)
-compare_all.pfbin_SS_data_compare(f0,f1,f2,f3)
+#compare_all.adc_SS_data_compare(f0,f1,f2,f3)
+#compare_all.pfbin_SS_data_compare(f0,f1,f2,f3)
+compare_all.mix_SS_data_compare(f0,f1,f2,f3)
+compare_all.ddc_SS_data_compare(f0,f1,f2,f3)
+#compare_all.fir_SS_data_compare(f0,f1,f2,f3)
+#compare_all.fft_SS_data_compare(f0,f1,f2,f3)
 #compare_all.nb_sync_SS_data_compare(f0,f1,f2,f3)
 #compare_all.quant_SS_data_compare(f0,f1,f2,f3)
 
 # Get Sync Counts
+print ' ' 
 print 'Grab Sync Counts'
+print '-----------------' 
 print 'cd_status0:', f0.registers.cd_status.read()
 print 'cd_status1:', f1.registers.cd_status.read()
 print 'cd_status2:', f2.registers.cd_status.read()
