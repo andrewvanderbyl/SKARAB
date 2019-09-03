@@ -61,8 +61,9 @@ elseif (strcmp(Input_class,'double'))
        Serial_Data(k+5,1) = Input_4(i);    
        Serial_Data(k+6,1) = Input_5(i);
        Serial_Data(k+7,1) = Input_6(i);   
-       Serial_Data(k+8,1) = Input_7(i);   
-       if dvalid_in.Data(i,1)
+       Serial_Data(k+8,1) = Input_7(i);  
+       if dvalid_in.Data(i,1)       
+       %if dvalid_in(i,1)
             Dvalid((k+1):((k+8)),1) = ones(8,1);    
        else
             Dvalid((k+1):((k+8)),1) = zeros(8,1); 

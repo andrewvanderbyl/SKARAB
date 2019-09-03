@@ -25,19 +25,19 @@ figure(2)
 semilogy(abs(fft_ddc))
 
 
-mix_re = double(zeros(length(ddc_re0.Data),1));
-mix_im = double(zeros(length(ddc_im0.Data),1));
-k = 1;
-for i=1:length(ddc_re0.Data)
-   if mix_dvalid.Data(i,1)==1
-       mix_re(k,1) = ddc_re0.Data(i,1);
-       mix_im(k,1) = ddc_im0.Data(i,1);
-       k = k + 1;
-   end
-end
-
-figure(3)
-plot(mix_re)
+% mix_re = double(zeros(length(ddc_re0.Data),1));
+% mix_im = double(zeros(length(ddc_im0.Data),1));
+% k = 1;
+% for i=1:length(ddc_re0.Data)
+%    if mix_dvalid.Data(i,1)==1
+%        mix_re(k,1) = ddc_re0.Data(i,1);
+%        mix_im(k,1) = ddc_im0.Data(i,1);
+%        k = k + 1;
+%    end
+% end
+% 
+% figure(3)
+% plot(mix_re)
 
 % mix_out = double(zeros(length(dec_tp1.Data),1));
 % k = 1;
