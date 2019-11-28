@@ -25,8 +25,8 @@ cd_filename = 'cd_'
 coeff_filename = 'coeff_'
 fir_int_filename = 'fir_int_'
 fir_filename = 'fir_'   
-fftbp_filename = 'firbp_'
-fftdir_filename = 'firdir_'
+fftbp_filename = 'fftbp_'
+fftdir_filename = 'fftdir_'
 fft_filename = 'fft_'
 
 #==============================================================================
@@ -57,12 +57,128 @@ class skarab:
         else:
             print 'SS are Identical'          
             print ' '
-        
 
+    def adc_diff(self):
+        print 'Grabbing ADC In'  
+        
+        # -- FHost 0
+        fhost_num = 0
+        adc0_snap = f0.snapshots.snap_adc0_ss.read(arm=False)['data'] 
+        
+        adc0_d0 = adc0_snap['p0_d0']
+        adc0_d1 = adc0_snap['p0_d1']
+        adc0_d2 = adc0_snap['p0_d2']
+        adc0_d3 = adc0_snap['p0_d3']
+        adc0_d4 = adc0_snap['p0_d4']
+        adc0_d5 = adc0_snap['p0_d5']
+        adc0_d6 = adc0_snap['p0_d6']
+        adc0_d7 = adc0_snap['p0_d7']
+                   
+        adc0_f0 = []
+                                       
+        for x in range(0, len(adc0_d0)):
+            adc0_f0.extend(
+                [adc0_d0[x], adc0_d1[x], adc0_d2[x], adc0_d3[x], adc0_d4[x], adc0_d5[x], adc0_d6[x], adc0_d7[x]])
+        
+        print len(adc0_f0)
+        
+        filename = adc_filename + build_ver + str(fhost_num) + '.txt'
+        print(filename)
+        with open(filename, 'w') as filehandle:
+            for listitem in adc0_f0:
+                filehandle.write('%s\n' % listitem)
+        
+            
+        # -- FHost 1
+        fhost_num = 1
+        adc0_snap = f1.snapshots.snap_adc0_ss.read(arm=False)['data'] 
+        
+        adc0_d0 = adc0_snap['p0_d0']
+        adc0_d1 = adc0_snap['p0_d1']
+        adc0_d2 = adc0_snap['p0_d2']
+        adc0_d3 = adc0_snap['p0_d3']
+        adc0_d4 = adc0_snap['p0_d4']
+        adc0_d5 = adc0_snap['p0_d5']
+        adc0_d6 = adc0_snap['p0_d6']
+        adc0_d7 = adc0_snap['p0_d7']
+                   
+        adc0_f1 = []
+                                       
+        for x in range(0, len(adc0_d0)):
+            adc0_f1.extend(
+                [adc0_d0[x], adc0_d1[x], adc0_d2[x], adc0_d3[x], adc0_d4[x], adc0_d5[x], adc0_d6[x], adc0_d7[x]])
+        
+        print len(adc0_f1)
+        
+        filename = adc_filename + build_ver + str(fhost_num) + '.txt'
+        print(filename)
+        with open(filename, 'w') as filehandle:
+            for listitem in adc0_f1:
+                filehandle.write('%s\n' % listitem)
+            
+            
+        # -- FHost 2
+        fhost_num = 2
+        adc0_snap = f2.snapshots.snap_adc0_ss.read(arm=False)['data'] 
+        
+        adc0_d0 = adc0_snap['p0_d0']
+        adc0_d1 = adc0_snap['p0_d1']
+        adc0_d2 = adc0_snap['p0_d2']
+        adc0_d3 = adc0_snap['p0_d3']
+        adc0_d4 = adc0_snap['p0_d4']
+        adc0_d5 = adc0_snap['p0_d5']
+        adc0_d6 = adc0_snap['p0_d6']
+        adc0_d7 = adc0_snap['p0_d7']
+                   
+        adc0_f2 = []
+                                       
+        for x in range(0, len(adc0_d0)):
+            adc0_f2.extend(
+                [adc0_d0[x], adc0_d1[x], adc0_d2[x], adc0_d3[x], adc0_d4[x], adc0_d5[x], adc0_d6[x], adc0_d7[x]])
+        
+        print len(adc0_f2)
+        
+        filename = adc_filename + build_ver + str(fhost_num) + '.txt'
+        print(filename)
+        with open(filename, 'w') as filehandle:
+            for listitem in adc0_f2:
+                filehandle.write('%s\n' % listitem)    
+            
+            
+        # -- FHost 3
+        fhost_num = 3
+        adc0_snap = f3.snapshots.snap_adc0_ss.read(arm=False)['data'] 
+        
+        adc0_d0 = adc0_snap['p0_d0']
+        adc0_d1 = adc0_snap['p0_d1']
+        adc0_d2 = adc0_snap['p0_d2']
+        adc0_d3 = adc0_snap['p0_d3']
+        adc0_d4 = adc0_snap['p0_d4']
+        adc0_d5 = adc0_snap['p0_d5']
+        adc0_d6 = adc0_snap['p0_d6']
+        adc0_d7 = adc0_snap['p0_d7']
+                   
+        adc0_f3 = []
+                                       
+        for x in range(0, len(adc0_d0)):
+            adc0_f3.extend(
+                [adc0_d0[x], adc0_d1[x], adc0_d2[x], adc0_d3[x], adc0_d4[x], adc0_d5[x], adc0_d6[x], adc0_d7[x]])
+        
+        print len(adc0_f3)
+        
+        filename = adc_filename + build_ver + str(fhost_num) + '.txt'
+        print(filename)
+        with open(filename, 'w') as filehandle:
+            for listitem in adc0_f3:
+                filehandle.write('%s\n' % listitem)   
+        
+       
+        
+        
 hosts = ['skarab020303-01', 'skarab020308-01', 'skarab02030A-01', 'skarab02030E-01']
 c=corr2.fxcorrelator.FxCorrelator('bob', config_source='/etc/corr/avdbyl_test_32k.ini')
 c.initialise(program=False, configure=False, require_epoch=False)
-
+        
 f0 = c.fhosts[0]
 f1 = c.fhosts[1]
 f2 = c.fhosts[2]
@@ -165,11 +281,11 @@ f1.snapshots.snap_adc0_ss.arm(man_trig=False, man_valid=False)
 f2.snapshots.snap_adc0_ss.arm(man_trig=False, man_valid=False)  
 f3.snapshots.snap_adc0_ss.arm(man_trig=False, man_valid=False)  
 
-# CD
-f0.snapshots.snap_cd_out_ss.arm(man_trig=False, man_valid=False)  
-f1.snapshots.snap_cd_out_ss.arm(man_trig=False, man_valid=False)  
-f2.snapshots.snap_cd_out_ss.arm(man_trig=False, man_valid=False)  
-f3.snapshots.snap_cd_out_ss.arm(man_trig=False, man_valid=False)  
+## CD
+#f0.snapshots.snap_cd_out_ss.arm(man_trig=False, man_valid=False)  
+#f1.snapshots.snap_cd_out_ss.arm(man_trig=False, man_valid=False)  
+#f2.snapshots.snap_cd_out_ss.arm(man_trig=False, man_valid=False)  
+#f3.snapshots.snap_cd_out_ss.arm(man_trig=False, man_valid=False)  
 
 ## Coeffs
 #f0.snapshots.pfb_pfb_fir_generic_snap_coeff_ss.arm(man_trig=False, man_valid=False)  
@@ -205,301 +321,408 @@ f1.snapshots.pfb_snap_fir_out1_ss.arm(man_trig=False, man_valid=False)
 f2.snapshots.pfb_snap_fir_out1_ss.arm(man_trig=False, man_valid=False)  
 f3.snapshots.pfb_snap_fir_out1_ss.arm(man_trig=False, man_valid=False)  
 
+## FFT BP
+#f0.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.arm(man_trig=False, man_valid=False)  
+#f1.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.arm(man_trig=False, man_valid=False)  
+#f2.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.arm(man_trig=False, man_valid=False)  
+#f3.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.arm(man_trig=False, man_valid=False)  
+#
+#f0.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.arm(man_trig=False, man_valid=False)  
+#f1.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.arm(man_trig=False, man_valid=False)  
+#f2.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.arm(man_trig=False, man_valid=False)  
+#f3.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.arm(man_trig=False, man_valid=False)  
+#
+#f0.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.arm(man_trig=False, man_valid=False)  
+#f1.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.arm(man_trig=False, man_valid=False)  
+#f2.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.arm(man_trig=False, man_valid=False)  
+#f3.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.arm(man_trig=False, man_valid=False)  
+#
+#f0.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.arm(man_trig=False, man_valid=False)  
+#f1.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.arm(man_trig=False, man_valid=False)  
+#f2.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.arm(man_trig=False, man_valid=False)  
+#f3.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.arm(man_trig=False, man_valid=False)  
+
+
 # FFT BP
-f0.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.arm(man_trig=False, man_valid=False)  
-f1.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.arm(man_trig=False, man_valid=False)  
-f2.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.arm(man_trig=False, man_valid=False)  
-f3.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.arm(man_trig=False, man_valid=False)  
+f0.snapshots.pfb_fft_snap_fftbp_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_snap_fftbp_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_snap_fftbp_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_snap_fftbp_ss.arm(man_trig=False, man_valid=False)  
 
-f0.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.arm(man_trig=False, man_valid=False)  
-f1.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.arm(man_trig=False, man_valid=False)  
-f2.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.arm(man_trig=False, man_valid=False)  
-f3.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.arm(man_trig=False, man_valid=False)  
+f0.snapshots.pfb_fft_snap_fftbp1_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_snap_fftbp1_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_snap_fftbp1_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_snap_fftbp1_ss.arm(man_trig=False, man_valid=False)  
 
-f0.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.arm(man_trig=False, man_valid=False)  
-f1.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.arm(man_trig=False, man_valid=False)  
-f2.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.arm(man_trig=False, man_valid=False)  
-f3.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.arm(man_trig=False, man_valid=False)  
+f0.snapshots.pfb_fft_snap_fftbp2_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_snap_fftbp2_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_snap_fftbp2_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_snap_fftbp2_ss.arm(man_trig=False, man_valid=False)  
 
-f0.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.arm(man_trig=False, man_valid=False)  
-f1.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.arm(man_trig=False, man_valid=False)  
-f2.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.arm(man_trig=False, man_valid=False)  
-f3.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.arm(man_trig=False, man_valid=False)  
+f0.snapshots.pfb_fft_snap_fftbp3_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_snap_fftbp3_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_snap_fftbp3_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_snap_fftbp3_ss.arm(man_trig=False, man_valid=False)  
+
+# FFT BP before Unscramble
+f0.snapshots.pfb_fft_bi_ss_bpc_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_bi_ss_bpc_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_bi_ss_bpc_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_bi_ss_bpc_ss.arm(man_trig=False, man_valid=False)  
+
+f0.snapshots.pfb_fft_bi_ss_bpc1_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_bi_ss_bpc1_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_bi_ss_bpc1_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_bi_ss_bpc1_ss.arm(man_trig=False, man_valid=False)  
+
+
+
+# FFT BP Core Stage 1
+f0.snapshots.pfb_fft_bi_core_s10_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_bi_core_s10_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_bi_core_s10_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_bi_core_s10_ss.arm(man_trig=False, man_valid=False)  
+
+f0.snapshots.pfb_fft_bi_core_s11_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_bi_core_s11_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_bi_core_s11_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_bi_core_s11_ss.arm(man_trig=False, man_valid=False)  
+
+# FFT BP Core Stage 1 Internal
+f0.snapshots.pfb_fft_bi_core_ffts1_s0_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_bi_core_ffts1_s0_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_bi_core_ffts1_s0_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_bi_core_ffts1_s0_ss.arm(man_trig=False, man_valid=False)  
+
+f0.snapshots.pfb_fft_bi_core_ffts1_s1_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_bi_core_ffts1_s1_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_bi_core_ffts1_s1_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_bi_core_ffts1_s1_ss.arm(man_trig=False, man_valid=False)  
+
+
+
+# FFT BP Core Stage 2
+f0.snapshots.pfb_fft_bi_core_s20_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_bi_core_s20_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_bi_core_s20_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_bi_core_s20_ss.arm(man_trig=False, man_valid=False)  
+
+f0.snapshots.pfb_fft_bi_core_s21_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_bi_core_s21_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_bi_core_s21_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_bi_core_s21_ss.arm(man_trig=False, man_valid=False)  
+
+# FFT BP Core Stage 2 Internal
+f0.snapshots.pfb_fft_bi_core_ffts2_s0_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_bi_core_ffts2_s0_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_bi_core_ffts2_s0_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_bi_core_ffts2_s0_ss.arm(man_trig=False, man_valid=False)  
+
+f0.snapshots.pfb_fft_bi_core_ffts2_s1_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_bi_core_ffts2_s1_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_bi_core_ffts2_s1_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_bi_core_ffts2_s1_ss.arm(man_trig=False, man_valid=False)  
+
+
+
+
+
+# FFT BP Core Stage 3
+f0.snapshots.pfb_fft_bi_core_s30_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_bi_core_s30_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_bi_core_s30_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_bi_core_s30_ss.arm(man_trig=False, man_valid=False)  
+
+f0.snapshots.pfb_fft_bi_core_s31_ss.arm(man_trig=False, man_valid=False)  
+f1.snapshots.pfb_fft_bi_core_s31_ss.arm(man_trig=False, man_valid=False)  
+f2.snapshots.pfb_fft_bi_core_s31_ss.arm(man_trig=False, man_valid=False)  
+f3.snapshots.pfb_fft_bi_core_s31_ss.arm(man_trig=False, man_valid=False)  
+
+
+
+
+
 
 # FFT DIR Out
-f0.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.arm(man_trig=False, man_valid=False)  
-f1.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.arm(man_trig=False, man_valid=False)  
-f2.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.arm(man_trig=False, man_valid=False)  
-f3.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.arm(man_trig=False, man_valid=False) 
-
-f0.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.arm(man_trig=False, man_valid=False)  
-f1.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.arm(man_trig=False, man_valid=False)  
-f2.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.arm(man_trig=False, man_valid=False)  
-f3.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.arm(man_trig=False, man_valid=False) 
+#f0.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.arm(man_trig=False, man_valid=False)  
+#f1.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.arm(man_trig=False, man_valid=False)  
+#f2.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.arm(man_trig=False, man_valid=False)  
+#f3.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.arm(man_trig=False, man_valid=False) 
+#
+#f0.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.arm(man_trig=False, man_valid=False)  
+#f1.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.arm(man_trig=False, man_valid=False)  
+#f2.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.arm(man_trig=False, man_valid=False)  
+#f3.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.arm(man_trig=False, man_valid=False) 
 
 # FFT Out
-f0.snapshots.pfb_snap_fft_out_ss.arm(man_trig=False, man_valid=False)  
-f1.snapshots.pfb_snap_fft_out_ss.arm(man_trig=False, man_valid=False)  
-f2.snapshots.pfb_snap_fft_out_ss.arm(man_trig=False, man_valid=False)  
-f3.snapshots.pfb_snap_fft_out_ss.arm(man_trig=False, man_valid=False)  
+#f0.snapshots.pfb_snap_fft_out_ss.arm(man_trig=False, man_valid=False)  
+#f1.snapshots.pfb_snap_fft_out_ss.arm(man_trig=False, man_valid=False)  
+#f2.snapshots.pfb_snap_fft_out_ss.arm(man_trig=False, man_valid=False)  
+#f3.snapshots.pfb_snap_fft_out_ss.arm(man_trig=False, man_valid=False)  
+#
+#f0.snapshots.pfb_snap_fft_out1_ss.arm(man_trig=False, man_valid=False)  
+#f1.snapshots.pfb_snap_fft_out1_ss.arm(man_trig=False, man_valid=False)  
+#f2.snapshots.pfb_snap_fft_out1_ss.arm(man_trig=False, man_valid=False)  
+#f3.snapshots.pfb_snap_fft_out1_ss.arm(man_trig=False, man_valid=False)  
 
-f0.snapshots.pfb_snap_fft_out1_ss.arm(man_trig=False, man_valid=False)  
-f1.snapshots.pfb_snap_fft_out1_ss.arm(man_trig=False, man_valid=False)  
-f2.snapshots.pfb_snap_fft_out1_ss.arm(man_trig=False, man_valid=False)  
-f3.snapshots.pfb_snap_fft_out1_ss.arm(man_trig=False, man_valid=False)  
 
-#c.fops.sys_reset()
+d = skarab()
+
+d.adc_diff()
+
+d.biplex_diff()
+
 #==============================================================================
-print ' ' 
-print 'Grabbing ADC In'  
-
-# -- FHost 0
-fhost_num = 0
-adc0_snap = f0.snapshots.snap_adc0_ss.read(arm=False)['data'] 
-
-adc0_d0 = adc0_snap['p0_d0']
-adc0_d1 = adc0_snap['p0_d1']
-adc0_d2 = adc0_snap['p0_d2']
-adc0_d3 = adc0_snap['p0_d3']
-adc0_d4 = adc0_snap['p0_d4']
-adc0_d5 = adc0_snap['p0_d5']
-adc0_d6 = adc0_snap['p0_d6']
-adc0_d7 = adc0_snap['p0_d7']
-           
-adc0_f0 = []
-                               
-for x in range(0, len(adc0_d0)):
-    adc0_f0.extend(
-        [adc0_d0[x], adc0_d1[x], adc0_d2[x], adc0_d3[x], adc0_d4[x], adc0_d5[x], adc0_d6[x], adc0_d7[x]])
-
-print len(adc0_f0)
-
-filename = adc_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in adc0_f0:
-        filehandle.write('%s\n' % listitem)
-
-    
-# -- FHost 1
-fhost_num = 1
-adc0_snap = f1.snapshots.snap_adc0_ss.read(arm=False)['data'] 
-
-adc0_d0 = adc0_snap['p0_d0']
-adc0_d1 = adc0_snap['p0_d1']
-adc0_d2 = adc0_snap['p0_d2']
-adc0_d3 = adc0_snap['p0_d3']
-adc0_d4 = adc0_snap['p0_d4']
-adc0_d5 = adc0_snap['p0_d5']
-adc0_d6 = adc0_snap['p0_d6']
-adc0_d7 = adc0_snap['p0_d7']
-           
-adc0_f1 = []
-                               
-for x in range(0, len(adc0_d0)):
-    adc0_f1.extend(
-        [adc0_d0[x], adc0_d1[x], adc0_d2[x], adc0_d3[x], adc0_d4[x], adc0_d5[x], adc0_d6[x], adc0_d7[x]])
-
-print len(adc0_f1)
-
-filename = adc_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in adc0_f1:
-        filehandle.write('%s\n' % listitem)
-    
-    
-# -- FHost 2
-fhost_num = 2
-adc0_snap = f2.snapshots.snap_adc0_ss.read(arm=False)['data'] 
-
-adc0_d0 = adc0_snap['p0_d0']
-adc0_d1 = adc0_snap['p0_d1']
-adc0_d2 = adc0_snap['p0_d2']
-adc0_d3 = adc0_snap['p0_d3']
-adc0_d4 = adc0_snap['p0_d4']
-adc0_d5 = adc0_snap['p0_d5']
-adc0_d6 = adc0_snap['p0_d6']
-adc0_d7 = adc0_snap['p0_d7']
-           
-adc0_f2 = []
-                               
-for x in range(0, len(adc0_d0)):
-    adc0_f2.extend(
-        [adc0_d0[x], adc0_d1[x], adc0_d2[x], adc0_d3[x], adc0_d4[x], adc0_d5[x], adc0_d6[x], adc0_d7[x]])
-
-print len(adc0_f2)
-
-filename = adc_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in adc0_f2:
-        filehandle.write('%s\n' % listitem)    
-    
-    
-# -- FHost 3
-fhost_num = 3
-adc0_snap = f3.snapshots.snap_adc0_ss.read(arm=False)['data'] 
-
-adc0_d0 = adc0_snap['p0_d0']
-adc0_d1 = adc0_snap['p0_d1']
-adc0_d2 = adc0_snap['p0_d2']
-adc0_d3 = adc0_snap['p0_d3']
-adc0_d4 = adc0_snap['p0_d4']
-adc0_d5 = adc0_snap['p0_d5']
-adc0_d6 = adc0_snap['p0_d6']
-adc0_d7 = adc0_snap['p0_d7']
-           
-adc0_f3 = []
-                               
-for x in range(0, len(adc0_d0)):
-    adc0_f3.extend(
-        [adc0_d0[x], adc0_d1[x], adc0_d2[x], adc0_d3[x], adc0_d4[x], adc0_d5[x], adc0_d6[x], adc0_d7[x]])
-
-print len(adc0_f3)
-
-filename = adc_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in adc0_f3:
-        filehandle.write('%s\n' % listitem)   
+#print ' ' 
+#print 'Grabbing ADC In'  
+#
+## -- FHost 0
+#fhost_num = 0
+#adc0_snap = f0.snapshots.snap_adc0_ss.read(arm=False)['data'] 
+#
+#adc0_d0 = adc0_snap['p0_d0']
+#adc0_d1 = adc0_snap['p0_d1']
+#adc0_d2 = adc0_snap['p0_d2']
+#adc0_d3 = adc0_snap['p0_d3']
+#adc0_d4 = adc0_snap['p0_d4']
+#adc0_d5 = adc0_snap['p0_d5']
+#adc0_d6 = adc0_snap['p0_d6']
+#adc0_d7 = adc0_snap['p0_d7']
+#           
+#adc0_f0 = []
+#                               
+#for x in range(0, len(adc0_d0)):
+#    adc0_f0.extend(
+#        [adc0_d0[x], adc0_d1[x], adc0_d2[x], adc0_d3[x], adc0_d4[x], adc0_d5[x], adc0_d6[x], adc0_d7[x]])
+#
+#print len(adc0_f0)
+#
+#filename = adc_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in adc0_f0:
+#        filehandle.write('%s\n' % listitem)
+#
+#    
+## -- FHost 1
+#fhost_num = 1
+#adc0_snap = f1.snapshots.snap_adc0_ss.read(arm=False)['data'] 
+#
+#adc0_d0 = adc0_snap['p0_d0']
+#adc0_d1 = adc0_snap['p0_d1']
+#adc0_d2 = adc0_snap['p0_d2']
+#adc0_d3 = adc0_snap['p0_d3']
+#adc0_d4 = adc0_snap['p0_d4']
+#adc0_d5 = adc0_snap['p0_d5']
+#adc0_d6 = adc0_snap['p0_d6']
+#adc0_d7 = adc0_snap['p0_d7']
+#           
+#adc0_f1 = []
+#                               
+#for x in range(0, len(adc0_d0)):
+#    adc0_f1.extend(
+#        [adc0_d0[x], adc0_d1[x], adc0_d2[x], adc0_d3[x], adc0_d4[x], adc0_d5[x], adc0_d6[x], adc0_d7[x]])
+#
+#print len(adc0_f1)
+#
+#filename = adc_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in adc0_f1:
+#        filehandle.write('%s\n' % listitem)
+#    
+#    
+## -- FHost 2
+#fhost_num = 2
+#adc0_snap = f2.snapshots.snap_adc0_ss.read(arm=False)['data'] 
+#
+#adc0_d0 = adc0_snap['p0_d0']
+#adc0_d1 = adc0_snap['p0_d1']
+#adc0_d2 = adc0_snap['p0_d2']
+#adc0_d3 = adc0_snap['p0_d3']
+#adc0_d4 = adc0_snap['p0_d4']
+#adc0_d5 = adc0_snap['p0_d5']
+#adc0_d6 = adc0_snap['p0_d6']
+#adc0_d7 = adc0_snap['p0_d7']
+#           
+#adc0_f2 = []
+#                               
+#for x in range(0, len(adc0_d0)):
+#    adc0_f2.extend(
+#        [adc0_d0[x], adc0_d1[x], adc0_d2[x], adc0_d3[x], adc0_d4[x], adc0_d5[x], adc0_d6[x], adc0_d7[x]])
+#
+#print len(adc0_f2)
+#
+#filename = adc_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in adc0_f2:
+#        filehandle.write('%s\n' % listitem)    
+#    
+#    
+## -- FHost 3
+#fhost_num = 3
+#adc0_snap = f3.snapshots.snap_adc0_ss.read(arm=False)['data'] 
+#
+#adc0_d0 = adc0_snap['p0_d0']
+#adc0_d1 = adc0_snap['p0_d1']
+#adc0_d2 = adc0_snap['p0_d2']
+#adc0_d3 = adc0_snap['p0_d3']
+#adc0_d4 = adc0_snap['p0_d4']
+#adc0_d5 = adc0_snap['p0_d5']
+#adc0_d6 = adc0_snap['p0_d6']
+#adc0_d7 = adc0_snap['p0_d7']
+#           
+#adc0_f3 = []
+#                               
+#for x in range(0, len(adc0_d0)):
+#    adc0_f3.extend(
+#        [adc0_d0[x], adc0_d1[x], adc0_d2[x], adc0_d3[x], adc0_d4[x], adc0_d5[x], adc0_d6[x], adc0_d7[x]])
+#
+#print len(adc0_f3)
+#
+#filename = adc_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in adc0_f3:
+#        filehandle.write('%s\n' % listitem)   
         
 ##==============================================================================
-print ' ' 
-print 'Grabbing CD SS'    
-
-# -- FHost 0
-fhost_num = 0  
-#cd_snap = f0.snapshots.snap_cd_out_ss.read['data']
-cd_snap = f0.snapshots.snap_cd_out_ss.read(arm=False)['data']
-
-d0 = cd_snap['d0']
-d1 = cd_snap['d1']
-d2 = cd_snap['d2']
-d3 = cd_snap['d3']
-d4 = cd_snap['d4']
-d5 = cd_snap['d5']
-d6 = cd_snap['d6']
-d7 = cd_snap['d7']
-cd_sync = cd_snap['sync']
-cd_dv = cd_snap['dv']
-           
-cd_f0 = []
-                               
-for x in range(0, len(d0)):
-    cd_f0.extend(
-        [d0[x], d1[x], d2[x], d3[x], d4[x], d5[x], d6[x], d7[x]])    
-
-print len(cd_f0)
-
-filename = cd_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in cd_f0:
-        filehandle.write('%s\n' % listitem)   
-
-
-
-#with open('f0_cd0.txt', 'w') as filehandle:
-#    for listitem in d0:
+#print ' ' 
+#print 'Grabbing CD SS'    
+#
+## -- FHost 0
+#fhost_num = 0  
+##cd_snap = f0.snapshots.snap_cd_out_ss.read['data']
+#cd_snap = f0.snapshots.snap_cd_out_ss.read(arm=False)['data']
+#
+#d0 = cd_snap['d0']
+#d1 = cd_snap['d1']
+#d2 = cd_snap['d2']
+#d3 = cd_snap['d3']
+#d4 = cd_snap['d4']
+#d5 = cd_snap['d5']
+#d6 = cd_snap['d6']
+#d7 = cd_snap['d7']
+#cd_sync = cd_snap['sync']
+#cd_dv = cd_snap['dv']
+#           
+#cd_f0 = []
+#                               
+#for x in range(0, len(d0)):
+#    cd_f0.extend(
+#        [d0[x], d1[x], d2[x], d3[x], d4[x], d5[x], d6[x], d7[x]])    
+#
+#print len(cd_f0)
+#
+#filename = cd_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in cd_f0:
 #        filehandle.write('%s\n' % listitem)   
 #
-#with open('f0_cd_sync.txt', 'w') as filehandle:
-#    for listitem in cd_sync:
+#
+#
+##with open('f0_cd0.txt', 'w') as filehandle:
+##    for listitem in d0:
+##        filehandle.write('%s\n' % listitem)   
+##
+##with open('f0_cd_sync.txt', 'w') as filehandle:
+##    for listitem in cd_sync:
+##        filehandle.write('%s\n' % listitem)   
+##
+##with open('f0_cd_dv.txt', 'w') as filehandle:
+##    for listitem in cd_dv:
+##        filehandle.write('%s\n' % listitem)   
+#
+#
+#
+##cd_data = cd_out[1:sample_len]
+##fft_cd_out = np.fft.fft(cd_data)
+#
+## -- FHost 1
+#fhost_num = 1  
+#cd_snap = f1.snapshots.snap_cd_out_ss.read(arm=False)['data']
+#
+#d0 = cd_snap['d0']
+#d1 = cd_snap['d1']
+#d2 = cd_snap['d2']
+#d3 = cd_snap['d3']
+#d4 = cd_snap['d4']
+#d5 = cd_snap['d5']
+#d6 = cd_snap['d6']
+#d7 = cd_snap['d7']
+#           
+#cd_f1 = []
+#                               
+#for x in range(0, len(d0)):
+#    cd_f1.extend(
+#        [d0[x], d1[x], d2[x], d3[x], d4[x], d5[x], d6[x], d7[x]])    
+#
+#print len(cd_f1)
+#
+#filename = cd_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in cd_f1:
 #        filehandle.write('%s\n' % listitem)   
 #
-#with open('f0_cd_dv.txt', 'w') as filehandle:
-#    for listitem in cd_dv:
+#
+## -- FHost 2
+#fhost_num = 2  
+#cd_snap = f2.snapshots.snap_cd_out_ss.read(arm=False)['data']
+#
+#d0 = cd_snap['d0']
+#d1 = cd_snap['d1']
+#d2 = cd_snap['d2']
+#d3 = cd_snap['d3']
+#d4 = cd_snap['d4']
+#d5 = cd_snap['d5']
+#d6 = cd_snap['d6']
+#d7 = cd_snap['d7']
+#           
+#cd_f2 = []
+#                               
+#for x in range(0, len(d0)):
+#    cd_f2.extend(
+#        [d0[x], d1[x], d2[x], d3[x], d4[x], d5[x], d6[x], d7[x]])    
+#
+#print len(cd_f2)
+#
+#filename = cd_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in cd_f2:
 #        filehandle.write('%s\n' % listitem)   
-
-
-
-#cd_data = cd_out[1:sample_len]
-#fft_cd_out = np.fft.fft(cd_data)
-
-# -- FHost 1
-fhost_num = 1  
-cd_snap = f1.snapshots.snap_cd_out_ss.read(arm=False)['data']
-
-d0 = cd_snap['d0']
-d1 = cd_snap['d1']
-d2 = cd_snap['d2']
-d3 = cd_snap['d3']
-d4 = cd_snap['d4']
-d5 = cd_snap['d5']
-d6 = cd_snap['d6']
-d7 = cd_snap['d7']
-           
-cd_f1 = []
-                               
-for x in range(0, len(d0)):
-    cd_f1.extend(
-        [d0[x], d1[x], d2[x], d3[x], d4[x], d5[x], d6[x], d7[x]])    
-
-print len(cd_f1)
-
-filename = cd_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in cd_f1:
-        filehandle.write('%s\n' % listitem)   
-
-
-# -- FHost 2
-fhost_num = 2  
-cd_snap = f2.snapshots.snap_cd_out_ss.read(arm=False)['data']
-
-d0 = cd_snap['d0']
-d1 = cd_snap['d1']
-d2 = cd_snap['d2']
-d3 = cd_snap['d3']
-d4 = cd_snap['d4']
-d5 = cd_snap['d5']
-d6 = cd_snap['d6']
-d7 = cd_snap['d7']
-           
-cd_f2 = []
-                               
-for x in range(0, len(d0)):
-    cd_f2.extend(
-        [d0[x], d1[x], d2[x], d3[x], d4[x], d5[x], d6[x], d7[x]])    
-
-print len(cd_f2)
-
-filename = cd_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in cd_f2:
-        filehandle.write('%s\n' % listitem)   
-
-
-# -- FHost 3
-fhost_num = 3  
-cd_snap = f3.snapshots.snap_cd_out_ss.read(arm=False)['data']
-
-d0 = cd_snap['d0']
-d1 = cd_snap['d1']
-d2 = cd_snap['d2']
-d3 = cd_snap['d3']
-d4 = cd_snap['d4']
-d5 = cd_snap['d5']
-d6 = cd_snap['d6']
-d7 = cd_snap['d7']
-           
-cd_f3 = []
-                               
-for x in range(0, len(d0)):
-    cd_f3.extend(
-        [d0[x], d1[x], d2[x], d3[x], d4[x], d5[x], d6[x], d7[x]])    
-
-print len(cd_f3)
-
-filename = cd_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in cd_f3:
-        filehandle.write('%s\n' % listitem)   
-        
+#
+#
+## -- FHost 3
+#fhost_num = 3  
+#cd_snap = f3.snapshots.snap_cd_out_ss.read(arm=False)['data']
+#
+#d0 = cd_snap['d0']
+#d1 = cd_snap['d1']
+#d2 = cd_snap['d2']
+#d3 = cd_snap['d3']
+#d4 = cd_snap['d4']
+#d5 = cd_snap['d5']
+#d6 = cd_snap['d6']
+#d7 = cd_snap['d7']
+#           
+#cd_f3 = []
+#                               
+#for x in range(0, len(d0)):
+#    cd_f3.extend(
+#        [d0[x], d1[x], d2[x], d3[x], d4[x], d5[x], d6[x], d7[x]])    
+#
+#print len(cd_f3)
+#
+#filename = cd_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in cd_f3:
+#        filehandle.write('%s\n' % listitem)   
+#        
 # ##==============================================================================       
 #print ' ' 
 #print 'Grabbing Coeff SS'  
@@ -925,10 +1148,15 @@ print 'Grabbing FFT BP SS'
 # -- FHost 0
 fhost_num = 0
 
-fftbp_snap = f0.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.read(arm=False)['data']
-fftbp_snap1 = f0.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.read(arm=False)['data']
-fftbp_snap2 = f0.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.read(arm=False)['data']
-fftbp_snap3 = f0.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.read(arm=False)['data']
+#fftbp_snap = f0.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.read(arm=False)['data']
+#fftbp_snap1 = f0.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.read(arm=False)['data']
+#fftbp_snap2 = f0.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.read(arm=False)['data']
+#fftbp_snap3 = f0.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.read(arm=False)['data']
+
+fftbp_snap = f0.snapshots.pfb_fft_snap_fftbp_ss.read(arm=False)['data']
+fftbp_snap1 = f0.snapshots.pfb_fft_snap_fftbp1_ss.read(arm=False)['data']
+fftbp_snap2 = f0.snapshots.pfb_fft_snap_fftbp2_ss.read(arm=False)['data']
+fftbp_snap3 = f0.snapshots.pfb_fft_snap_fftbp3_ss.read(arm=False)['data']
 
 fftr0 = fftbp_snap['real0']
 ffti0 = fftbp_snap['imag0']
@@ -975,10 +1203,15 @@ with open(filename, 'w') as filehandle:
 # -- FHost 1
 fhost_num = 1
 
-fftbp_snap = f1.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.read(arm=False)['data']
-fftbp_snap1 = f1.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.read(arm=False)['data']
-fftbp_snap2 = f1.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.read(arm=False)['data']
-fftbp_snap3 = f1.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.read(arm=False)['data']
+#fftbp_snap = f1.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.read(arm=False)['data']
+#fftbp_snap1 = f1.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.read(arm=False)['data']
+#fftbp_snap2 = f1.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.read(arm=False)['data']
+#fftbp_snap3 = f1.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.read(arm=False)['data']
+
+fftbp_snap = f1.snapshots.pfb_fft_snap_fftbp_ss.read(arm=False)['data']
+fftbp_snap1 = f1.snapshots.pfb_fft_snap_fftbp1_ss.read(arm=False)['data']
+fftbp_snap2 = f1.snapshots.pfb_fft_snap_fftbp2_ss.read(arm=False)['data']
+fftbp_snap3 = f1.snapshots.pfb_fft_snap_fftbp3_ss.read(arm=False)['data']
 
 fftr0 = fftbp_snap['real0']
 ffti0 = fftbp_snap['imag0']
@@ -1025,10 +1258,15 @@ with open(filename, 'w') as filehandle:
 # -- FHost 2
 fhost_num = 2
 
-fftbp_snap = f2.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.read(arm=False)['data']
-fftbp_snap1 = f2.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.read(arm=False)['data']
-fftbp_snap2 = f2.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.read(arm=False)['data']
-fftbp_snap3 = f2.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.read(arm=False)['data']
+#fftbp_snap = f2.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.read(arm=False)['data']
+#fftbp_snap1 = f2.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.read(arm=False)['data']
+#fftbp_snap2 = f2.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.read(arm=False)['data']
+#fftbp_snap3 = f2.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.read(arm=False)['data']
+
+fftbp_snap = f2.snapshots.pfb_fft_snap_fftbp_ss.read(arm=False)['data']
+fftbp_snap1 = f2.snapshots.pfb_fft_snap_fftbp1_ss.read(arm=False)['data']
+fftbp_snap2 = f2.snapshots.pfb_fft_snap_fftbp2_ss.read(arm=False)['data']
+fftbp_snap3 = f2.snapshots.pfb_fft_snap_fftbp3_ss.read(arm=False)['data']
 
 fftr0 = fftbp_snap['real0']
 ffti0 = fftbp_snap['imag0']
@@ -1075,10 +1313,15 @@ with open(filename, 'w') as filehandle:
 # -- FHost 3
 fhost_num = 3
 
-fftbp_snap = f3.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.read(arm=False)['data']
-fftbp_snap1 = f3.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.read(arm=False)['data']
-fftbp_snap2 = f3.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.read(arm=False)['data']
-fftbp_snap3 = f3.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.read(arm=False)['data']
+#fftbp_snap = f3.snapshots.pfb_fft_wideband_real_snap_fftbp_ss.read(arm=False)['data']
+#fftbp_snap1 = f3.snapshots.pfb_fft_wideband_real_snap_fftbp1_ss.read(arm=False)['data']
+#fftbp_snap2 = f3.snapshots.pfb_fft_wideband_real_snap_fftbp2_ss.read(arm=False)['data']
+#fftbp_snap3 = f3.snapshots.pfb_fft_wideband_real_snap_fftbp3_ss.read(arm=False)['data']
+
+fftbp_snap = f3.snapshots.pfb_fft_snap_fftbp_ss.read(arm=False)['data']
+fftbp_snap1 = f3.snapshots.pfb_fft_snap_fftbp1_ss.read(arm=False)['data']
+fftbp_snap2 = f3.snapshots.pfb_fft_snap_fftbp2_ss.read(arm=False)['data']
+fftbp_snap3 = f3.snapshots.pfb_fft_snap_fftbp3_ss.read(arm=False)['data']
 
 fftr0 = fftbp_snap['real0']
 ffti0 = fftbp_snap['imag0']
@@ -1123,319 +1366,319 @@ with open(filename, 'w') as filehandle:
 
 
 ##=============================================================================
-print ' ' 
-print 'Grabbing FFT Dir SS'   
-
-# -- FHost 0
-fhost_num = 0
-
-fftdir_snap = f0.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.read(arm=False)['data']
-fftdir_snap1 = f0.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.read(arm=False)['data']
-
-fftr0 = fftdir_snap['real0']
-ffti0 = fftdir_snap['imag0']
-fftr1 = fftdir_snap['real1']
-ffti1 = fftdir_snap['imag1']
-
-fftr2 = fftdir_snap1['real2']
-ffti2 = fftdir_snap1['imag2']
-fftr3 = fftdir_snap1['real3']
-ffti3 = fftdir_snap1['imag3']
-
-fft_real = []
-fft_imag = []
-                       
-for x in range(0, len(fftr0)):
-    fft_real.extend(
-        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
-            
-for x in range(0, len(ffti0)):
-    fft_imag.extend(
-        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
-            
-fftdir_cmplx_f0 = fft_real + np.multiply(fft_imag, 1j)
-
-print len(fftdir_cmplx_f0)
-
-filename = fftdir_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in fftdir_cmplx_f0:
-        filehandle.write('%s\n' % listitem) 
-        
-        
-# -- FHost 1
-fhost_num = 1
-
-fftdir_snap = f1.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.read(arm=False)['data']
-fftdir_snap1 = f1.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.read(arm=False)['data']
-
-fftr0 = fftdir_snap['real0']
-ffti0 = fftdir_snap['imag0']
-fftr1 = fftdir_snap['real1']
-ffti1 = fftdir_snap['imag1']
-
-fftr2 = fftdir_snap1['real2']
-ffti2 = fftdir_snap1['imag2']
-fftr3 = fftdir_snap1['real3']
-ffti3 = fftdir_snap1['imag3']
-
-fft_real = []
-fft_imag = []
-                       
-for x in range(0, len(fftr0)):
-    fft_real.extend(
-        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
-            
-for x in range(0, len(ffti0)):
-    fft_imag.extend(
-        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
-            
-fftdir_cmplx_f1 = fft_real + np.multiply(fft_imag, 1j)
-
-print len(fftdir_cmplx_f1)
-
-filename = fftdir_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in fftdir_cmplx_f1:
-        filehandle.write('%s\n' % listitem)         
-        
-
-# -- FHost 2
-fhost_num = 2
-
-fftdir_snap = f2.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.read(arm=False)['data']
-fftdir_snap1 = f2.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.read(arm=False)['data']
-
-fftr0 = fftdir_snap['real0']
-ffti0 = fftdir_snap['imag0']
-fftr1 = fftdir_snap['real1']
-ffti1 = fftdir_snap['imag1']
-
-fftr2 = fftdir_snap1['real2']
-ffti2 = fftdir_snap1['imag2']
-fftr3 = fftdir_snap1['real3']
-ffti3 = fftdir_snap1['imag3']
-
-fft_real = []
-fft_imag = []
-                       
-for x in range(0, len(fftr0)):
-    fft_real.extend(
-        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
-            
-for x in range(0, len(ffti0)):
-    fft_imag.extend(
-        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
-            
-fftdir_cmplx_f2 = fft_real + np.multiply(fft_imag, 1j)
-
-print len(fftdir_cmplx_f2)
-
-filename = fftdir_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in fftdir_cmplx_f2:
-        filehandle.write('%s\n' % listitem)    
-
-
-# -- FHost 3
-fhost_num = 3
-
-fftdir_snap = f3.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.read(arm=False)['data']
-fftdir_snap1 = f3.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.read(arm=False)['data']
-
-fftr0 = fftdir_snap['real0']
-ffti0 = fftdir_snap['imag0']
-fftr1 = fftdir_snap['real1']
-ffti1 = fftdir_snap['imag1']
-
-fftr2 = fftdir_snap1['real2']
-ffti2 = fftdir_snap1['imag2']
-fftr3 = fftdir_snap1['real3']
-ffti3 = fftdir_snap1['imag3']
-
-fft_real = []
-fft_imag = []
-                       
-for x in range(0, len(fftr0)):
-    fft_real.extend(
-        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
-            
-for x in range(0, len(ffti0)):
-    fft_imag.extend(
-        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
-            
-fftdir_cmplx_f3 = fft_real + np.multiply(fft_imag, 1j)
-
-print len(fftdir_cmplx_f3)
-
-filename = fftdir_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in fftdir_cmplx_f3:
-        filehandle.write('%s\n' % listitem)   
+#print ' ' 
+#print 'Grabbing FFT Dir SS'   
+#
+## -- FHost 0
+#fhost_num = 0
+#
+#fftdir_snap = f0.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.read(arm=False)['data']
+#fftdir_snap1 = f0.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.read(arm=False)['data']
+#
+#fftr0 = fftdir_snap['real0']
+#ffti0 = fftdir_snap['imag0']
+#fftr1 = fftdir_snap['real1']
+#ffti1 = fftdir_snap['imag1']
+#
+#fftr2 = fftdir_snap1['real2']
+#ffti2 = fftdir_snap1['imag2']
+#fftr3 = fftdir_snap1['real3']
+#ffti3 = fftdir_snap1['imag3']
+#
+#fft_real = []
+#fft_imag = []
+#                       
+#for x in range(0, len(fftr0)):
+#    fft_real.extend(
+#        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
+#            
+#for x in range(0, len(ffti0)):
+#    fft_imag.extend(
+#        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
+#            
+#fftdir_cmplx_f0 = fft_real + np.multiply(fft_imag, 1j)
+#
+#print len(fftdir_cmplx_f0)
+#
+#filename = fftdir_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in fftdir_cmplx_f0:
+#        filehandle.write('%s\n' % listitem) 
+#        
+#        
+## -- FHost 1
+#fhost_num = 1
+#
+#fftdir_snap = f1.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.read(arm=False)['data']
+#fftdir_snap1 = f1.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.read(arm=False)['data']
+#
+#fftr0 = fftdir_snap['real0']
+#ffti0 = fftdir_snap['imag0']
+#fftr1 = fftdir_snap['real1']
+#ffti1 = fftdir_snap['imag1']
+#
+#fftr2 = fftdir_snap1['real2']
+#ffti2 = fftdir_snap1['imag2']
+#fftr3 = fftdir_snap1['real3']
+#ffti3 = fftdir_snap1['imag3']
+#
+#fft_real = []
+#fft_imag = []
+#                       
+#for x in range(0, len(fftr0)):
+#    fft_real.extend(
+#        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
+#            
+#for x in range(0, len(ffti0)):
+#    fft_imag.extend(
+#        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
+#            
+#fftdir_cmplx_f1 = fft_real + np.multiply(fft_imag, 1j)
+#
+#print len(fftdir_cmplx_f1)
+#
+#filename = fftdir_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in fftdir_cmplx_f1:
+#        filehandle.write('%s\n' % listitem)         
+#        
+#
+## -- FHost 2
+#fhost_num = 2
+#
+#fftdir_snap = f2.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.read(arm=False)['data']
+#fftdir_snap1 = f2.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.read(arm=False)['data']
+#
+#fftr0 = fftdir_snap['real0']
+#ffti0 = fftdir_snap['imag0']
+#fftr1 = fftdir_snap['real1']
+#ffti1 = fftdir_snap['imag1']
+#
+#fftr2 = fftdir_snap1['real2']
+#ffti2 = fftdir_snap1['imag2']
+#fftr3 = fftdir_snap1['real3']
+#ffti3 = fftdir_snap1['imag3']
+#
+#fft_real = []
+#fft_imag = []
+#                       
+#for x in range(0, len(fftr0)):
+#    fft_real.extend(
+#        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
+#            
+#for x in range(0, len(ffti0)):
+#    fft_imag.extend(
+#        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
+#            
+#fftdir_cmplx_f2 = fft_real + np.multiply(fft_imag, 1j)
+#
+#print len(fftdir_cmplx_f2)
+#
+#filename = fftdir_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in fftdir_cmplx_f2:
+#        filehandle.write('%s\n' % listitem)    
+#
+#
+## -- FHost 3
+#fhost_num = 3
+#
+#fftdir_snap = f3.snapshots.pfb_fft_wideband_real_snap_fftdir_ss.read(arm=False)['data']
+#fftdir_snap1 = f3.snapshots.pfb_fft_wideband_real_snap_fftdir1_ss.read(arm=False)['data']
+#
+#fftr0 = fftdir_snap['real0']
+#ffti0 = fftdir_snap['imag0']
+#fftr1 = fftdir_snap['real1']
+#ffti1 = fftdir_snap['imag1']
+#
+#fftr2 = fftdir_snap1['real2']
+#ffti2 = fftdir_snap1['imag2']
+#fftr3 = fftdir_snap1['real3']
+#ffti3 = fftdir_snap1['imag3']
+#
+#fft_real = []
+#fft_imag = []
+#                       
+#for x in range(0, len(fftr0)):
+#    fft_real.extend(
+#        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
+#            
+#for x in range(0, len(ffti0)):
+#    fft_imag.extend(
+#        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
+#            
+#fftdir_cmplx_f3 = fft_real + np.multiply(fft_imag, 1j)
+#
+#print len(fftdir_cmplx_f3)
+#
+#filename = fftdir_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in fftdir_cmplx_f3:
+#        filehandle.write('%s\n' % listitem)   
 
 
 ##=============================================================================
-print ' ' 
-print 'Grabbing FFT SS'   
-
-# -- FHost 0
-fhost_num = 0
-#fft_snap = f0.snapshots.pfb_snap_fft_out_ss.read()['data'] 
-fft_snap = f0.snapshots.pfb_snap_fft_out_ss.read(arm=False)['data']
-fft_snap1 = f0.snapshots.pfb_snap_fft_out1_ss.read(arm=False)['data']
-
-fftr0 = fft_snap['real0']
-ffti0 = fft_snap['imag0']
-fftr1 = fft_snap['real1']
-ffti1 = fft_snap['imag1']
-
-fftr2 = fft_snap1['real2']
-ffti2 = fft_snap1['imag2']
-fftr3 = fft_snap1['real3']
-ffti3 = fft_snap1['imag3']
-           
-fft_real = []
-fft_imag = []
-                       
-for x in range(0, len(fftr0)):
-    fft_real.extend(
-        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
-            
-for x in range(0, len(ffti0)):
-    fft_imag.extend(
-        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
-            
-fft_complx_f0 = fft_real + np.multiply(fft_imag, 1j)
-
-print len(fft_complx_f0)
-
-#with open('fft_2018_0.txt', 'w') as filehandle:
+#print ' ' 
+#print 'Grabbing FFT SS'   
+#
+## -- FHost 0
+#fhost_num = 0
+##fft_snap = f0.snapshots.pfb_snap_fft_out_ss.read()['data'] 
+#fft_snap = f0.snapshots.pfb_snap_fft_out_ss.read(arm=False)['data']
+#fft_snap1 = f0.snapshots.pfb_snap_fft_out1_ss.read(arm=False)['data']
+#
+#fftr0 = fft_snap['real0']
+#ffti0 = fft_snap['imag0']
+#fftr1 = fft_snap['real1']
+#ffti1 = fft_snap['imag1']
+#
+#fftr2 = fft_snap1['real2']
+#ffti2 = fft_snap1['imag2']
+#fftr3 = fft_snap1['real3']
+#ffti3 = fft_snap1['imag3']
+#           
+#fft_real = []
+#fft_imag = []
+#                       
+#for x in range(0, len(fftr0)):
+#    fft_real.extend(
+#        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
+#            
+#for x in range(0, len(ffti0)):
+#    fft_imag.extend(
+#        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
+#            
+#fft_complx_f0 = fft_real + np.multiply(fft_imag, 1j)
+#
+#print len(fft_complx_f0)
+#
+##with open('fft_2018_0.txt', 'w') as filehandle:
+##    for listitem in fft_complx_f0:
+##        filehandle.write('%s\n' % listitem)
+#
+#filename = fft_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
 #    for listitem in fft_complx_f0:
-#        filehandle.write('%s\n' % listitem)
-
-filename = fft_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in fft_complx_f0:
-        filehandle.write('%s\n' % listitem)   
-
-# -- FHost 1
-fhost_num = 1
-fft_snap = f1.snapshots.pfb_snap_fft_out_ss.read(arm=False)['data']
-fft_snap1 = f1.snapshots.pfb_snap_fft_out1_ss.read(arm=False)['data']
-
-fftr0 = fft_snap['real0']
-ffti0 = fft_snap['imag0']
-fftr1 = fft_snap['real1']
-ffti1 = fft_snap['imag1']
-
-fftr2 = fft_snap1['real2']
-ffti2 = fft_snap1['imag2']
-fftr3 = fft_snap1['real3']
-ffti3 = fft_snap1['imag3']
-
-           
-fft_real = []
-fft_imag = []
-                       
-for x in range(0, len(fftr0)):
-    fft_real.extend(
-        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
-            
-for x in range(0, len(ffti0)):
-    fft_imag.extend(
-        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
-            
-fft_complx_f1 = fft_real + np.multiply(fft_imag, 1j)
-
-print len(fft_complx_f1)
-
-#with open('fft_2018_1.txt', 'w') as filehandle:
+#        filehandle.write('%s\n' % listitem)   
+#
+## -- FHost 1
+#fhost_num = 1
+#fft_snap = f1.snapshots.pfb_snap_fft_out_ss.read(arm=False)['data']
+#fft_snap1 = f1.snapshots.pfb_snap_fft_out1_ss.read(arm=False)['data']
+#
+#fftr0 = fft_snap['real0']
+#ffti0 = fft_snap['imag0']
+#fftr1 = fft_snap['real1']
+#ffti1 = fft_snap['imag1']
+#
+#fftr2 = fft_snap1['real2']
+#ffti2 = fft_snap1['imag2']
+#fftr3 = fft_snap1['real3']
+#ffti3 = fft_snap1['imag3']
+#
+#           
+#fft_real = []
+#fft_imag = []
+#                       
+#for x in range(0, len(fftr0)):
+#    fft_real.extend(
+#        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
+#            
+#for x in range(0, len(ffti0)):
+#    fft_imag.extend(
+#        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
+#            
+#fft_complx_f1 = fft_real + np.multiply(fft_imag, 1j)
+#
+#print len(fft_complx_f1)
+#
+##with open('fft_2018_1.txt', 'w') as filehandle:
+##    for listitem in fft_complx_f1:
+##        filehandle.write('%s\n' % listitem)
+#
+#filename = fft_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
 #    for listitem in fft_complx_f1:
-#        filehandle.write('%s\n' % listitem)
-
-filename = fft_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in fft_complx_f1:
-        filehandle.write('%s\n' % listitem)   
-
-# -- FHost 2
-fhost_num = 2
-fft_snap = f2.snapshots.pfb_snap_fft_out_ss.read(arm=False)['data']
-fft_snap1 = f2.snapshots.pfb_snap_fft_out1_ss.read(arm=False)['data']
-
-fftr0 = fft_snap['real0']
-ffti0 = fft_snap['imag0']
-fftr1 = fft_snap['real1']
-ffti1 = fft_snap['imag1']
-
-fftr2 = fft_snap1['real2']
-ffti2 = fft_snap1['imag2']
-fftr3 = fft_snap1['real3']
-ffti3 = fft_snap1['imag3']
-
-           
-fft_real = []
-fft_imag = []
-                       
-for x in range(0, len(fftr0)):
-    fft_real.extend(
-        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
-            
-for x in range(0, len(ffti0)):
-    fft_imag.extend(
-        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
-            
-fft_complx_f2 = fft_real + np.multiply(fft_imag, 1j)
-
-print len(fft_complx_f2)
-
-filename = fft_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in fft_complx_f2:
-        filehandle.write('%s\n' % listitem)   
-
-# -- FHost 3
-fhost_num = 3
-fft_snap = f3.snapshots.pfb_snap_fft_out_ss.read(arm=False)['data']
-fft_snap1 = f3.snapshots.pfb_snap_fft_out1_ss.read(arm=False)['data']
-
-fftr0 = fft_snap['real0']
-ffti0 = fft_snap['imag0']
-fftr1 = fft_snap['real1']
-ffti1 = fft_snap['imag1']
-
-fftr2 = fft_snap1['real2']
-ffti2 = fft_snap1['imag2']
-fftr3 = fft_snap1['real3']
-ffti3 = fft_snap1['imag3']
-           
-fft_real = []
-fft_imag = []
-                       
-for x in range(0, len(fftr0)):
-    fft_real.extend(
-        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
-            
-for x in range(0, len(ffti0)):
-    fft_imag.extend(
-        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
-            
-fft_complx_f3 = fft_real + np.multiply(fft_imag, 1j)
-
-print len(fft_complx_f3)
-
-filename = fft_filename + build_ver + str(fhost_num) + '.txt'
-print(filename)
-with open(filename, 'w') as filehandle:
-    for listitem in fft_complx_f3:
-        filehandle.write('%s\n' % listitem)   
+#        filehandle.write('%s\n' % listitem)   
+#
+## -- FHost 2
+#fhost_num = 2
+#fft_snap = f2.snapshots.pfb_snap_fft_out_ss.read(arm=False)['data']
+#fft_snap1 = f2.snapshots.pfb_snap_fft_out1_ss.read(arm=False)['data']
+#
+#fftr0 = fft_snap['real0']
+#ffti0 = fft_snap['imag0']
+#fftr1 = fft_snap['real1']
+#ffti1 = fft_snap['imag1']
+#
+#fftr2 = fft_snap1['real2']
+#ffti2 = fft_snap1['imag2']
+#fftr3 = fft_snap1['real3']
+#ffti3 = fft_snap1['imag3']
+#
+#           
+#fft_real = []
+#fft_imag = []
+#                       
+#for x in range(0, len(fftr0)):
+#    fft_real.extend(
+#        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
+#            
+#for x in range(0, len(ffti0)):
+#    fft_imag.extend(
+#        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
+#            
+#fft_complx_f2 = fft_real + np.multiply(fft_imag, 1j)
+#
+#print len(fft_complx_f2)
+#
+#filename = fft_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in fft_complx_f2:
+#        filehandle.write('%s\n' % listitem)   
+#
+## -- FHost 3
+#fhost_num = 3
+#fft_snap = f3.snapshots.pfb_snap_fft_out_ss.read(arm=False)['data']
+#fft_snap1 = f3.snapshots.pfb_snap_fft_out1_ss.read(arm=False)['data']
+#
+#fftr0 = fft_snap['real0']
+#ffti0 = fft_snap['imag0']
+#fftr1 = fft_snap['real1']
+#ffti1 = fft_snap['imag1']
+#
+#fftr2 = fft_snap1['real2']
+#ffti2 = fft_snap1['imag2']
+#fftr3 = fft_snap1['real3']
+#ffti3 = fft_snap1['imag3']
+#           
+#fft_real = []
+#fft_imag = []
+#                       
+#for x in range(0, len(fftr0)):
+#    fft_real.extend(
+#        [fftr0[x], fftr1[x], fftr2[x], fftr3[x]])
+#            
+#for x in range(0, len(ffti0)):
+#    fft_imag.extend(
+#        [ffti0[x], ffti1[x], ffti2[x], ffti3[x]])
+#            
+#fft_complx_f3 = fft_real + np.multiply(fft_imag, 1j)
+#
+#print len(fft_complx_f3)
+#
+#filename = fft_filename + build_ver + str(fhost_num) + '.txt'
+#print(filename)
+#with open(filename, 'w') as filehandle:
+#    for listitem in fft_complx_f3:
+#        filehandle.write('%s\n' % listitem)   
 
 ##==============================================================================
 #print ' ' 
@@ -1554,16 +1797,16 @@ print 'FHost 3'
 print f3.registers.sync_count.read()
 print ' '
 
-print 'CD Sync Count'
-print 'FHost 0'
-print f0.registers.cd_sync_count.read()
-print 'FHost 1'
-print f1.registers.cd_sync_count.read()
-print 'FHost 2'
-print f2.registers.cd_sync_count.read()
-print 'FHost 3'
-print f3.registers.cd_sync_count.read()
-print ' '
+#print 'CD Sync Count'
+#print 'FHost 0'
+#print f0.registers.cd_sync_count.read()
+#print 'FHost 1'
+#print f1.registers.cd_sync_count.read()
+#print 'FHost 2'
+#print f2.registers.cd_sync_count.read()
+#print 'FHost 3'
+#print f3.registers.cd_sync_count.read()
+#print ' '
 
 print 'PFB Sync Count'
 print 'FHost 0'
@@ -1576,7 +1819,7 @@ print 'FHost 3'
 print f3.registers.pfb_sync_count.read()
 print ' '
 
-d = skarab()
+
 
 # ADC Diff
 print '------------- *** ADC Diff ***  -------------'
@@ -1593,53 +1836,53 @@ d.board_ss_diff(adc0_f1,adc0_f3)
 print 'ADC Diff 2-3'
 d.board_ss_diff(adc0_f2,adc0_f3)
 
-# CD Diff
-print '------------- *** CD Diff ***  -------------'
-print 'CD Diff 0-1'
-d.board_ss_diff(cd_f0,cd_f1)
-print 'CD Diff 0-2'
-d.board_ss_diff(cd_f0,cd_f2)
-print 'CD Diff 0-3'
-d.board_ss_diff(cd_f0,cd_f3)
-print 'CD Diff 1-2'
-d.board_ss_diff(cd_f1,cd_f2)
-print 'CD Diff 1-3'
-d.board_ss_diff(cd_f1,cd_f3)
-print 'CD Diff 2-3'
-d.board_ss_diff(cd_f2,cd_f3)
+## CD Diff
+#print '------------- *** CD Diff ***  -------------'
+#print 'CD Diff 0-1'
+#d.board_ss_diff(cd_f0,cd_f1)
+#print 'CD Diff 0-2'
+#d.board_ss_diff(cd_f0,cd_f2)
+#print 'CD Diff 0-3'
+#d.board_ss_diff(cd_f0,cd_f3)
+#print 'CD Diff 1-2'
+#d.board_ss_diff(cd_f1,cd_f2)
+#print 'CD Diff 1-3'
+#d.board_ss_diff(cd_f1,cd_f3)
+#print 'CD Diff 2-3'
+#d.board_ss_diff(cd_f2,cd_f3)
 
 
 
-# FIR Int Diff
-print '------------- *** FIR Coeff Diff ***  -------------'
-print 'FIR Coeff Diff 0-1'
-d.board_ss_diff(coeff_f0,coeff_f1)
-print 'FIR Coeff Diff 0-2'
-d.board_ss_diff(coeff_f0,coeff_f2)
-print 'FIR Coeff Diff 0-3'
-d.board_ss_diff(coeff_f0,coeff_f3)
-print 'FIR Coeff Diff 1-2'
-d.board_ss_diff(coeff_f1,coeff_f2)
-print 'FIR Coeff Diff 1-3'
-d.board_ss_diff(coeff_f1,coeff_f3)
-print 'FIR Coeff Diff 2-3'
-d.board_ss_diff(coeff_f2,coeff_f3)
-
-
-# FIR Int Diff
-print '-------------  *** FIR Int Diff ***  -------------'
-print 'FIR Int Diff 0-1'
-d.board_ss_diff(fir_int_f0,fir_int_f1)
-print 'FIR Int Diff 0-2'
-d.board_ss_diff(fir_int_f0,fir_int_f2)
-print 'FIR Int Diff 0-3'
-d.board_ss_diff(fir_int_f0,fir_int_f3)
-print 'FIR Int Diff 1-2'
-d.board_ss_diff(fir_int_f1,fir_int_f2)
-print 'FIR Int Diff 1-3'
-d.board_ss_diff(fir_int_f1,fir_int_f3)
-print 'FIR Int Diff 2-3'
-d.board_ss_diff(fir_int_f2,fir_int_f3)
+## FIR Coeff Diff
+#print '------------- *** FIR Coeff Diff ***  -------------'
+#print 'FIR Coeff Diff 0-1'
+#d.board_ss_diff(coeff_f0,coeff_f1)
+#print 'FIR Coeff Diff 0-2'
+#d.board_ss_diff(coeff_f0,coeff_f2)
+#print 'FIR Coeff Diff 0-3'
+#d.board_ss_diff(coeff_f0,coeff_f3)
+#print 'FIR Coeff Diff 1-2'
+#d.board_ss_diff(coeff_f1,coeff_f2)
+#print 'FIR Coeff Diff 1-3'
+#d.board_ss_diff(coeff_f1,coeff_f3)
+#print 'FIR Coeff Diff 2-3'
+#d.board_ss_diff(coeff_f2,coeff_f3)
+#
+#
+## FIR Int Diff
+#print '-------------  *** FIR Int Diff ***  -------------'
+#print 'FIR Int Diff 0-1'
+#d.board_ss_diff(fir_int_f0,fir_int_f1)
+#print 'FIR Int Diff 0-2'
+#d.board_ss_diff(fir_int_f0,fir_int_f2)
+#print 'FIR Int Diff 0-3'
+#d.board_ss_diff(fir_int_f0,fir_int_f3)
+#print 'FIR Int Diff 1-2'
+#d.board_ss_diff(fir_int_f1,fir_int_f2)
+#print 'FIR Int Diff 1-3'
+#d.board_ss_diff(fir_int_f1,fir_int_f3)
+#print 'FIR Int Diff 2-3'
+#d.board_ss_diff(fir_int_f2,fir_int_f3)
 
 # FIR Out Diff
 print '-------------  *** FIR Out Diff ***   -------------'
@@ -1656,18 +1899,54 @@ d.board_ss_diff(fir_f1,fir_f3)
 print 'FIR Out Diff 2-3'
 d.board_ss_diff(fir_f2,fir_f3)
 
-# FFT Out Diff
-print '-------------  *** FFT Out Diff ***   -------------'
-print 'FFT Out Diff 0-1'
-d.board_ss_diff(fft_complx_f0,fft_complx_f1)
-print 'FFT Out Diff 0-2'
-d.board_ss_diff(fft_complx_f0,fft_complx_f2)
-print 'FFT Out Diff 0-3'
-d.board_ss_diff(fft_complx_f0,fft_complx_f3)
-print 'FFT Out Diff 1-2'
-d.board_ss_diff(fft_complx_f1,fft_complx_f2)
-print 'FFT Out Diff 1-3'
-d.board_ss_diff(fft_complx_f1,fft_complx_f3)
-print 'FFT Out Diff 2-3'
-d.board_ss_diff(fft_complx_f2,fft_complx_f3)
+
+
+# FFT BP Diff
+print '-------------  *** FFT BP Diff ***   -------------'
+print 'FFT BP Diff 0-1'
+d.board_ss_diff(fftbp_cmplx_f0,fftbp_cmplx_f1)
+print 'FFT BP Diff 0-2'
+d.board_ss_diff(fftbp_cmplx_f0,fftbp_cmplx_f2)
+print 'FFT BP Diff 0-3'
+d.board_ss_diff(fftbp_cmplx_f0,fftbp_cmplx_f3)
+print 'FFT BP Diff 1-2'
+d.board_ss_diff(fftbp_cmplx_f1,fftbp_cmplx_f2)
+print 'FFT BP Diff 1-3'
+d.board_ss_diff(fftbp_cmplx_f1,fftbp_cmplx_f3)
+print 'FFT BP Diff 2-3'
+d.board_ss_diff(fftbp_cmplx_f2,fftbp_cmplx_f3)
+
+
+
+## FFT Dir Diff
+#print '-------------  *** FFT Dir Diff ***   -------------'
+#print 'FFT Dir Diff 0-1'
+#d.board_ss_diff(fftdir_cmplx_f0,fftdir_cmplx_f1)
+#print 'FFT Dir Diff 0-2'
+#d.board_ss_diff(fftdir_cmplx_f0,fftdir_cmplx_f2)
+#print 'FFT Dir Diff 0-3'
+#d.board_ss_diff(fftdir_cmplx_f0,fftdir_cmplx_f3)
+#print 'FFT Dir Diff 1-2'
+#d.board_ss_diff(fftdir_cmplx_f1,fftdir_cmplx_f2)
+#print 'FFT Dir Diff 1-3'
+#d.board_ss_diff(fftdir_cmplx_f1,fftdir_cmplx_f3)
+#print 'FFT Dir Diff 2-3'
+#d.board_ss_diff(fftdir_cmplx_f2,fftdir_cmplx_f3)
+
+
+
+## FFT Out Diff
+#print '-------------  *** FFT Out Diff ***   -------------'
+#print 'FFT Out Diff 0-1'
+#d.board_ss_diff(fft_complx_f0,fft_complx_f1)
+#print 'FFT Out Diff 0-2'
+#d.board_ss_diff(fft_complx_f0,fft_complx_f2)
+#print 'FFT Out Diff 0-3'
+#d.board_ss_diff(fft_complx_f0,fft_complx_f3)
+#print 'FFT Out Diff 1-2'
+#d.board_ss_diff(fft_complx_f1,fft_complx_f2)
+#print 'FFT Out Diff 1-3'
+#d.board_ss_diff(fft_complx_f1,fft_complx_f3)
+#print 'FFT Out Diff 2-3'
+#d.board_ss_diff(fft_complx_f2,fft_complx_f3)
 
