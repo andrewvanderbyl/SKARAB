@@ -19,7 +19,7 @@ tvg_offset = 0
 tvg_amp = 1
 
 # For file generation
-build_ver =  '2018_'
+build_ver =  '2019_'
 adc_filename = 'adc_'
 cd_filename = 'cd_' 
 coeff_filename = 'coeff_'
@@ -2464,20 +2464,20 @@ class skarab:
         fftr1_in = fftbp_unscr_buf0_in_snap['b0_in2']
         ffti1_in = fftbp_unscr_buf0_in_snap['b0_in3']
         
-        fftr2_in = fftbp_unscr_buf1_in_snap['b0_in0']
-        ffti2_in = fftbp_unscr_buf1_in_snap['b0_in1']
-        fftr3_in = fftbp_unscr_buf1_in_snap['b0_in2']
-        ffti3_in = fftbp_unscr_buf1_in_snap['b0_in3']
+        fftr2_in = fftbp_unscr_buf1_in_snap['b1_in0']
+        ffti2_in = fftbp_unscr_buf1_in_snap['b1_in1']
+        fftr3_in = fftbp_unscr_buf1_in_snap['b1_in2']
+        ffti3_in = fftbp_unscr_buf1_in_snap['b1_in3']
 
-        fftr0_out = fftbp_unscr_buf0_in_snap['b0_out0']
-        ffti0_out = fftbp_unscr_buf0_in_snap['b0_out1']
-        fftr1_out = fftbp_unscr_buf0_in_snap['b0_out2']
-        ffti1_out = fftbp_unscr_buf0_in_snap['b0_out3']
+        fftr0_out = fftbp_unscr_buf0_out_snap['b0_out0']
+        ffti0_out = fftbp_unscr_buf0_out_snap['b0_out1']
+        fftr1_out = fftbp_unscr_buf0_out_snap['b0_out2']
+        ffti1_out = fftbp_unscr_buf0_out_snap['b0_out3']
         
-        fftr2_out = fftbp_unscr_buf1_in_snap['b1_out0']
-        ffti2_out = fftbp_unscr_buf1_in_snap['b1_out1']
-        fftr3_out = fftbp_unscr_buf1_in_snap['b1_out2']
-        ffti3_out = fftbp_unscr_buf1_in_snap['b1_out3']
+        fftr2_out = fftbp_unscr_buf1_out_snap['b1_out0']
+        ffti2_out = fftbp_unscr_buf1_out_snap['b1_out1']
+        fftr3_out = fftbp_unscr_buf1_out_snap['b1_out2']
+        ffti3_out = fftbp_unscr_buf1_out_snap['b1_out3']
        
         buf_sync_in = fftbp_unscr_buf0_in_snap['sync_in']
         buf_dv_in = fftbp_unscr_buf0_in_snap['dv_in']
@@ -3881,25 +3881,25 @@ f3.snapshots.pfb_fft_bi_bi_real_unscr_4x_ss_hil3_ss.arm(man_trig=False, man_vali
 
 
 # FFT BP Buffer
-f0.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf00_ss.arm(man_trig=False, man_valid=True)  
-f1.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf00_ss.arm(man_trig=False, man_valid=True)  
-f2.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf00_ss.arm(man_trig=False, man_valid=True)  
-f3.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf00_ss.arm(man_trig=False, man_valid=True)  
-
-f0.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf01_ss.arm(man_trig=False, man_valid=True)  
-f1.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf01_ss.arm(man_trig=False, man_valid=True)  
-f2.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf01_ss.arm(man_trig=False, man_valid=True)  
-f3.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf01_ss.arm(man_trig=False, man_valid=True)  
-
-f0.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf10_ss.arm(man_trig=False, man_valid=True)  
-f1.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf10_ss.arm(man_trig=False, man_valid=True)  
-f2.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf10_ss.arm(man_trig=False, man_valid=True)  
-f3.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf10_ss.arm(man_trig=False, man_valid=True)  
-
-f0.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf11_ss.arm(man_trig=False, man_valid=True)  
-f1.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf11_ss.arm(man_trig=False, man_valid=True)  
-f2.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf11_ss.arm(man_trig=False, man_valid=True)  
-f3.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf11_ss.arm(man_trig=False, man_valid=True)  
+#f0.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf0_in_ss.arm(man_trig=False, man_valid=True)  
+#f1.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf0_in_ss.arm(man_trig=False, man_valid=True)  
+#f2.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf0_in_ss.arm(man_trig=False, man_valid=True)  
+#f3.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf0_in_ss.arm(man_trig=False, man_valid=True)  
+#
+#f0.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf1_in_ss.arm(man_trig=False, man_valid=True)  
+#f1.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf1_in_ss.arm(man_trig=False, man_valid=True)  
+#f2.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf1_in_ss.arm(man_trig=False, man_valid=True)  
+#f3.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf1_in_ss.arm(man_trig=False, man_valid=True)  
+#
+#f0.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf0_out_ss.arm(man_trig=False, man_valid=True)  
+#f1.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf0_out_ss.arm(man_trig=False, man_valid=True)  
+#f2.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf0_out_ss.arm(man_trig=False, man_valid=True)  
+#f3.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf0_out_ss.arm(man_trig=False, man_valid=True)  
+#
+#f0.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf1_out_ss.arm(man_trig=False, man_valid=True)  
+#f1.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf1_out_ss.arm(man_trig=False, man_valid=True)  
+#f2.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf1_out_ss.arm(man_trig=False, man_valid=True)  
+#f3.snapshots.pfb_fft_bi_bi_real_unscr_4x_buf1_out_ss.arm(man_trig=False, man_valid=True)  
 
 
 
@@ -3980,9 +3980,9 @@ d = skarab()
 
 #d.fft_bp_unscramble_hilbert_internal_convert_diff()
 
-#d.fft_bp_unscramble_hilbert_split_diff()
+d.fft_bp_unscramble_hilbert_split_diff()
 
-d.fft_bp_unscramble_buffer()
+#d.fft_bp_unscramble_buffer()
 
 
 #d.fft_bp_unscramble_hilbert_diff()
