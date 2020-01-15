@@ -1,3 +1,4 @@
+[Coeff_string] = coeff_to_string_convert(Coeff) 
 %Take Coeff variable in worspace and make a string inserting commas between
 %values.
 c = [sprintf('%.6f',Coeffs(1,1)),','];
