@@ -23,7 +23,7 @@ for fhost in range(len(c.fhosts)):
 for i in range(10):
    
     c.fops.sys_reset()
-    time.sleep(2)
+    time.sleep(4)
     
     _ = system('clear')
 
@@ -36,22 +36,38 @@ for i in range(10):
     proc_msw = []
     proc_lsw = []
 
+    sync_status = []
+    sync_time_cd_count = []
+    sync_time_ddc_count = []
+    sync_time_pfb_count = []
+    sync_time_ct_count = []
+
+    cd_sync_count = []
+    ddc_in_sync_count = []
+    ddc_out_sync_count = []
+    fft_sync_count = []
+    pfb_sync_count = []
+    quant_sync_count = []
+    ct_sync_count = []
+
     for fhost in range(len(c.fhosts)):
-        print(c.fhosts[fhost].registers.sync_status0.read()['data'])
+        # Grab Sync Count
+        cd_sync_count.append(c.fhosts[fhost].registers.cd_sync_cnt.read()['data']['reg']) 
+        ddc_in_sync_count.append(c.fhosts[fhost].registers.DDC_ddc_in_sync_cnt.read()['data']['reg'])
+        ddc_out_sync_count.append(c.fhosts[fhost].registers.DDC_ddc_out_sync_cnt.read()['data']['reg'])
+        fft_sync_count.append(c.fhosts[fhost].registers.nb_pfb_fft_sync_cnt.read()['data']['reg'])        
+        pfb_sync_count.append(c.fhosts[fhost].registers.pfb_sync_cnt.read()['data']['reg']) 
+        quant_sync_count.append(c.fhosts[fhost].registers.quant_sync_cnt.read()['data']['reg']) 
+        ct_sync_count.append(c.fhosts[fhost].registers.ct_sync_cnt.read()['data']['sync_out']) 
 
-        # print('CD Sync Count:')
-        # print(c.fhosts[fhost].registers.sync_time_cd_count.read()['data'])
+        # Grab Sync Latency
+        sync_status.append(c.fhosts[fhost].registers.sync_status0.read()['data'])
+        sync_time_cd_count.append(c.fhosts[fhost].registers.sync_time_cd_count.read()['data'])
+        sync_time_ddc_count.append(c.fhosts[fhost].registers.sync_time_ddc_count.read()['data'])
+        sync_time_pfb_count.append(c.fhosts[fhost].registers.sync_time_pfb_count.read()['data'])
+        sync_time_ct_count.append(c.fhosts[fhost].registers.sync_time_ct_count.read()['data'])
 
-        # print('DDC Sync Count:')
-        # print(c.fhosts[fhost].registers.sync_time_pfb_count1.read()['data'])
-
-        # print('PFB Sync Count:')
-        # print(c.fhosts[fhost].registers.sync_time_pfb_count.read()['data'])
-
-        # print('CT Sync Count:')
-        # print(c.fhosts[fhost].registers.sync_time_ct_count.read()['data'])
-
-
+        # Grab Sync Time Gen
         hmc_in_msw.append(c.fhosts[fhost].registers.hmc_ct_sync_time_hmc_in_msw.read()['data']['msw'])
         hmc_in_lsw.append(c.fhosts[fhost].registers.hmc_ct_sync_time_hmc_in_lsw.read()['data']['lsw'])
 
@@ -65,6 +81,55 @@ for i in range(10):
         proc_lsw.append(c.fhosts[fhost].registers.hmc_ct_obuf_sync_time_proc_lsw.read()['data']['lsw'])
 
     #-----------------------------------------------------------------------
+    print(' *** Register Poll ***')
+    print('--------------------- ')
+    print(' ')
+
+    print('Sync Status:')      
+    for fhost in range(len(c.fhosts)):
+        print(sync_status[fhost])
+    print('-----------------------------------------------------------------------')
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CD Sync Count: FHost{0}:{1}".format(fhost,cd_sync_count[fhost]))
+
+    for fhost in range(len(c.fhosts)):
+        print("DDC In Sync Count: FHost{0}:{1}".format(fhost,ddc_in_sync_count[fhost]))
+        
+    for fhost in range(len(c.fhosts)):
+        print("DDC Out Sync Count: FHost{0}:{1}".format(fhost,ddc_out_sync_count[fhost]))
+
+    for fhost in range(len(c.fhosts)):
+        print("FFT Out Sync Count: FHost{0}:{1}".format(fhost,fft_sync_count[fhost]))
+
+    for fhost in range(len(c.fhosts)):
+        print("PFB Sync Count: FHost{0}:{1}".format(fhost,pfb_sync_count[fhost])) 
+
+    for fhost in range(len(c.fhosts)):
+        print("Quant Sync Count: FHost{0}:{1}".format(fhost,quant_sync_count[fhost])) 
+
+    for fhost in range(len(c.fhosts)):
+        print("CT Sync Count: FHost{0}:{1}".format(fhost,ct_sync_count[fhost])) 
+
+    print('-----------------------------------------------------------------------')
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CD Sync Latency: FHost{0}:{1}".format(fhost,sync_time_cd_count[fhost])) 
+    
+    for fhost in range(len(c.fhosts)):
+        print("DDC Sync Latency: FHost{0}:{1}".format(fhost,sync_time_ddc_count[fhost])) 
+    
+    for fhost in range(len(c.fhosts)):
+        print("PFB Sync Latency: FHost{0}:{1}".format(fhost,sync_time_pfb_count[fhost])) 
+
+    for fhost in range(len(c.fhosts)):
+        print("CT Sync Latency: FHost{0}:{1}".format(fhost,sync_time_ct_count[fhost])) 
+
+
+    print('-----------------------------------------------------------------------')
+    print(' ')
 
     print('HMC In:')
     hmc_in_time_diff = []
@@ -84,7 +149,6 @@ for i in range(10):
             hmc_in_time_diff_temp = np.add(np.abs(hmc_in_msw_diff_temp)<<32, np.abs(hmc_in_lsw_diff_temp))
             hmc_in_time_diff.append(hmc_in_time_diff_temp)
             print("Diff: FHost{0} - FHost{1} is:{2}".format(r, (r+n+1), hmc_in_time_diff_temp))
-
 
     print('HMC Out:')
     hmc_out_time_diff = []
