@@ -4,133 +4,308 @@ import matplotlib.pyplot as plt
 from IPython import embed
 from os import system
 
-hosts = ['skarab020a03-01','skarab020918-01','skarab02091b-01','skarab020A45-01']
+dash = '-' * 40
 
-print(hosts)
+print(' *** Register Poll ***')
+print('----------------------')
+print(' ')
 
 c=corr2.fxcorrelator.FxCorrelator('bob',config_source='/etc/corr/avdbyl_nb_107_32k.ini')
 c.initialise(program=False,configure=False,require_epoch=False)
 
-
-f0 = c.fhosts[0]
-f1 = c.fhosts[1]
-f2 = c.fhosts[2]
-f3 = c.fhosts[3]
-
-for fhost in range(len(c.fhosts)):
-    c.fhosts[fhost].registers.control.write(cnt_rst='pulse')
-
-for i in range(10):
-   
-    c.fops.sys_reset()
-    time.sleep(4)
-    
-    _ = system('clear')
-
-    hmc_in_msw = []
-    hmc_in_lsw = []
-    hmc_out_msw = []
-    hmc_out_lsw = []
-    hmc_int_msw = []
-    hmc_int_lsw = []
-    proc_msw = []
-    proc_lsw = []
-
-    sync_status = []
-    sync_time_cd_count = []
-    sync_time_ddc_count = []
-    sync_time_pfb_count = []
-    sync_time_ct_count = []
-
-    cd_sync_count = []
-    ddc_in_sync_count = []
-    ddc_out_sync_count = []
-    fft_sync_count = []
-    pfb_sync_count = []
-    quant_sync_count = []
-    ct_sync_count = []
-
-    for fhost in range(len(c.fhosts)):
-        # Grab Sync Count
-        cd_sync_count.append(c.fhosts[fhost].registers.cd_sync_cnt.read()['data']['reg']) 
-        ddc_in_sync_count.append(c.fhosts[fhost].registers.DDC_ddc_in_sync_cnt.read()['data']['reg'])
-        ddc_out_sync_count.append(c.fhosts[fhost].registers.DDC_ddc_out_sync_cnt.read()['data']['reg'])
-        fft_sync_count.append(c.fhosts[fhost].registers.nb_pfb_fft_sync_cnt.read()['data']['reg'])        
-        pfb_sync_count.append(c.fhosts[fhost].registers.pfb_sync_cnt.read()['data']['reg']) 
-        quant_sync_count.append(c.fhosts[fhost].registers.quant_sync_cnt.read()['data']['reg']) 
-        ct_sync_count.append(c.fhosts[fhost].registers.ct_sync_cnt.read()['data']['sync_out']) 
-
-        # Grab Sync Latency
-        sync_status.append(c.fhosts[fhost].registers.sync_status0.read()['data'])
-        sync_time_cd_count.append(c.fhosts[fhost].registers.sync_time_cd_count.read()['data'])
-        sync_time_ddc_count.append(c.fhosts[fhost].registers.sync_time_ddc_count.read()['data'])
-        sync_time_pfb_count.append(c.fhosts[fhost].registers.sync_time_pfb_count.read()['data'])
-        sync_time_ct_count.append(c.fhosts[fhost].registers.sync_time_ct_count.read()['data'])
-
-        # Grab Sync Time Gen
-        hmc_in_msw.append(c.fhosts[fhost].registers.hmc_ct_sync_time_hmc_in_msw.read()['data']['msw'])
-        hmc_in_lsw.append(c.fhosts[fhost].registers.hmc_ct_sync_time_hmc_in_lsw.read()['data']['lsw'])
-
-        hmc_out_msw.append(c.fhosts[fhost].registers.hmc_ct_sync_time_hmc_out_msw.read()['data']['msw'])
-        hmc_out_lsw.append(c.fhosts[fhost].registers.hmc_ct_sync_time_hmc_out_lsw.read()['data']['lsw'])
-
-        hmc_int_msw.append(c.fhosts[fhost].registers.hmc_ct_obuf_sync_time_hmc_msw.read()['data']['msw'])
-        hmc_int_lsw.append(c.fhosts[fhost].registers.hmc_ct_obuf_sync_time_hmc_lsw.read()['data']['lsw'])
-
-        proc_msw.append(c.fhosts[fhost].registers.hmc_ct_obuf_sync_time_proc_msw.read()['data']['msw'])
-        proc_lsw.append(c.fhosts[fhost].registers.hmc_ct_obuf_sync_time_proc_lsw.read()['data']['lsw'])
-
-    #-----------------------------------------------------------------------
-    print(' *** Register Poll ***')
-    print('--------------------- ')
-    print(' ')
-
+def printSyncStatus():
     print('Sync Status:')      
     for fhost in range(len(c.fhosts)):
         print(sync_status[fhost])
-    print('-----------------------------------------------------------------------')
+    print(dash)
     print(' ')
 
+def printSyncCount():
     for fhost in range(len(c.fhosts)):
         print("CD Sync Count: FHost{0}:{1}".format(fhost,cd_sync_count[fhost]))
+    print(' ')
 
     for fhost in range(len(c.fhosts)):
         print("DDC In Sync Count: FHost{0}:{1}".format(fhost,ddc_in_sync_count[fhost]))
-        
+    print(' ')
+
     for fhost in range(len(c.fhosts)):
         print("DDC Out Sync Count: FHost{0}:{1}".format(fhost,ddc_out_sync_count[fhost]))
+    print(' ')
 
     for fhost in range(len(c.fhosts)):
         print("FFT Out Sync Count: FHost{0}:{1}".format(fhost,fft_sync_count[fhost]))
+    print(' ')
 
     for fhost in range(len(c.fhosts)):
         print("PFB Sync Count: FHost{0}:{1}".format(fhost,pfb_sync_count[fhost])) 
+    print(' ')
 
     for fhost in range(len(c.fhosts)):
         print("Quant Sync Count: FHost{0}:{1}".format(fhost,quant_sync_count[fhost])) 
+    print(' ')
 
     for fhost in range(len(c.fhosts)):
         print("CT Sync Count: FHost{0}:{1}".format(fhost,ct_sync_count[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print('FHost{}:CD Sync Count {:<5}FHost{}:DDC In Sync Count {:<5} FHost{}:DDC Out Sync Count {:<5} FHost{}:FFT Sync Count {:<5} FHost{}:PFB Sync Count {:<5} FHost{}:Quant Sync Count {:<5} FHost{}:CT Sync Count {:< 5}'.format(fhost,cd_sync_count[fhost],\
+        fhost, ddc_in_sync_count[fhost],\
+        fhost,ddc_out_sync_count[fhost],\
+        fhost,fft_sync_count[fhost],\
+        fhost,pfb_sync_count[fhost],\
+        fhost,quant_sync_count[fhost],\
+        fhost,ct_sync_count[fhost]))
+
+    print(dash)
+    print(' ')
+
+def printSyncLatency():
+    # Print out Sync Latencies
+    for fhost in range(len(c.fhosts)):
+        print("TLCD Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_tlcd[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CD Raw Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_raw_cd_hmc[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CD Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_cd_hmc[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("TLBS Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_tlbs[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("BS Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_bs[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("TG DDS Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_tgdds[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("DDS Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_dds[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("Mix Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_mix[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("DecFIR Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_decfir[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("DDC Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_ddc[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("FFT Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_fft[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("FFT ReOrder Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_fft_reorder[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("PFB Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_pfb[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("FD Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_fd[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("Quant Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_quant[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CT Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_ct[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CT In Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_ct_in[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("HMC AddGen Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_hmc_addgen[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("Pack Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_pack[fhost])) 
+    print(' ')
 
     print('-----------------------------------------------------------------------')
     print(' ')
 
-    for fhost in range(len(c.fhosts)):
-        print("CD Sync Latency: FHost{0}:{1}".format(fhost,sync_time_cd_count[fhost])) 
-    
-    for fhost in range(len(c.fhosts)):
-        print("DDC Sync Latency: FHost{0}:{1}".format(fhost,sync_time_ddc_count[fhost])) 
-    
-    for fhost in range(len(c.fhosts)):
-        print("PFB Sync Latency: FHost{0}:{1}".format(fhost,sync_time_pfb_count[fhost])) 
+def printSyncLatencyFreeRunning():
 
+    # Print out Sync Latencies (Free Running)
     for fhost in range(len(c.fhosts)):
-        print("CT Sync Latency: FHost{0}:{1}".format(fhost,sync_time_ct_count[fhost])) 
-
-
-    print('-----------------------------------------------------------------------')
+        print("TLCD Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_tlcd_free[fhost])) 
     print(' ')
 
+    for fhost in range(len(c.fhosts)):
+        print("CD Raw Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_raw_cd_hmc_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CD Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_cd_hmc_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("TLBS Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_tlbs_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("BS Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_bs_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("TG DDS Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_tgdds_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("DDS Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_dds_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("Mix Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_mix_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("DecFIR Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_decfir_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("DDC Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_ddc_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("FFT Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_fft_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("FFT ReOrder Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_fft_reorder_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("PFB Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_pfb_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("FD Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_fd_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("Quant Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_quant_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CT Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_ct_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CT In Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_ct_in_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("HMC AddGen Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_hmc_addgen_free[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("Pack Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_pack_free[fhost])) 
+    print(' ')
+
+    print(dash)
+    print(' ')
+
+def printSyncDataLatch():
+    # Print out Sync Data Latch
+    for fhost in range(len(c.fhosts)):
+        print("TLCD Data Latch: FHost{0}:{1}".format(fhost,sync_latch_tlcd[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CD Raw Data Latch: FHost{0}:{1}".format(fhost,sync_latch_raw_cd_hmc[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CD Data Latch: FHost{0}:{1}".format(fhost,sync_latch_cd_hmc[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("TLBS Data Latch: FHost{0}:{1}".format(fhost,sync_latch_tlbs[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("BS Data Latch: FHost{0}:{1}".format(fhost,sync_latch_bs[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("TG DDS Data Latch: FHost{0}:{1}".format(fhost,sync_latch_tgdds[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("DDS Data Latch: FHost{0}:{1}".format(fhost,sync_latch_dds[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("Mix Data Latch: FHost{0}:{1}".format(fhost,sync_latch_mix[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("DecFIR Data Latch: FHost{0}:{1}".format(fhost,sync_latch_decfir[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("DDC Data Latch: FHost{0}:{1}".format(fhost,sync_latch_ddc[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("FFT Data Latch: FHost{0}:{1}".format(fhost,sync_latch_fft[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("FFT ReOrder Data Latch: FHost{0}:{1}".format(fhost,sync_latch_fft_reorder[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("PFB Data Latch: FHost{0}:{1}".format(fhost,sync_latch_pfb[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("FD Data Latch: FHost{0}:{1}".format(fhost,sync_latch_fd[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("Quant Data Latch: FHost{0}:{1}".format(fhost,sync_latch_quant[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CT Data Latch: FHost{0}:{1}".format(fhost,sync_latch_ct[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CT In Data Latch: FHost{0}:{1}".format(fhost,sync_latch_ct_in[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("CT HMC AddGen Data Latch: FHost{0}:{1}".format(fhost,sync_latch_hmc_addgen[fhost])) 
+    print(' ')
+
+    for fhost in range(len(c.fhosts)):
+        print("Pack Data Latch: FHost{0}:{1}".format(fhost,sync_latch_pack[fhost])) 
+    print(' ')
+
+    print(dash)
+    print(' ')
+
+def printTimeStamps():
     print('HMC In:')
     hmc_in_time_diff = []
 
@@ -209,361 +384,197 @@ for i in range(10):
             proc_time_diff.append(proc_time_diff_temp)
             print("Diff: FHost{0} - FHost{1} is:{2}".format(r, (r+n+1), proc_time_diff_temp))
 
+
+for fhost in range(len(c.fhosts)):
+    # Reset Counters
+    c.fhosts[fhost].registers.control.write(cnt_rst='pulse')
+    # Disable Auto Reset
+    c.fhosts[fhost].registers.control.write(auto_rst_enable=0)
+    
+
+for i in range(2):
+   
+    c.fops.sys_reset()
+    time.sleep(3)
+    
+    _ = system('clear')
+
+    hmc_in_msw = []
+    hmc_in_lsw = []
+    hmc_out_msw = []
+    hmc_out_lsw = []
+    hmc_int_msw = []
+    hmc_int_lsw = []
+    proc_msw = []
+    proc_lsw = []
+
+    sync_status = []
+
+    sync_lat_tlcd = []
+    sync_lat_cd_hmc = []
+    sync_lat_raw_cd_hmc = []
+    sync_lat_tlbs = []
+    sync_lat_bs = []
+    sync_lat_tgdds = []
+    sync_lat_dds = []
+    sync_lat_mix = []
+    sync_lat_decfir = []
+    sync_lat_ddc = []
+    sync_lat_fft = []
+    sync_lat_fft_reorder = []
+    sync_lat_pfb = []
+    sync_lat_fd = []
+    sync_lat_quant = []
+    sync_lat_ct = []
+    sync_lat_ct_in = []
+    sync_lat_hmc_addgen = []
+    sync_lat_pack = []
+
+    sync_lat_tlcd_free = []
+    sync_lat_cd_hmc_free = []
+    sync_lat_raw_cd_hmc_free = []
+    sync_lat_tlbs_free = []
+    sync_lat_bs_free = []
+    sync_lat_tgdds_free = []
+    sync_lat_dds_free = []
+    sync_lat_mix_free = []
+    sync_lat_decfir_free = []   
+    sync_lat_ddc_free = []
+    sync_lat_fft_free = []
+    sync_lat_fft_reorder_free = []    
+    sync_lat_pfb_free = []
+    sync_lat_fd_free = []
+    sync_lat_quant_free = []
+    sync_lat_ct_free = []
+    sync_lat_ct_in_free = []
+    sync_lat_hmc_addgen_free = []    
+    sync_lat_pack_free = []
+
+    sync_latch_tlcd = []
+    sync_latch_cd_hmc = []
+    sync_latch_raw_cd_hmc = []
+    sync_latch_tlbs = []
+    sync_latch_bs = []
+    sync_latch_tgdds = []
+    sync_latch_dds = []
+    sync_latch_mix = []
+    sync_latch_decfir = []
+    sync_latch_ddc = []
+    sync_latch_fft = []
+    sync_latch_fft_reorder = []      
+    sync_latch_pfb = []
+    sync_latch_fd = []
+    sync_latch_quant = []
+    sync_latch_ct = []
+    sync_latch_ct_in = []
+    sync_latch_hmc_addgen = []      
+    sync_latch_pack = []
+
+    cd_sync_count = []
+    ddc_in_sync_count = []
+    ddc_out_sync_count = []
+    fft_sync_count = []
+    pfb_sync_count = []
+    quant_sync_count = []
+    ct_sync_count = []
+
+    for fhost in range(len(c.fhosts)):
+        # Grab Sync Status
+        sync_status.append(c.fhosts[fhost].registers.sync_status0.read()['data'])
+
+        # Grab Sync Count
+        cd_sync_count.append(c.fhosts[fhost].registers.cd_sync_cnt.read()['data']['reg']) 
+        ddc_in_sync_count.append(c.fhosts[fhost].registers.DDC_ddc_in_sync_cnt.read()['data']['reg'])
+        ddc_out_sync_count.append(c.fhosts[fhost].registers.DDC_ddc_out_sync_cnt.read()['data']['reg'])
+        fft_sync_count.append(c.fhosts[fhost].registers.nb_pfb_fft_sync_cnt.read()['data']['reg'])        
+        pfb_sync_count.append(c.fhosts[fhost].registers.pfb_sync_cnt.read()['data']['reg']) 
+        quant_sync_count.append(c.fhosts[fhost].registers.quant_sync_cnt.read()['data']['reg']) 
+        ct_sync_count.append(c.fhosts[fhost].registers.ct_sync_cnt.read()['data']['sync_out']) 
+
+        # Grab Sync Latency
+        sync_lat_tlcd.append(c.fhosts[fhost].registers.sync_lat_tlcd.read()['data'])
+        sync_lat_cd_hmc.append(c.fhosts[fhost].registers.sync_lat_cd_hmc.read()['data'])
+        sync_lat_raw_cd_hmc.append(c.fhosts[fhost].registers.sync_lat_raw_cd_hmc.read()['data'])
+        sync_lat_tlbs.append(c.fhosts[fhost].registers.sync_lat_tlbs.read()['data'])
+        sync_lat_bs.append(c.fhosts[fhost].registers.sync_lat_bs.read()['data'])
+        sync_lat_tgdds.append(c.fhosts[fhost].registers.sync_lat_tgdds.read()['data'])
+        sync_lat_dds.append(c.fhosts[fhost].registers.sync_lat_dds.read()['data'])
+        sync_lat_mix.append(c.fhosts[fhost].registers.DDC_sync_lat_mix.read()['data'])
+        sync_lat_decfir.append(c.fhosts[fhost].registers.DDC_sync_lat_decfir.read()['data'])   
+        sync_lat_ddc.append(c.fhosts[fhost].registers.sync_lat_ddc.read()['data'])
+        sync_lat_fft.append(c.fhosts[fhost].registers.nb_pfb_sync_lat_fft.read()['data'])   
+        sync_lat_fft_reorder.append(c.fhosts[fhost].registers.nb_pfb_sync_lat_fft_reorder.read()['data'])              
+        sync_lat_pfb.append(c.fhosts[fhost].registers.sync_lat_pfb.read()['data'])
+        sync_lat_fd.append(c.fhosts[fhost].registers.sync_lat_fd.read()['data'])
+        sync_lat_quant.append(c.fhosts[fhost].registers.sync_lat_quant.read()['data'])
+        sync_lat_ct.append(c.fhosts[fhost].registers.sync_lat_ct.read()['data'])
+        sync_lat_ct_in.append(c.fhosts[fhost].registers.hmc_ct_sync_lat_ct_in.read()['data'])
+        sync_lat_hmc_addgen.append(c.fhosts[fhost].registers.hmc_ct_sync_lat_hmc_addgen.read()['data'])
+        sync_lat_pack.append(c.fhosts[fhost].registers.sync_lat_pack.read()['data'])
+        
+        # Grab Sync Latency Free Running
+        sync_lat_tlcd_free.append(c.fhosts[fhost].registers.sync_lat_tlcd_free.read()['data'])
+        sync_lat_cd_hmc_free.append(c.fhosts[fhost].registers.sync_lat_cd_hmc_free.read()['data'])
+        sync_lat_raw_cd_hmc_free.append(c.fhosts[fhost].registers.sync_lat_raw_cd_hmc_free.read()['data'])
+        sync_lat_tlbs_free.append(c.fhosts[fhost].registers.sync_lat_tlbs_free.read()['data'])
+        sync_lat_bs_free.append(c.fhosts[fhost].registers.sync_lat_bs_free.read()['data'])
+        sync_lat_tgdds_free.append(c.fhosts[fhost].registers.sync_lat_tgdds_free.read()['data'])
+        sync_lat_dds_free.append(c.fhosts[fhost].registers.sync_lat_dds_free.read()['data'])
+        sync_lat_mix_free.append(c.fhosts[fhost].registers.DDC_sync_lat_mix_free.read()['data'])   
+        sync_lat_decfir_free.append(c.fhosts[fhost].registers.DDC_sync_lat_decfir_free.read()['data'])   
+        sync_lat_ddc_free.append(c.fhosts[fhost].registers.sync_lat_ddc_free.read()['data'])
+        sync_lat_fft_free.append(c.fhosts[fhost].registers.nb_pfb_sync_lat_fft_free.read()['data'])
+        sync_lat_fft_reorder_free.append(c.fhosts[fhost].registers.nb_pfb_sync_lat_fft_reorder_free.read()['data'])              
+        sync_lat_pfb_free.append(c.fhosts[fhost].registers.sync_lat_pfb_free.read()['data'])
+        sync_lat_fd_free.append(c.fhosts[fhost].registers.sync_lat_fd_free.read()['data'])
+        sync_lat_quant_free.append(c.fhosts[fhost].registers.sync_lat_quant_free.read()['data'])
+        sync_lat_ct_free.append(c.fhosts[fhost].registers.sync_lat_ct_free.read()['data'])
+        sync_lat_ct_in_free.append(c.fhosts[fhost].registers.hmc_ct_sync_lat_ct_in_free.read()['data'])
+        sync_lat_hmc_addgen_free.append(c.fhosts[fhost].registers.hmc_ct_sync_lat_hmc_addgen_free.read()['data'])        
+        sync_lat_pack_free.append(c.fhosts[fhost].registers.sync_lat_pack_free.read()['data'])
+
+
+        # Grab Sync Data Latch
+        sync_latch_tlcd.append(c.fhosts[fhost].registers.sync_latch_tlcd.read()['data'])
+        sync_latch_cd_hmc.append(c.fhosts[fhost].registers.sync_latch_cd_hmc.read()['data'])
+        sync_latch_raw_cd_hmc.append(c.fhosts[fhost].registers.sync_latch_raw_cd_hmc.read()['data'])
+        sync_latch_tlbs.append(c.fhosts[fhost].registers.sync_latch_tlbs.read()['data'])
+        sync_latch_bs.append(c.fhosts[fhost].registers.sync_latch_bs.read()['data'])
+        sync_latch_tgdds.append(c.fhosts[fhost].registers.sync_latch_tgdds.read()['data'])
+        sync_latch_dds.append(c.fhosts[fhost].registers.sync_latch_dds.read()['data'])
+        sync_latch_mix.append(c.fhosts[fhost].registers.DDC_sync_latch_mix.read()['data'])
+        sync_latch_decfir.append(c.fhosts[fhost].registers.DDC_sync_latch_decfir.read()['data'])
+        sync_latch_ddc.append(c.fhosts[fhost].registers.sync_latch_ddc.read()['data'])
+        sync_latch_fft.append(c.fhosts[fhost].registers.nb_pfb_sync_latch_fft.read()['data'])
+        sync_latch_fft_reorder.append(c.fhosts[fhost].registers.nb_pfb_sync_latch_fft_reorder.read()['data'])           
+        sync_latch_pfb.append(c.fhosts[fhost].registers.sync_latch_pfb.read()['data'])
+        sync_latch_fd.append(c.fhosts[fhost].registers.sync_latch_fd.read()['data'])
+        sync_latch_quant.append(c.fhosts[fhost].registers.sync_latch_quant.read()['data'])
+        sync_latch_ct.append(c.fhosts[fhost].registers.sync_latch_ct.read()['data'])
+        sync_latch_ct_in.append(c.fhosts[fhost].registers.hmc_ct_sync_latch_ct_in.read()['data'])
+        sync_latch_hmc_addgen.append(c.fhosts[fhost].registers.hmc_ct_sync_latch_hmc_addgen.read()['data'])              
+        sync_latch_pack.append(c.fhosts[fhost].registers.sync_latch_pack.read()['data'])
+
+
+        # Grab Sync Time Gen
+        hmc_in_msw.append(c.fhosts[fhost].registers.hmc_ct_sync_time_hmc_in_msw.read()['data']['msw'])
+        hmc_in_lsw.append(c.fhosts[fhost].registers.hmc_ct_sync_time_hmc_in_lsw.read()['data']['lsw'])
+
+        hmc_out_msw.append(c.fhosts[fhost].registers.hmc_ct_sync_time_hmc_out_msw.read()['data']['msw'])
+        hmc_out_lsw.append(c.fhosts[fhost].registers.hmc_ct_sync_time_hmc_out_lsw.read()['data']['lsw'])
+
+        hmc_int_msw.append(c.fhosts[fhost].registers.hmc_ct_obuf_sync_time_hmc_msw.read()['data']['msw'])
+        hmc_int_lsw.append(c.fhosts[fhost].registers.hmc_ct_obuf_sync_time_hmc_lsw.read()['data']['lsw'])
+
+        proc_msw.append(c.fhosts[fhost].registers.hmc_ct_obuf_sync_time_proc_msw.read()['data']['msw'])
+        proc_lsw.append(c.fhosts[fhost].registers.hmc_ct_obuf_sync_time_proc_lsw.read()['data']['lsw'])
+
+    #-----------------------------------------------------------------------
+    printSyncStatus()
+    printSyncCount()
+    #printSyncLatency()
+    #printSyncLatencyFreeRunning()
+    #printSyncDataLatch()
+
+
     time.sleep(1)
-
-
-
-
-
-# Old Code:
-
-
-
-    # f1_hmc_in_msw = f1.registers.hmc_ct_sync_time_hmc_in_msw.read()['data']['msw']
-    # f1_hmc_in_lsw = f1.registers.hmc_ct_sync_time_hmc_in_lsw.read()['data']['lsw']
-
-    # f1_hmc_out_msw = f1.registers.hmc_ct_sync_time_hmc_out_msw.read()['data']['msw']
-    # f1_hmc_out_lsw = f1.registers.hmc_ct_sync_time_hmc_out_lsw.read()['data']['lsw']
-
-    # f1_hmc_int_msw = f1.registers.hmc_ct_obuf_sync_time_hmc_msw.read()['data']['msw']
-    # f1_hmc_int_lsw = f1.registers.hmc_ct_obuf_sync_time_hmc_lsw.read()['data']['lsw']
-
-    # f1_proc_msw = f1.registers.hmc_ct_obuf_sync_time_proc_msw.read()['data']['msw']
-    # f1_proc_lsw = f1.registers.hmc_ct_obuf_sync_time_proc_lsw.read()['data']['lsw']
-
-    # #-----------------------------------------------------------------------
-
-    # f2_hmc_in_msw = f2.registers.hmc_ct_sync_time_hmc_in_msw.read()['data']['msw']
-    # f2_hmc_in_lsw = f2.registers.hmc_ct_sync_time_hmc_in_lsw.read()['data']['lsw']
-
-    # f2_hmc_out_msw = f2.registers.hmc_ct_sync_time_hmc_out_msw.read()['data']['msw']
-    # f2_hmc_out_lsw = f2.registers.hmc_ct_sync_time_hmc_out_lsw.read()['data']['lsw']
-
-    # f2_hmc_int_msw = f2.registers.hmc_ct_obuf_sync_time_hmc_msw.read()['data']['msw']
-    # f2_hmc_int_lsw = f2.registers.hmc_ct_obuf_sync_time_hmc_lsw.read()['data']['lsw']
-
-    # f2_proc_msw = f2.registers.hmc_ct_obuf_sync_time_proc_msw.read()['data']['msw']
-    # f2_proc_lsw = f2.registers.hmc_ct_obuf_sync_time_proc_lsw.read()['data']['lsw']
-
-    # #-----------------------------------------------------------------------
-
-    # f3_hmc_in_msw = f3.registers.hmc_ct_sync_time_hmc_in_msw.read()['data']['msw']
-    # f3_hmc_in_lsw = f3.registers.hmc_ct_sync_time_hmc_in_lsw.read()['data']['lsw']
-
-    # f3_hmc_out_msw = f3.registers.hmc_ct_sync_time_hmc_out_msw.read()['data']['msw']
-    # f3_hmc_out_lsw = f3.registers.hmc_ct_sync_time_hmc_out_lsw.read()['data']['lsw']
-
-    # f3_hmc_int_msw = f3.registers.hmc_ct_obuf_sync_time_hmc_msw.read()['data']['msw']
-    # f3_hmc_int_lsw = f3.registers.hmc_ct_obuf_sync_time_hmc_lsw.read()['data']['lsw']
-
-    # f3_proc_msw = f3.registers.hmc_ct_obuf_sync_time_proc_msw.read()['data']['msw']
-    # f3_proc_lsw = f3.registers.hmc_ct_obuf_sync_time_proc_lsw.read()['data']['lsw']
-
-
-   # for i in range(len(hmc_in_msw)):
-    #     print('hmc_in_msw:', hmc_in_msw[i])
-    #     print('hmc_in_lsw:',hmc_in_lsw[i])
-    #     print(' ')
-
-    # print('HMC Out:')
-    # for i in range(len(hmc_out_msw)):
-    #     print(hmc_out_msw[i])
-    #     print(hmc_out_lsw[i])
-    #     print(' ')
-
-    # print('Tag Reorder In:')
-    # for i in range(len(hmc_int_msw)):
-    #     print(hmc_int_msw[i])
-    #     print(hmc_int_lsw[i])
-    #     print(' ')
-
-    # print('Tag Reorder Out:')
-    # for i in range(len(proc_msw)):
-    #     print(proc_msw[i])
-    #     print(proc_lsw[i])
-    #     print(' ')
-
-    #print('CT HMC In:')
-    # # print(f0_hmc_in_msw)
-    # # print(f1_hmc_in_msw)
-    # # print(f2_hmc_in_msw)
-    # # print(f3_hmc_in_msw)
-    # # print(f0_hmc_in_lsw)
-    # # print(f1_hmc_in_lsw)
-    # # print(f2_hmc_in_lsw)
-    # # print(f3_hmc_in_lsw)
-    # print(' ')
-    # print(' ')
-
-    # print('HMC Out:')
-    # print(f0_hmc_out_msw)
-    # print(f3_hmc_out_msw)
-    # print(f1_hmc_out_msw)
-    # print(f2_hmc_out_msw)
-    # print(f0_hmc_out_lsw)
-    # print(f1_hmc_out_lsw)
-    # print(f2_hmc_out_lsw)
-    # print(f3_hmc_out_lsw)
-    # print(' ')
-    # print(' ')
-
-    # print('HMC Int:')
-    # print(f0_hmc_int_msw)
-    # print(f1_hmc_int_msw)
-    # print(f2_hmc_int_msw)
-    # print(f3_hmc_int_msw)
-    # print(f0_hmc_int_lsw)
-    # print(f1_hmc_int_lsw)
-    # print(f2_hmc_int_lsw)
-    # print(f3_hmc_int_lsw)
-    # print(' ')
-    # print(' ')
-
-    # print('Proc:')
-    # print(f0_proc_msw)
-    # print(f1_proc_msw)
-    # print(f2_proc_msw)
-    # print(f3_proc_msw)
-    # print(f0_proc_lsw)
-    # print(f1_proc_lsw)
-    # print(f2_proc_lsw)
-    # print(f3_proc_lsw)
-    # print(' ')
-    # print(' ')
-
-    # Compute Diff: HMC in
-    # print('CT HMC In Diff:')
-    # print('---------------')
-    # hmc_in_diff01_msw = f0_hmc_in_msw - f1_hmc_in_msw
-    # hmc_in_diff01_lsw = f0_hmc_in_lsw - f1_hmc_in_lsw
-    # time_hmc_in_diff01 = np.add(np.abs(hmc_in_diff01_msw)<<32, np.abs(hmc_in_diff01_lsw))
-
-    # hmc_in_diff02_msw = f0_hmc_in_msw - f2_hmc_in_msw
-    # hmc_in_diff02_lsw = f0_hmc_in_lsw - f2_hmc_in_lsw
-    # time_hmc_in_diff02 = np.add(np.abs(hmc_in_diff02_msw)<<32, np.abs(hmc_in_diff02_lsw))
-
-    # hmc_in_diff03_msw = f0_hmc_in_msw - f3_hmc_in_msw
-    # hmc_in_diff03_lsw = f0_hmc_in_lsw - f3_hmc_in_lsw
-    # time_hmc_in_diff03 = np.add(np.abs(hmc_in_diff03_msw)<<32, np.abs(hmc_in_diff03_lsw))
-
-    # hmc_in_diff12_msw = f1_hmc_in_msw - f2_hmc_in_msw
-    # hmc_in_diff12_lsw = f1_hmc_in_lsw - f2_hmc_in_lsw
-    # time_hmc_in_diff12 = np.add(np.abs(hmc_in_diff12_msw)<<32, np.abs(hmc_in_diff12_lsw))
-
-    # hmc_in_diff13_msw = f1_hmc_in_msw - f3_hmc_in_msw
-    # hmc_in_diff13_lsw = f1_hmc_in_lsw - f3_hmc_in_lsw
-    # time_hmc_in_diff13 = np.add(np.abs(hmc_in_diff13_msw)<<32, np.abs(hmc_in_diff13_lsw))
-
-    # print('MSW:')
-    # print(hmc_in_diff01_msw)
-    # print(hmc_in_diff02_msw)
-    # print(hmc_in_diff03_msw)
-    # print(hmc_in_diff12_msw)
-    # print(hmc_in_diff13_msw)
-    # print('LSW:')
-    # print(hmc_in_diff01_lsw)
-    # print(hmc_in_diff02_lsw)
-    # print(hmc_in_diff03_lsw)
-    # print(hmc_in_diff12_lsw)
-    # print(hmc_in_diff13_lsw)
-    # print(' ')
-
-    # print('Diff:F0 - F1')
-    # print(time_hmc_in_diff01)
-    # print('Diff:F0 - F2')
-    # print(time_hmc_in_diff02)
-    # print('Diff:F0 - F3')
-    # print(time_hmc_in_diff03)
-    # print('Diff:F1 - F2')
-    # print(time_hmc_in_diff12)
-    # print('Diff:F1 - F3')
-    # print(time_hmc_in_diff13)
-    # print(' ')
-
-    # # Compute Diff: HMC Out
-    # print('CT HMC Out Diff:')
-    # print('----------------')
-    # hmc_out_diff01_msw = f0_hmc_out_msw - f1_hmc_out_msw
-    # hmc_out_diff01_lsw = f0_hmc_out_lsw - f1_hmc_out_lsw
-    # time_hmc_out_diff01 = np.add(np.abs(hmc_out_diff01_msw)<<32, np.abs(hmc_out_diff01_lsw))
-
-    # hmc_out_diff02_msw = f0_hmc_out_msw - f2_hmc_out_msw
-    # hmc_out_diff02_lsw = f0_hmc_out_lsw - f2_hmc_out_lsw
-    # time_hmc_out_diff02 = np.add(np.abs(hmc_out_diff02_msw)<<32, np.abs(hmc_out_diff02_lsw))
-
-    # hmc_out_diff03_msw = f0_hmc_out_msw - f3_hmc_out_msw
-    # hmc_out_diff03_lsw = f0_hmc_out_lsw - f3_hmc_out_lsw
-    # time_hmc_out_diff03 = np.add(np.abs(hmc_out_diff03_msw)<<32, np.abs(hmc_out_diff03_lsw))
-
-    # hmc_out_diff12_msw = f1_hmc_out_msw - f2_hmc_out_msw
-    # hmc_out_diff12_lsw = f1_hmc_out_lsw - f2_hmc_out_lsw
-    # time_hmc_out_diff12 = np.add(np.abs(hmc_out_diff12_msw)<<32, np.abs(hmc_out_diff12_lsw))
-
-    # hmc_out_diff13_msw = f1_hmc_out_msw - f3_hmc_out_msw
-    # hmc_out_diff13_lsw = f1_hmc_out_lsw - f3_hmc_out_lsw
-    # time_hmc_out_diff13 = np.add(np.abs(hmc_out_diff13_msw)<<32, np.abs(hmc_out_diff13_lsw))
-
-    # print('MSW:')
-    # print(hmc_out_diff01_msw)
-    # print(hmc_out_diff02_msw)
-    # print(hmc_out_diff03_msw)
-    # print(hmc_out_diff12_msw)
-    # print(hmc_out_diff13_msw)
-    # print('LSW:')
-    # print(hmc_out_diff01_lsw)
-    # print(hmc_out_diff02_lsw)
-    # print(hmc_out_diff03_lsw)
-    # print(hmc_out_diff12_lsw)
-    # print(hmc_out_diff13_lsw)
-    # print(' ')
-
-    # print('Diff:F0 - F1')
-    # print(time_hmc_out_diff01)
-    # print('Diff:F0 - F2')
-    # print(time_hmc_out_diff02)
-    # print('Diff:F0 - F3')
-    # print(time_hmc_out_diff03)
-    # print('Diff:F1 - F2')
-    # print(time_hmc_out_diff12)
-    # print('Diff:F1 - F3')
-    # print(time_hmc_out_diff13)
-    # print(' ')
-
-
-    # # Compute Diff: HMC Int
-    # print('Tag Re-order In Diff:')
-    # print('---------------------')
-    # hmc_int_diff01_msw = f0_hmc_int_msw - f1_hmc_int_msw
-    # hmc_int_diff01_lsw = f0_hmc_int_lsw - f1_hmc_int_lsw
-    # time_hmc_int_diff01 = np.add(np.abs(hmc_int_diff01_msw)<<32, np.abs(hmc_int_diff01_lsw))
-
-    # hmc_int_diff02_msw = f0_hmc_int_msw - f2_hmc_int_msw
-    # hmc_int_diff02_lsw = f0_hmc_int_lsw - f2_hmc_int_lsw
-    # time_hmc_int_diff02 = np.add(np.abs(hmc_int_diff02_msw)<<32, np.abs(hmc_int_diff02_lsw))
-
-    # hmc_int_diff03_msw = f0_hmc_int_msw - f3_hmc_int_msw
-    # hmc_int_diff03_lsw = f0_hmc_int_lsw - f3_hmc_int_lsw
-    # time_hmc_int_diff03 = np.add(np.abs(hmc_int_diff03_msw)<<32, np.abs(hmc_int_diff03_lsw))
-
-    # hmc_int_diff12_msw = f1_hmc_int_msw - f2_hmc_int_msw
-    # hmc_int_diff12_lsw = f1_hmc_int_lsw - f2_hmc_int_lsw
-    # time_hmc_int_diff12 = np.add(np.abs(hmc_int_diff12_msw)<<32, np.abs(hmc_int_diff12_lsw))
-
-    # hmc_int_diff13_msw = f1_hmc_int_msw - f3_hmc_int_msw
-    # hmc_int_diff13_lsw = f1_hmc_int_lsw - f3_hmc_int_lsw
-    # time_hmc_int_diff13 = np.add(np.abs(hmc_int_diff13_msw)<<32, np.abs(hmc_int_diff13_lsw))
-
-    # print('MSW:')
-    # print(hmc_int_diff01_msw)
-    # print(hmc_int_diff02_msw)
-    # print(hmc_int_diff03_msw)
-    # print(hmc_int_diff12_msw)
-    # print(hmc_int_diff13_msw)
-    # print('LSW:')
-    # print(hmc_int_diff01_lsw)
-    # print(hmc_int_diff02_lsw)
-    # print(hmc_int_diff03_lsw)
-    # print(hmc_int_diff12_lsw)
-    # print(hmc_int_diff13_lsw)
-    # print(' ')
-
-    # print('Diff:F0 - F1')
-    # print(time_hmc_int_diff01)
-    # print('Diff:F0 - F2')
-    # print(time_hmc_int_diff02)
-    # print('Diff:F0 - F3')
-    # print(time_hmc_int_diff03)
-    # print('Diff:F1 - F2')
-    # print(time_hmc_int_diff12)
-    # print('Diff:F1 - F3')
-    # print(time_hmc_int_diff13)
-    # print(' ')
-
-    # # Compute Diff: Proc
-    # print('Tag Re-order Out Diff:')
-    # print('---------------------')
-    # proc_diff01_msw = f0_proc_msw - f1_proc_msw
-    # proc_diff01_lsw = f0_proc_lsw - f1_proc_lsw
-    # time_proc_diff01 = np.add(np.abs(proc_diff01_msw)<<32, np.abs(proc_diff01_lsw))
-
-    # proc_diff02_msw = f0_proc_msw - f2_proc_msw
-    # proc_diff02_lsw = f0_proc_lsw - f2_proc_lsw
-    # time_proc_diff02 = np.add(np.abs(proc_diff02_msw)<<32, np.abs(proc_diff02_lsw))
-
-    # proc_diff03_msw = f0_proc_msw - f3_proc_msw
-    # proc_diff03_lsw = f0_proc_lsw - f3_proc_lsw
-    # time_proc_diff03 = np.add(np.abs(proc_diff03_msw)<<32, np.abs(proc_diff03_lsw))
-
-    # proc_diff12_msw = f1_proc_msw - f2_proc_msw
-    # proc_diff12_lsw = f1_proc_lsw - f2_proc_lsw
-    # time_proc_diff12 = np.add(np.abs(proc_diff12_msw)<<32, np.abs(proc_diff12_lsw))
-
-    # proc_diff13_msw = f1_proc_msw - f3_proc_msw
-    # proc_diff13_lsw = f1_proc_lsw - f3_proc_lsw
-    # time_proc_diff13 = np.add(np.abs(proc_diff13_msw)<<32, np.abs(proc_diff13_lsw))
-
-    # print('MSW:')
-    # print(proc_diff01_msw)
-    # print(proc_diff02_msw)
-    # print(proc_diff03_msw)
-    # print(proc_diff12_msw)
-    # print(proc_diff13_msw)
-    # print('LSW:')
-    # print(proc_diff01_lsw)
-    # print(proc_diff02_lsw)
-    # print(proc_diff03_lsw)
-    # print(proc_diff12_lsw)
-    # print(proc_diff13_lsw)
-    # print(' ')
-
-    # print('Diff:F0 - F1')
-    # print(time_proc_diff01)
-    # print('Diff:F0 - F2')
-    # print(time_proc_diff02)
-    # print('Diff:F0 - F3')
-    # print(time_proc_diff03)
-    # print('Diff:F1 - F2')
-    # print(time_proc_diff12)
-    # print('Diff:F1 - F3')
-    # print(time_proc_diff13)
-    # print(' ')
-
-
-    # print(f0.registers.hmc_ct_status0.read())
-    # print(f1.registers.hmc_ct_status0.read())
-    # print(f2.registers.hmc_ct_status0.read())
-    # print(f3.registers.hmc_ct_status0.read())
-    # print("--------------------------------")
-
-    # print(f0.registers.hmc_ct_status1.read())
-    # print(f1.registers.hmc_ct_status1.read())
-    # print(f2.registers.hmc_ct_status1.read())
-    # print(f3.registers.hmc_ct_status1.read())
-    # print("--------------------------------")
-
-    # print(f0.registers.hmc_ct_status2.read())
-    # print(f1.registers.hmc_ct_status2.read())
-    # print(f2.registers.hmc_ct_status2.read())
-    # print(f3.registers.hmc_ct_status2.read())
-    # print("--------------------------------")
-
-
-
-
-# print(f0.registers.hmc_ct_status0.read())
-# print(f1.registers.hmc_ct_status0.read())
-# print(f2.registers.hmc_ct_status0.read())
-# print(f3.registers.hmc_ct_status0.read())
-# print("--------------------------------")
-
-# print(f0.registers.hmc_ct_status1.read())
-# print(f1.registers.hmc_ct_status1.read())
-# print(f2.registers.hmc_ct_status1.read())
-# print(f3.registers.hmc_ct_status1.read())
-# print("--------------------------------")
-
-# print(f0.registers.hmc_ct_status2.read())
-# print(f1.registers.hmc_ct_status2.read())
-# print(f2.registers.hmc_ct_status2.read())
-# print(f3.registers.hmc_ct_status2.read())
-# print("--------------------------------")
