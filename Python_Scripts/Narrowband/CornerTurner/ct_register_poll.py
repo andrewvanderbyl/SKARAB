@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 from IPython import embed
 from os import system
 
-dash = '-' * 40
+dash = '-' * 250
+number_of_polls = 5
 
 print(' *** Register Poll ***')
 print('----------------------')
@@ -22,35 +23,8 @@ def printSyncStatus():
 
 def printSyncCount():
     for fhost in range(len(c.fhosts)):
-        print("CD Sync Count: FHost{0}:{1}".format(fhost,cd_sync_count[fhost]))
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("DDC In Sync Count: FHost{0}:{1}".format(fhost,ddc_in_sync_count[fhost]))
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("DDC Out Sync Count: FHost{0}:{1}".format(fhost,ddc_out_sync_count[fhost]))
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("FFT Out Sync Count: FHost{0}:{1}".format(fhost,fft_sync_count[fhost]))
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("PFB Sync Count: FHost{0}:{1}".format(fhost,pfb_sync_count[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("Quant Sync Count: FHost{0}:{1}".format(fhost,quant_sync_count[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("CT Sync Count: FHost{0}:{1}".format(fhost,ct_sync_count[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print('FHost{}:CD Sync Count {:<5}FHost{}:DDC In Sync Count {:<5} FHost{}:DDC Out Sync Count {:<5} FHost{}:FFT Sync Count {:<5} FHost{}:PFB Sync Count {:<5} FHost{}:Quant Sync Count {:<5} FHost{}:CT Sync Count {:< 5}'.format(fhost,cd_sync_count[fhost],\
+        print('FHost{}:CD Sync Count {:<5}  FHost{}:DDC In Sync Count {:<5}     FHost{}:DDC Out Sync Count {:<5}     FHost{}:FFT Sync Count {:<5}   FHost{}:PFB Sync Count {:<5}    FHost{}:Quant Sync Count {:<5}  FHost{}:CT Sync Count {:< 5}'.format(\
+        fhost,cd_sync_count[fhost],\
         fhost, ddc_in_sync_count[fhost],\
         fhost,ddc_out_sync_count[fhost],\
         fhost,fft_sync_count[fhost],\
@@ -62,163 +36,78 @@ def printSyncCount():
     print(' ')
 
 def printSyncLatency():
-    # Print out Sync Latencies
+    # Print out Sync Latencies (DV Enabled)
+    
+    print('DV Counter')
+    print('----------')
     for fhost in range(len(c.fhosts)):
-        print("TLCD Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_tlcd[fhost])) 
+        print('FHost{}:TLCD Sync Lat {:<5}  FHost{}:CD Raw Sync Lat {:<5}    FHost{}:CD Sync Lat {:<5}  FHost{}:TLBS Sync Lat {:<5}  FHost{}:BS Sync Lat {:<5}     FHost{}:TG DDS Sync Lat {:<5}   FHost{}:DDS Sync Lat {:<5}   FHost{}:Mix Sync Lat {:<5}     FHost{}:DecFIR Sync Lat {:<5}'.format(\
+        fhost,sync_lat_tlcd[fhost],\
+        fhost, sync_lat_raw_cd_hmc[fhost],\
+        fhost,sync_lat_cd_hmc[fhost],\
+        fhost,sync_lat_tlbs[fhost],\
+        fhost,sync_lat_bs[fhost],\
+        fhost,sync_lat_tgdds[fhost],\
+        fhost,sync_lat_dds[fhost],\
+        fhost,sync_lat_mix[fhost],\
+        fhost,sync_lat_decfir[fhost]))
+    
+    print(' ')
     print(' ')
 
     for fhost in range(len(c.fhosts)):
-        print("CD Raw Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_raw_cd_hmc[fhost])) 
+        print('FHost{}:DDC Sync Lat {:<5}   FHost{}:FFT Sync Lat {:<5}      FHost{}:FFT ReOrder Sync Lat {:<5}      FHost{}:PFB Sync Lat {:<5}      FHost{}:FD Sync Lat {:<5}    FHost{}:Quant Sync Lat {:<5}    FHost{}:CT Sync Lat {:<5}      FHost{}:CT In Sync Lat {:<5}    FHost{}:HMC AddGen Sync Lat {:<5}    FHost{}:Pack Sync Lat {:<5}'.format(\
+        fhost,sync_lat_ddc[fhost],\
+        fhost, sync_lat_fft[fhost],\
+        fhost,sync_lat_fft_reorder[fhost],\
+        fhost,sync_lat_pfb[fhost],\
+        fhost,sync_lat_fd[fhost],\
+        fhost,sync_lat_quant[fhost],\
+        fhost,sync_lat_ct[fhost],\
+        fhost,sync_lat_ct_in[fhost],\
+        fhost,sync_lat_hmc_addgen[fhost],\
+        fhost,sync_lat_pack[fhost]))
+
+    print(' ')    
     print(' ')
 
-    for fhost in range(len(c.fhosts)):
-        print("CD Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_cd_hmc[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("TLBS Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_tlbs[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("BS Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_bs[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("TG DDS Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_tgdds[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("DDS Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_dds[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("Mix Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_mix[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("DecFIR Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_decfir[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("DDC Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_ddc[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("FFT Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_fft[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("FFT ReOrder Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_fft_reorder[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("PFB Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_pfb[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("FD Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_fd[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("Quant Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_quant[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("CT Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_ct[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("CT In Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_ct_in[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("HMC AddGen Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_hmc_addgen[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("Pack Sync Latency: FHost{0}:{1}".format(fhost,sync_lat_pack[fhost])) 
-    print(' ')
-
-    print('-----------------------------------------------------------------------')
+    print(dash)
     print(' ')
 
 def printSyncLatencyFreeRunning():
-
     # Print out Sync Latencies (Free Running)
+
+    print('Free Running Counter')
+    print('--------------------')
     for fhost in range(len(c.fhosts)):
-        print("TLCD Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_tlcd_free[fhost])) 
+        print('FHost{}:TLCD Sync Lat {:<5}  FHost{}:CD Raw Sync Lat {:<5}   FHost{}:CD Sync Lat {:<5}   FHost{}:TLBS Sync Lat {:<5}  FHost{}:BS Sync Lat {:<5}  FHost{}:TG DDS Sync Lat {:<5}   FHost{}:DDS Sync Lat {:<5}  FHost{}:Mix Sync Lat {:<5}   FHost{}:DecFIR Sync Lat {:<5}'.format(\
+        fhost,sync_lat_tlcd_free[fhost],\
+        fhost, sync_lat_raw_cd_hmc_free[fhost],\
+        fhost,sync_lat_cd_hmc_free[fhost],\
+        fhost,sync_lat_tlbs_free[fhost],\
+        fhost,sync_lat_bs_free[fhost],\
+        fhost,sync_lat_tgdds_free[fhost],\
+        fhost,sync_lat_dds_free[fhost],\
+        fhost,sync_lat_mix_free[fhost],\
+        fhost,sync_lat_decfir_free[fhost]))
+    
+    print(' ')
     print(' ')
 
     for fhost in range(len(c.fhosts)):
-        print("CD Raw Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_raw_cd_hmc_free[fhost])) 
-    print(' ')
+        print('FHost{}:DDC Sync Lat {:<5}   FHost{}:FFT Sync Lat {:<5}   FHost{}:FFT ReOrder Sync Lat {:<5}      FHost{}:PFB Sync Lat {:<5}      FHost{}:FD Sync Lat {:<5}   FHost{}:Quant Sync Lat {:<5}    FHost{}:CT Sync Lat {:<5}    FHost{}:CT In Sync Lat {:<5}   FHost{}:HMC AddGen Sync Lat {:<5}   FHost{}:Pack Sync Lat {:<5}'.format(\
+        fhost,sync_lat_ddc_free[fhost],\
+        fhost, sync_lat_fft_free[fhost],\
+        fhost,sync_lat_fft_reorder_free[fhost],\
+        fhost,sync_lat_pfb_free[fhost],\
+        fhost,sync_lat_fd_free[fhost],\
+        fhost,sync_lat_quant_free[fhost],\
+        fhost,sync_lat_ct_free[fhost],\
+        fhost,sync_lat_ct_in_free[fhost],\
+        fhost,sync_lat_hmc_addgen_free[fhost],\
+        fhost,sync_lat_pack_free[fhost]))
 
-    for fhost in range(len(c.fhosts)):
-        print("CD Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_cd_hmc_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("TLBS Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_tlbs_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("BS Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_bs_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("TG DDS Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_tgdds_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("DDS Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_dds_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("Mix Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_mix_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("DecFIR Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_decfir_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("DDC Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_ddc_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("FFT Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_fft_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("FFT ReOrder Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_fft_reorder_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("PFB Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_pfb_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("FD Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_fd_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("Quant Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_quant_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("CT Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_ct_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("CT In Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_ct_in_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("HMC AddGen Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_hmc_addgen_free[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("Pack Sync Latency(Free): FHost{0}:{1}".format(fhost,sync_lat_pack_free[fhost])) 
+    print(' ')    
     print(' ')
 
     print(dash)
@@ -226,80 +115,38 @@ def printSyncLatencyFreeRunning():
 
 def printSyncDataLatch():
     # Print out Sync Data Latch
+
+    print('Data Latch')
+    print('--------------------')
     for fhost in range(len(c.fhosts)):
-        print("TLCD Data Latch: FHost{0}:{1}".format(fhost,sync_latch_tlcd[fhost])) 
+        print('FHost{}:TLCD {:<5}   FHost{}:CD Raw {:<5}    FHost{}:CD {:<5}    FHost{}:TLBS {:<5}  FHost{}:BS {:<5}    FHost{}:TG DDS {:<5}        FHost{}:DDS {:<5}       FHost{}:Mix {:<5}     FHost{}:DecFIR {:<5}'.format(\
+        fhost,sync_latch_tlcd[fhost],\
+        fhost,sync_latch_raw_cd_hmc[fhost],\
+        fhost,sync_latch_cd_hmc[fhost],\
+        fhost,sync_latch_tlbs[fhost],\
+        fhost,sync_latch_bs[fhost],\
+        fhost,sync_latch_tgdds[fhost],\
+        fhost,sync_latch_dds[fhost],\
+        fhost,sync_latch_mix[fhost],\
+        fhost,sync_latch_decfir[fhost]))
+    
+    print(' ')
     print(' ')
 
     for fhost in range(len(c.fhosts)):
-        print("CD Raw Data Latch: FHost{0}:{1}".format(fhost,sync_latch_raw_cd_hmc[fhost])) 
-    print(' ')
+        print('FHost{}:DDC {:<10}    FHost{}:FFT {:<5}      FHost{}:FFT ReOrder {:<10}     FHost{}:PFB {:<5}      FHost{}:FD {:<5}    FHost{}:Quant {:<5}    FHost{}:CT {:<5}        FHost{}:CT In {:<5}         FHost{}:HMC AddGen {:<5}      FHost{}:Pack {:<5}'.format(\
+        fhost,sync_latch_ddc[fhost],\
+        fhost,sync_latch_fft[fhost],\
+        fhost,sync_latch_fft_reorder[fhost],\
+        fhost,sync_latch_pfb[fhost],\
+        fhost,sync_latch_fd[fhost],\
+        fhost,sync_latch_quant[fhost],\
+        fhost,sync_latch_ct[fhost],\
+        fhost,sync_latch_ct_in[fhost],\
+        fhost,sync_latch_hmc_addgen[fhost],\
+        fhost,sync_latch_pack[fhost]))
 
-    for fhost in range(len(c.fhosts)):
-        print("CD Data Latch: FHost{0}:{1}".format(fhost,sync_latch_cd_hmc[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("TLBS Data Latch: FHost{0}:{1}".format(fhost,sync_latch_tlbs[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("BS Data Latch: FHost{0}:{1}".format(fhost,sync_latch_bs[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("TG DDS Data Latch: FHost{0}:{1}".format(fhost,sync_latch_tgdds[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("DDS Data Latch: FHost{0}:{1}".format(fhost,sync_latch_dds[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("Mix Data Latch: FHost{0}:{1}".format(fhost,sync_latch_mix[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("DecFIR Data Latch: FHost{0}:{1}".format(fhost,sync_latch_decfir[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("DDC Data Latch: FHost{0}:{1}".format(fhost,sync_latch_ddc[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("FFT Data Latch: FHost{0}:{1}".format(fhost,sync_latch_fft[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("FFT ReOrder Data Latch: FHost{0}:{1}".format(fhost,sync_latch_fft_reorder[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("PFB Data Latch: FHost{0}:{1}".format(fhost,sync_latch_pfb[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("FD Data Latch: FHost{0}:{1}".format(fhost,sync_latch_fd[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("Quant Data Latch: FHost{0}:{1}".format(fhost,sync_latch_quant[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("CT Data Latch: FHost{0}:{1}".format(fhost,sync_latch_ct[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("CT In Data Latch: FHost{0}:{1}".format(fhost,sync_latch_ct_in[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("CT HMC AddGen Data Latch: FHost{0}:{1}".format(fhost,sync_latch_hmc_addgen[fhost])) 
-    print(' ')
-
-    for fhost in range(len(c.fhosts)):
-        print("Pack Data Latch: FHost{0}:{1}".format(fhost,sync_latch_pack[fhost])) 
+    print(' ')    
     print(' ')
 
     print(dash)
@@ -392,7 +239,7 @@ for fhost in range(len(c.fhosts)):
     c.fhosts[fhost].registers.control.write(auto_rst_enable=0)
     
 
-for i in range(2):
+for i in range(number_of_polls):
    
     c.fops.sys_reset()
     time.sleep(3)
@@ -492,68 +339,68 @@ for i in range(2):
         ct_sync_count.append(c.fhosts[fhost].registers.ct_sync_cnt.read()['data']['sync_out']) 
 
         # Grab Sync Latency
-        sync_lat_tlcd.append(c.fhosts[fhost].registers.sync_lat_tlcd.read()['data'])
-        sync_lat_cd_hmc.append(c.fhosts[fhost].registers.sync_lat_cd_hmc.read()['data'])
-        sync_lat_raw_cd_hmc.append(c.fhosts[fhost].registers.sync_lat_raw_cd_hmc.read()['data'])
-        sync_lat_tlbs.append(c.fhosts[fhost].registers.sync_lat_tlbs.read()['data'])
-        sync_lat_bs.append(c.fhosts[fhost].registers.sync_lat_bs.read()['data'])
-        sync_lat_tgdds.append(c.fhosts[fhost].registers.sync_lat_tgdds.read()['data'])
-        sync_lat_dds.append(c.fhosts[fhost].registers.sync_lat_dds.read()['data'])
-        sync_lat_mix.append(c.fhosts[fhost].registers.DDC_sync_lat_mix.read()['data'])
-        sync_lat_decfir.append(c.fhosts[fhost].registers.DDC_sync_lat_decfir.read()['data'])   
-        sync_lat_ddc.append(c.fhosts[fhost].registers.sync_lat_ddc.read()['data'])
-        sync_lat_fft.append(c.fhosts[fhost].registers.nb_pfb_sync_lat_fft.read()['data'])   
-        sync_lat_fft_reorder.append(c.fhosts[fhost].registers.nb_pfb_sync_lat_fft_reorder.read()['data'])              
-        sync_lat_pfb.append(c.fhosts[fhost].registers.sync_lat_pfb.read()['data'])
-        sync_lat_fd.append(c.fhosts[fhost].registers.sync_lat_fd.read()['data'])
-        sync_lat_quant.append(c.fhosts[fhost].registers.sync_lat_quant.read()['data'])
-        sync_lat_ct.append(c.fhosts[fhost].registers.sync_lat_ct.read()['data'])
-        sync_lat_ct_in.append(c.fhosts[fhost].registers.hmc_ct_sync_lat_ct_in.read()['data'])
-        sync_lat_hmc_addgen.append(c.fhosts[fhost].registers.hmc_ct_sync_lat_hmc_addgen.read()['data'])
-        sync_lat_pack.append(c.fhosts[fhost].registers.sync_lat_pack.read()['data'])
+        sync_lat_tlcd.append(c.fhosts[fhost].registers.sync_lat_tlcd.read()['data']['count'])
+        sync_lat_cd_hmc.append(c.fhosts[fhost].registers.sync_lat_cd_hmc.read()['data']['count'])
+        sync_lat_raw_cd_hmc.append(c.fhosts[fhost].registers.sync_lat_raw_cd_hmc.read()['data']['count'])
+        sync_lat_tlbs.append(c.fhosts[fhost].registers.sync_lat_tlbs.read()['data']['count'])
+        sync_lat_bs.append(c.fhosts[fhost].registers.sync_lat_bs.read()['data']['count'])
+        sync_lat_tgdds.append(c.fhosts[fhost].registers.sync_lat_tgdds.read()['data']['count'])
+        sync_lat_dds.append(c.fhosts[fhost].registers.sync_lat_dds.read()['data']['count'])
+        sync_lat_mix.append(c.fhosts[fhost].registers.DDC_sync_lat_mix.read()['data']['count'])
+        sync_lat_decfir.append(c.fhosts[fhost].registers.DDC_sync_lat_decfir.read()['data']['count'])   
+        sync_lat_ddc.append(c.fhosts[fhost].registers.sync_lat_ddc.read()['data']['count'])
+        sync_lat_fft.append(c.fhosts[fhost].registers.nb_pfb_sync_lat_fft.read()['data']['count'])   
+        sync_lat_fft_reorder.append(c.fhosts[fhost].registers.nb_pfb_sync_lat_fft_reorder.read()['data']['count'])              
+        sync_lat_pfb.append(c.fhosts[fhost].registers.sync_lat_pfb.read()['data']['count'])
+        sync_lat_fd.append(c.fhosts[fhost].registers.sync_lat_fd.read()['data']['count'])
+        sync_lat_quant.append(c.fhosts[fhost].registers.sync_lat_quant.read()['data']['count'])
+        sync_lat_ct.append(c.fhosts[fhost].registers.sync_lat_ct.read()['data']['count'])
+        sync_lat_ct_in.append(c.fhosts[fhost].registers.hmc_ct_sync_lat_ct_in.read()['data']['count'])
+        sync_lat_hmc_addgen.append(c.fhosts[fhost].registers.hmc_ct_sync_lat_hmc_addgen.read()['data']['count'])
+        sync_lat_pack.append(c.fhosts[fhost].registers.sync_lat_pack.read()['data']['count'])
         
         # Grab Sync Latency Free Running
-        sync_lat_tlcd_free.append(c.fhosts[fhost].registers.sync_lat_tlcd_free.read()['data'])
-        sync_lat_cd_hmc_free.append(c.fhosts[fhost].registers.sync_lat_cd_hmc_free.read()['data'])
-        sync_lat_raw_cd_hmc_free.append(c.fhosts[fhost].registers.sync_lat_raw_cd_hmc_free.read()['data'])
-        sync_lat_tlbs_free.append(c.fhosts[fhost].registers.sync_lat_tlbs_free.read()['data'])
-        sync_lat_bs_free.append(c.fhosts[fhost].registers.sync_lat_bs_free.read()['data'])
-        sync_lat_tgdds_free.append(c.fhosts[fhost].registers.sync_lat_tgdds_free.read()['data'])
-        sync_lat_dds_free.append(c.fhosts[fhost].registers.sync_lat_dds_free.read()['data'])
-        sync_lat_mix_free.append(c.fhosts[fhost].registers.DDC_sync_lat_mix_free.read()['data'])   
-        sync_lat_decfir_free.append(c.fhosts[fhost].registers.DDC_sync_lat_decfir_free.read()['data'])   
-        sync_lat_ddc_free.append(c.fhosts[fhost].registers.sync_lat_ddc_free.read()['data'])
-        sync_lat_fft_free.append(c.fhosts[fhost].registers.nb_pfb_sync_lat_fft_free.read()['data'])
-        sync_lat_fft_reorder_free.append(c.fhosts[fhost].registers.nb_pfb_sync_lat_fft_reorder_free.read()['data'])              
-        sync_lat_pfb_free.append(c.fhosts[fhost].registers.sync_lat_pfb_free.read()['data'])
-        sync_lat_fd_free.append(c.fhosts[fhost].registers.sync_lat_fd_free.read()['data'])
-        sync_lat_quant_free.append(c.fhosts[fhost].registers.sync_lat_quant_free.read()['data'])
-        sync_lat_ct_free.append(c.fhosts[fhost].registers.sync_lat_ct_free.read()['data'])
-        sync_lat_ct_in_free.append(c.fhosts[fhost].registers.hmc_ct_sync_lat_ct_in_free.read()['data'])
-        sync_lat_hmc_addgen_free.append(c.fhosts[fhost].registers.hmc_ct_sync_lat_hmc_addgen_free.read()['data'])        
-        sync_lat_pack_free.append(c.fhosts[fhost].registers.sync_lat_pack_free.read()['data'])
+        sync_lat_tlcd_free.append(c.fhosts[fhost].registers.sync_lat_tlcd_free.read()['data']['count'])
+        sync_lat_cd_hmc_free.append(c.fhosts[fhost].registers.sync_lat_cd_hmc_free.read()['data']['count'])
+        sync_lat_raw_cd_hmc_free.append(c.fhosts[fhost].registers.sync_lat_raw_cd_hmc_free.read()['data']['count'])
+        sync_lat_tlbs_free.append(c.fhosts[fhost].registers.sync_lat_tlbs_free.read()['data']['count'])
+        sync_lat_bs_free.append(c.fhosts[fhost].registers.sync_lat_bs_free.read()['data']['count'])
+        sync_lat_tgdds_free.append(c.fhosts[fhost].registers.sync_lat_tgdds_free.read()['data']['count'])
+        sync_lat_dds_free.append(c.fhosts[fhost].registers.sync_lat_dds_free.read()['data']['count'])
+        sync_lat_mix_free.append(c.fhosts[fhost].registers.DDC_sync_lat_mix_free.read()['data']['count'])   
+        sync_lat_decfir_free.append(c.fhosts[fhost].registers.DDC_sync_lat_decfir_free.read()['data']['count'])   
+        sync_lat_ddc_free.append(c.fhosts[fhost].registers.sync_lat_ddc_free.read()['data']['count'])
+        sync_lat_fft_free.append(c.fhosts[fhost].registers.nb_pfb_sync_lat_fft_free.read()['data']['count'])
+        sync_lat_fft_reorder_free.append(c.fhosts[fhost].registers.nb_pfb_sync_lat_fft_reorder_free.read()['data']['count'])              
+        sync_lat_pfb_free.append(c.fhosts[fhost].registers.sync_lat_pfb_free.read()['data']['count'])
+        sync_lat_fd_free.append(c.fhosts[fhost].registers.sync_lat_fd_free.read()['data']['count'])
+        sync_lat_quant_free.append(c.fhosts[fhost].registers.sync_lat_quant_free.read()['data']['count'])
+        sync_lat_ct_free.append(c.fhosts[fhost].registers.sync_lat_ct_free.read()['data']['count'])
+        sync_lat_ct_in_free.append(c.fhosts[fhost].registers.hmc_ct_sync_lat_ct_in_free.read()['data']['count'])
+        sync_lat_hmc_addgen_free.append(c.fhosts[fhost].registers.hmc_ct_sync_lat_hmc_addgen_free.read()['data']['count'])        
+        sync_lat_pack_free.append(c.fhosts[fhost].registers.sync_lat_pack_free.read()['data']['count'])
 
 
         # Grab Sync Data Latch
-        sync_latch_tlcd.append(c.fhosts[fhost].registers.sync_latch_tlcd.read()['data'])
-        sync_latch_cd_hmc.append(c.fhosts[fhost].registers.sync_latch_cd_hmc.read()['data'])
-        sync_latch_raw_cd_hmc.append(c.fhosts[fhost].registers.sync_latch_raw_cd_hmc.read()['data'])
-        sync_latch_tlbs.append(c.fhosts[fhost].registers.sync_latch_tlbs.read()['data'])
-        sync_latch_bs.append(c.fhosts[fhost].registers.sync_latch_bs.read()['data'])
-        sync_latch_tgdds.append(c.fhosts[fhost].registers.sync_latch_tgdds.read()['data'])
-        sync_latch_dds.append(c.fhosts[fhost].registers.sync_latch_dds.read()['data'])
-        sync_latch_mix.append(c.fhosts[fhost].registers.DDC_sync_latch_mix.read()['data'])
-        sync_latch_decfir.append(c.fhosts[fhost].registers.DDC_sync_latch_decfir.read()['data'])
-        sync_latch_ddc.append(c.fhosts[fhost].registers.sync_latch_ddc.read()['data'])
-        sync_latch_fft.append(c.fhosts[fhost].registers.nb_pfb_sync_latch_fft.read()['data'])
-        sync_latch_fft_reorder.append(c.fhosts[fhost].registers.nb_pfb_sync_latch_fft_reorder.read()['data'])           
-        sync_latch_pfb.append(c.fhosts[fhost].registers.sync_latch_pfb.read()['data'])
-        sync_latch_fd.append(c.fhosts[fhost].registers.sync_latch_fd.read()['data'])
-        sync_latch_quant.append(c.fhosts[fhost].registers.sync_latch_quant.read()['data'])
-        sync_latch_ct.append(c.fhosts[fhost].registers.sync_latch_ct.read()['data'])
-        sync_latch_ct_in.append(c.fhosts[fhost].registers.hmc_ct_sync_latch_ct_in.read()['data'])
-        sync_latch_hmc_addgen.append(c.fhosts[fhost].registers.hmc_ct_sync_latch_hmc_addgen.read()['data'])              
-        sync_latch_pack.append(c.fhosts[fhost].registers.sync_latch_pack.read()['data'])
+        sync_latch_tlcd.append(c.fhosts[fhost].registers.sync_latch_tlcd.read()['data']['count'])
+        sync_latch_cd_hmc.append(c.fhosts[fhost].registers.sync_latch_cd_hmc.read()['data']['count'])
+        sync_latch_raw_cd_hmc.append(c.fhosts[fhost].registers.sync_latch_raw_cd_hmc.read()['data']['count'])
+        sync_latch_tlbs.append(c.fhosts[fhost].registers.sync_latch_tlbs.read()['data']['count'])
+        sync_latch_bs.append(c.fhosts[fhost].registers.sync_latch_bs.read()['data']['count'])
+        sync_latch_tgdds.append(c.fhosts[fhost].registers.sync_latch_tgdds.read()['data']['count'])
+        sync_latch_dds.append(c.fhosts[fhost].registers.sync_latch_dds.read()['data']['count'])
+        sync_latch_mix.append(c.fhosts[fhost].registers.DDC_sync_latch_mix.read()['data']['count'])
+        sync_latch_decfir.append(c.fhosts[fhost].registers.DDC_sync_latch_decfir.read()['data']['count'])
+        sync_latch_ddc.append(c.fhosts[fhost].registers.sync_latch_ddc.read()['data']['count'])
+        sync_latch_fft.append(c.fhosts[fhost].registers.nb_pfb_sync_latch_fft.read()['data']['count'])
+        sync_latch_fft_reorder.append(c.fhosts[fhost].registers.nb_pfb_sync_latch_fft_reorder.read()['data']['count'])           
+        sync_latch_pfb.append(c.fhosts[fhost].registers.sync_latch_pfb.read()['data']['count'])
+        sync_latch_fd.append(c.fhosts[fhost].registers.sync_latch_fd.read()['data']['count'])
+        sync_latch_quant.append(c.fhosts[fhost].registers.sync_latch_quant.read()['data']['count'])
+        sync_latch_ct.append(c.fhosts[fhost].registers.sync_latch_ct.read()['data']['count'])
+        sync_latch_ct_in.append(c.fhosts[fhost].registers.hmc_ct_sync_latch_ct_in.read()['data']['count'])
+        sync_latch_hmc_addgen.append(c.fhosts[fhost].registers.hmc_ct_sync_latch_hmc_addgen.read()['data']['count'])              
+        sync_latch_pack.append(c.fhosts[fhost].registers.sync_latch_pack.read()['data']['count'])
 
 
         # Grab Sync Time Gen
@@ -572,9 +419,9 @@ for i in range(2):
     #-----------------------------------------------------------------------
     printSyncStatus()
     printSyncCount()
-    #printSyncLatency()
-    #printSyncLatencyFreeRunning()
-    #printSyncDataLatch()
+    printSyncLatency()
+    printSyncLatencyFreeRunning()
+    printSyncDataLatch()
 
 
     time.sleep(1)
