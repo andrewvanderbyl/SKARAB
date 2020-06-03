@@ -2,25 +2,24 @@ ddc_out_re = double(zeros(length(ddc_pol0_re.Data),1));
 ddc_out_im = double(zeros(length(ddc_pol0_im.Data),1));
 k = 1;
 for i=1:length(ddc_pol0_re.Data)
-%for i=1:length(dec_tp3.Data)
    if ddc_dvalid.Data(i,1)==1
        ddc_out_re(k,1) = ddc_pol0_re.Data(i,1);
        ddc_out_im(k,1) = ddc_pol0_im.Data(i,1);
-       %ddc_out(k,1) = dec_tp3.Data(i,1);
        k = k + 1;
    end
 end
-
 
 figure(1)
 hold on;
 plot(ddc_out_re)
 plot(ddc_out_im)
 
-ddc_ext_re =  ddc_out_re(26:26+4095);
-ddc_ext_im =  ddc_out_im(26:26+4095);
+ddc_ext_re =  ddc_out_re(100:100+4095);
+ddc_ext_im =  ddc_out_im(100:100+4095);
+ddc_ext_cmplx =  ddc_ext_re+1i*ddc_ext_im;
 
-fft_ddc = fft(ddc_ext_re+1i*ddc_ext_im);
+fft_ddc = fft(ddc_ext_cmplx);
+
 figure(2)
 semilogy(abs(fft_ddc))
 
@@ -38,7 +37,7 @@ semilogy(abs(fft_ddc))
 % 
 % figure(3)
 % plot(mix_re)
-
+% 
 % mix_out = double(zeros(length(dec_tp1.Data),1));
 % k = 1;
 % for i=1:length(dec_tp1.Data)
