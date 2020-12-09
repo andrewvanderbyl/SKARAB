@@ -21,6 +21,11 @@ if freq>0
     Random_Signal = exp(1i*2*pi*randn(1,length(x1))); 
     
     Quant_Signal = num2fixpt(Real_Signal, sfix(Config.Total_coeffBits), Config.coeff_precision, RndMth, DoSatur);
+    
+    % Add dither to Quant signal
+    dither = Random_Signal*Config.coeff_precision; 
+    
+    Quant_Signal = Quant_Signal + dither;
 
 else
     Num_Samples = fs/cycles;
