@@ -1,0 +1,1 @@
+dlmwrite('ddc_coeff_53MHz.csv', coef_53M_6dB_equiripple2,'delimiter',',','precision', 13);
