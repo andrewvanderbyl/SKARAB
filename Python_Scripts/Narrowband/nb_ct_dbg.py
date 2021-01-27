@@ -18,6 +18,7 @@ x_debug = False
 start_correlator = False
 halt_test_on_fail = False
 create_ref = False
+dbg_verbose = False
 
 num_fengs = 4
 num_xengs_boards = 1   #4A = 1; 64A = 8
@@ -90,13 +91,17 @@ def write_xeng_channels_to_file(data):
             f.write("%d\r\n" % channel_per_X[core_number][i])
         f.close()
 
-def write_test_results_to_file(results):
+def write_fx_test_results_to_file(results):
     print 'Writing to file'
 
-    f= open("Test_results.txt","w+")
+    f= open("FX_results.txt","a+")
     for i in range(len(results)):
         #print results[i]
+        f.write("%s\r\n" % str(time.ctime()))
         f.write("%s\r\n" % str(results[i]))
+
+    f.write(" \r\n")    
+    f.write(" \r\n")
     f.close()
 
 def read_in_xeng_ref_file(total_xcores, num_fengs):
@@ -117,40 +122,44 @@ def read_in_xeng_ref_file(total_xcores, num_fengs):
 
 def compare_xeng_data_with_ref_xeng(feng, fxeng_ref_data, fchannel_per_X):
     print 'Comparing FXEng data'
-    embed()
     
     # Compute the sum of all xcores for all fengs
     total_fx_cores = num_fengs*num_cores_per_x*num_xengs_boards
-
 
     # check number of fengs match
     if len(fxeng_ref_data) != total_fx_cores:
         raise Exception('Number of fx cores do not match. Aborting.')
     else:
-
         errors =  []
 
-        
-        for feng in range(len(fxeng_ref_data)):
-            # Check list length matches in each XEng
-            if len(fxeng_ref_data[feng]) != len(fchannel_per_X[feng]):
-                raise Exception('Number of channels in XEngs do not match. Aborting.')
+        # We know the Feng under test. Now check each fxcore of the current with the fxcore of the reference
+        for curr_cores in range(len(fchannel_per_X)):
 
+            # Compute which core to look at in the reference.
+            ref_core = num_fengs*feng + curr_cores
+            print 'Current Core is:', curr_cores
+            print 'Ref Core is:', ref_core
+
+            if len(fxeng_ref_data[ref_core]) != len(fchannel_per_X[curr_cores]):
+                raise Exception('Number of channels in XEngs do not match. Aborting.')
+            
             match = True
             err_tmp = []
-            for i in range(len(fxeng_ref_data[xeng])):
-                if fxeng_ref_data[xeng][i] != fchannel_per_X[xeng][i]:
+
+            for i in range(len(fxeng_ref_data[ref_core])):
+                if dbg_verbose:
+                    print 'Checking Ref Core:', ref_core, 'where freq is:', fxeng_ref_data[ref_core][i], 'and Current Core is:', curr_cores,'with freq:',fchannel_per_X[curr_cores][i]
+                if fxeng_ref_data[ref_core][i] != fchannel_per_X[curr_cores][i]:
                     match = False
-                    mismatch_str = 'Mismatch in Xeng:', xeng, 'Found Channel:', fchannel_per_X[xeng][i], 'Should be Channel:', fxeng_ref_data[xeng][i]
+                    mismatch_str = 'Mismatch in FXCore:', ref_core, 'Found Channel:', fchannel_per_X[curr_cores][i], 'Should be Channel:', fxeng_ref_data[ref_core][i]
                     print mismatch_str
                     err_tmp.append(mismatch_str)
-            
 
             if match:
-                print 'No errors in Xeng:%d' % xeng 
+                print 'No errors in FXCore:%d' % ref_core 
             else:
                 errors.append(err_tmp)
-                print 'Found', len(errors),'error(s) in XEng', xeng  
+                print 'Found', len(errors),'error(s) in FXCore', ref_core 
     return errors
 
 
@@ -236,7 +245,10 @@ for run_number in range(number_of_runs):
     if f_debug:
         for feng in range(num_fengs):
             f = c.fhosts[feng]
-            print("Checking CT Data in FEng:",feng)
+
+            print ' '
+            print 'Checking CT Data in FEng:',feng
+            print '---------------------------'
             #==============================================================================
             #  FFT Debug
             #==============================================================================
@@ -300,13 +312,15 @@ for run_number in range(number_of_runs):
                 # Check if the test passed.
                 if len(results) != 0:
                     # Create a tuple with run_number and results
-                    feng_full_test_results.append((feng,run_number,results))
-                    
-                    write_test_results_to_file(feng_full_test_results)
+                    feng_full_test_results.append(('FEng:'+str(feng),'Run:'+str(run_number),results))
 
+                    write_fx_test_results_to_file(feng_full_test_results) 
+                    
                     # Halt at this point
                     if halt_test_on_fail:
                         embed()
+        
+           
 
     if x_debug:
         for xeng in range(num_xengs):
@@ -330,9 +344,10 @@ for run_number in range(number_of_runs):
     plt.show()
 
 print ' '
-print 'Feng Results:'
+print '##################################################'
 print ' '
-print feng_full_test_results
-print 'Xeng Results:'
+print 'Feng Results:', feng_full_test_results
 print ' '
-print xeng_full_test_results
+print 'Xeng Results:', xeng_full_test_results
+print ' '
+print '##################################################'
