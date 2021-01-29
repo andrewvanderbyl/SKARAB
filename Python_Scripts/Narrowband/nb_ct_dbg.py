@@ -5,6 +5,7 @@ from IPython import embed
 
 # Dbelab06
 config_file = '/etc/corr/avdbyl_nb_107_32k.ini'
+# config_file = '/etc/corr/avdbyl_nb_107_32k.ini'
 
 # CMC2
 #config_file = '/etc/corr/array0-bc128n107M32k_qual'
@@ -16,9 +17,12 @@ config_file = '/etc/corr/avdbyl_nb_107_32k.ini'
 f_debug = True
 x_debug = False
 start_correlator = False
+
 halt_test_on_fail = False
 create_ref = False
+
 dbg_verbose = False
+tvg_enable = True
 
 num_fengs = 4
 num_xengs_boards = 1   #4A = 1; 64A = 8
@@ -136,9 +140,10 @@ def compare_xeng_data_with_ref_xeng(feng, fxeng_ref_data, fchannel_per_X):
         for curr_cores in range(len(fchannel_per_X)):
 
             # Compute which core to look at in the reference.
-            ref_core = num_fengs*feng + curr_cores
+            ref_core = (num_cores_per_x*num_xengs_boards)*feng + curr_cores
             print 'Current Core is:', curr_cores
             print 'Ref Core is:', ref_core
+
 
             if len(fxeng_ref_data[ref_core]) != len(fchannel_per_X[curr_cores]):
                 raise Exception('Number of channels in XEngs do not match. Aborting.')
@@ -214,6 +219,11 @@ for run_number in range(number_of_runs):
             # print 'Setting Acc Length'
             # f0.registers.acc_len1.write(reg=np.power(2,16))
             # f0.registers.acc_scale.write(reg=0.9)
+
+            # CT TVG
+            if tvg_enable:
+                f.registers.ct_control0.write(tvg_en2=1)
+
 
             #==============================================================================
             #  ARM Snapshots
