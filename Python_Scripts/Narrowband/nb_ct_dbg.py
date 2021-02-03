@@ -15,11 +15,12 @@ config_file = '/etc/corr/avdbyl_nb_107_32k.ini'
 
 # Control Parameters
 f_debug = True
-x_debug = False
+x_debug = True
 start_correlator = False
 
 halt_test_on_fail = False
-create_ref = False
+create_fref = False
+create_xref = False
 
 dbg_verbose = False
 tvg_enable = True
@@ -80,7 +81,7 @@ def extract_Fchannel_per_Xeng(x_idx):
     
     return Fchan_to_xeng
 
-def write_xeng_channels_to_file(data):
+def write_fxeng_channels_to_file(data):
     feng = data[0]
     channel_per_X = data[1]
 
@@ -108,7 +109,7 @@ def write_fx_test_results_to_file(results):
     f.write(" \r\n")
     f.close()
 
-def read_in_xeng_ref_file(total_xcores, num_fengs):
+def read_in_fxeng_ref_file(total_xcores, num_fengs):
 
     fxeng_ref_data = []
 
@@ -124,7 +125,7 @@ def read_in_xeng_ref_file(total_xcores, num_fengs):
 
     return fxeng_ref_data
 
-def compare_xeng_data_with_ref_xeng(feng, fxeng_ref_data, fchannel_per_X):
+def compare_fxeng_data_with_ref_fxeng(feng, fxeng_ref_data, fchannel_per_X):
     print 'Comparing FXEng data'
     
     # Compute the sum of all xcores for all fengs
@@ -167,6 +168,29 @@ def compare_xeng_data_with_ref_xeng(feng, fxeng_ref_data, fchannel_per_X):
                 print 'Found', len(errors),'error(s) in FXCore', ref_core 
     return errors
 
+def check_xeng_core_data(xeng, core, fengid, freq, data, valid):
+    print ' '
+    print 'Checking XEng core data Xeng:', xeng, 'and core:', core
+    print ' '
+    xcore = []
+    passed = True
+
+    for f in range(num_fengs):
+        for idx in range(len(fengid)):
+            if fengid[idx] == f:
+                if (freq[idx] == data[idx]) & valid[idx]:
+                    # print 'fengid[idx] is:', fengid[idx], 'and f is:', f
+                    xcore.append((fengid[idx],freq[idx],data[idx],valid[idx]))
+                else:
+                    print 'Feng',fengid[idx] ,'Match error in channel:', freq[idx], 'and', data[idx]
+                    passed = False
+    
+    if passed:
+        print 'Xeng:', xeng, 'with core:', core, 'Passed'
+    else:
+        print 'Xeng:', xeng, 'with core:', core, 'Falied'
+
+    return xcore
 
 #==============================================================================
 # Start Correlator
@@ -175,11 +199,11 @@ def compare_xeng_data_with_ref_xeng(feng, fxeng_ref_data, fchannel_per_X):
 feng_full_test_results = []
 xeng_full_test_results = []
 
-if create_ref == False:
+if create_fref == False:
     # Read in reference XEng channel allocations
     print 'Reading in Reference files'
     total_xcores = num_xengs_boards * num_cores_per_x
-    fxeng_ref_data = read_in_xeng_ref_file(total_xcores,num_fengs)
+    fxeng_ref_data = read_in_fxeng_ref_file(total_xcores,num_fengs)
 
 #while True:
 for run_number in range(number_of_runs):
@@ -235,12 +259,32 @@ for run_number in range(number_of_runs):
 
     if x_debug:
         print("Setting Up XEngs")
-        for xeng in range(num_xengs):
+        for xeng in range(num_xengs_boards):
             x = c.xhosts[xeng]
             print("XEng:",xeng)
+
+            x.registers.hmc_pkt_reord_dv_sel.write(sel=0)
+            x.registers.rx_unpack_dv_sel.write(sel=3)
+            x.registers.tvg_control.write(snap_hmc_pkt_reord_we_sel=4)
+
+            x.registers.fengid_match.write(sel=3)
+
+            # Inside Cores
+            x.registers.sys0_snap_reord_dv_sel.write(sel=6)
+            x.registers.sys1_snap_reord_dv_sel.write(sel=6)
+            x.registers.sys2_snap_reord_dv_sel.write(sel=6)
+            x.registers.sys3_snap_reord_dv_sel.write(sel=6)
+
+
+            #==============================================================================
+            #  ARM Snapshots
+            #==============================================================================
             x.snapshots.snap_rx_unpack0_ss.arm(man_trig=False, man_valid=False)
-
-
+            x.snapshots.snap_hmc_pkt_reord_ss.arm(man_trig=False, man_valid=False)
+            x.snapshots.sys0_snap_reord_ss.arm(man_trig=False, man_valid=False)
+            x.snapshots.sys1_snap_reord_ss.arm(man_trig=False, man_valid=False)
+            x.snapshots.sys2_snap_reord_ss.arm(man_trig=False, man_valid=False)
+            x.snapshots.sys3_snap_reord_ss.arm(man_trig=False, man_valid=False)
 
 
 
@@ -253,6 +297,9 @@ for run_number in range(number_of_runs):
     print 'Reset Done'      
 
     if f_debug:
+        print '##################'
+        print 'Checking FEng Data'
+        print '##################'
         for feng in range(num_fengs):
             f = c.fhosts[feng]
 
@@ -312,12 +359,12 @@ for run_number in range(number_of_runs):
             # Get all the channels sent to each XEngine
             fchannel_per_X = extract_Fchannel_per_Xeng(ct2_x_idx)
 
-            if create_ref:
+            if create_fref:
                 # Write the results to file per X-Eng
-                write_xeng_channels_to_file((feng,fchannel_per_X))
+                write_fxeng_channels_to_file((feng,fchannel_per_X))
             else:
                 # Compare current Xeng data with reference Xeng data
-                results = compare_xeng_data_with_ref_xeng(feng, fxeng_ref_data, fchannel_per_X)
+                results = compare_fxeng_data_with_ref_fxeng(feng, fxeng_ref_data, fchannel_per_X)
             
                 # Check if the test passed.
                 if len(results) != 0:
@@ -333,7 +380,12 @@ for run_number in range(number_of_runs):
            
 
     if x_debug:
-        for xeng in range(num_xengs):
+        print ' '
+        print '##################'
+        print 'Checking XEng Data'
+        print '##################'
+        xeng_cores = []
+        for xeng in range(num_xengs_boards):
             x = c.xhosts[xeng]
             print("Checking CT Data in XEng:",xeng)
 
@@ -341,15 +393,106 @@ for run_number in range(number_of_runs):
             #  XEng Unpack
             #==============================================================================
             # print('Reading RX Unpack')
-            rx_unpack_snap = x.snapshots.snap_rx_unpack0_ss.read(arm=False)['data']
+            # rx_unpack_snap = x.snapshots.snap_rx_unpack0_ss.read(arm=False)['data']
 
-            rx_unp_valid = rx_unpack_snap['valid']
-            rx_unp_eof = rx_unpack_snap['eof']
-            rx_unp_fengid = rx_unpack_snap['fengid']
-            rx_unp_freq_this_eng = rx_unpack_snap['freq_this_eng']
-            rx_unp_xeng_id = rx_unpack_snap['xeng_id']
+            # rx_unp_valid = rx_unpack_snap['valid']
+            # rx_unp_eof = rx_unpack_snap['eof']
+            # rx_unp_fengid = rx_unpack_snap['fengid']
+            # rx_unp_freq_this_eng = rx_unpack_snap['freq_this_eng']
+            # rx_unp_xeng_id = rx_unpack_snap['xeng_id']
 
-            print x.snapshots.snap_rx_unpack0_ss.pri
+
+            #==============================================================================
+            #  XEng HMC Reorder
+            #==============================================================================
+            # hmc_pkt_reord_snap = x.snapshots.snap_hmc_pkt_reord_ss.read(arm=False)['data']
+
+            # hmc_reord_data = hmc_pkt_reord_snap['data']
+            # hmc_reord_valid = hmc_pkt_reord_snap['valid']
+            # hmc_reord_pkt_idx = hmc_pkt_reord_snap['pkt_idx']
+            # hmc_reord_timestamp = hmc_pkt_reord_snap['timestamp']
+            # hmc_reord_fengid = hmc_pkt_reord_snap['fengid']
+            # hmc_reord_freq = hmc_pkt_reord_snap['freq']
+            # hmc_reord_xeng = hmc_pkt_reord_snap['xeng']
+            # hmc_reord_err = hmc_pkt_reord_snap['err']
+            # hmc_reord_dv = hmc_pkt_reord_snap['dv']
+
+            #==============================================================================
+            #  XEng Cores
+            #==============================================================================
+            # temp_sys0 = x.snapshots.sys0_snap_reord_ss.read()
+            # sys0_reord_snap = temp_sys0['data']
+
+            sys0_reord_snap = x.snapshots.sys0_snap_reord_ss.read()['data']
+
+            sys0_reord_fengid = sys0_reord_snap['fengid']
+            sys0_reord_valid = sys0_reord_snap['valid']
+            sys0_reord_freq = sys0_reord_snap['freq']
+            sys0_reord_data = sys0_reord_snap['data']
+            sys0_reord_dv = sys0_reord_snap['dv']
+
+            # Create tuple with all sys0 snapshot data
+            # sys0_reord = (xeng, core, sys0_reord_fengid, sys0_reord_freq, sys0_reord_data, sys0_reord_valid, sys0_reord_dv)
+            # -------------------
+
+            sys1_reord_snap = x.snapshots.sys1_snap_reord_ss.read()['data']
+
+            sys1_reord_fengid = sys1_reord_snap['fengid']
+            sys1_reord_valid = sys1_reord_snap['valid']
+            sys1_reord_freq = sys1_reord_snap['freq']
+            sys1_reord_data = sys1_reord_snap['data']
+            sys1_reord_dv = sys1_reord_snap['dv']
+            # -------------------
+
+            sys2_reord_snap = x.snapshots.sys2_snap_reord_ss.read()['data']
+
+            sys2_reord_fengid = sys2_reord_snap['fengid']
+            sys2_reord_valid = sys2_reord_snap['valid']
+            sys2_reord_freq = sys2_reord_snap['freq']
+            sys2_reord_data = sys2_reord_snap['data']
+            sys2_reord_dv = sys2_reord_snap['dv']
+            # -------------------
+
+            sys3_reord_snap = x.snapshots.sys3_snap_reord_ss.read()['data']
+
+            sys3_reord_fengid = sys3_reord_snap['fengid']
+            sys3_reord_valid = sys3_reord_snap['valid']
+            sys3_reord_freq = sys3_reord_snap['freq']
+            sys3_reord_data = sys3_reord_snap['data']
+            sys3_reord_dv = sys3_reord_snap['dv']
+
+            #==============================================================================
+            #  Process Data
+            #==============================================================================
+            core = 0
+            xcore0 = check_xeng_core_data(xeng, core, sys0_reord_fengid, sys0_reord_freq, sys0_reord_data, sys0_reord_valid)
+            core = 1
+            xcore1 = check_xeng_core_data(xeng, core, sys1_reord_fengid, sys1_reord_freq, sys1_reord_data, sys1_reord_valid)
+            core = 2
+            xcore2 = check_xeng_core_data(xeng, core, sys2_reord_fengid, sys2_reord_freq, sys2_reord_data, sys2_reord_valid)
+            core = 3
+            xcore3 = check_xeng_core_data(xeng, core, sys3_reord_fengid, sys3_reord_freq, sys3_reord_data, sys3_reord_valid)
+            
+            xeng_cores.append((xcore0, xcore1, xcore2, xcore3))
+
+            # if create_xref:
+            #     # Write the results to file per X-Eng
+            #     write_fxeng_channels_to_file((feng,fchannel_per_X))
+            # else:
+                # Compare current Xeng data with reference Xeng data
+                # results = compare_fxeng_data_with_ref_fxeng(feng, fxeng_ref_data, fchannel_per_X)
+            
+                # # Check if the test passed.
+                # if len(results) != 0:
+                #     # Create a tuple with run_number and results
+                #     feng_full_test_results.append(('FEng:'+str(feng),'Run:'+str(run_number),results))
+
+                #     write_fx_test_results_to_file(feng_full_test_results) 
+                    
+                #     # Halt at this point
+                #     if halt_test_on_fail:
+                #         embed()
+            # embed()
 
     plt.show()
 
