@@ -25,10 +25,11 @@ create_xref = False
 dbg_verbose = False
 tvg_enable = True
 
+num_channels = 32768
 num_fengs = 4
 num_xengs_boards = 1   #4A = 1; 64A = 8
 num_cores_per_x = 4 
-number_of_runs = 1
+number_of_runs = 2
 
 #==============================================================================
 #   Classes and methods
@@ -126,7 +127,10 @@ def read_in_fxeng_ref_file(total_xcores, num_fengs):
     return fxeng_ref_data
 
 def compare_fxeng_data_with_ref_fxeng(feng, fxeng_ref_data, fchannel_per_X):
+    print '####################'
     print 'Comparing FXEng data'
+    print '####################'
+    print ' '
     
     # Compute the sum of all xcores for all fengs
     total_fx_cores = num_fengs*num_cores_per_x*num_xengs_boards
@@ -171,26 +175,59 @@ def compare_fxeng_data_with_ref_fxeng(feng, fxeng_ref_data, fchannel_per_X):
 def check_xeng_core_data(xeng, core, fengid, freq, data, valid):
     print ' '
     print 'Checking XEng core data Xeng:', xeng, 'and core:', core
+    print '---------------------------------------------- '
     print ' '
+
+    # Setup runtime parameters
     xcore = []
     passed = True
 
-    for f in range(num_fengs):
-        for idx in range(len(fengid)):
-            if fengid[idx] == f:
-                if (freq[idx] == data[idx]) & valid[idx]:
-                    # print 'fengid[idx] is:', fengid[idx], 'and f is:', f
-                    xcore.append((fengid[idx],freq[idx],data[idx],valid[idx]))
-                else:
-                    print 'Feng',fengid[idx] ,'Match error in channel:', freq[idx], 'and', data[idx]
-                    passed = False
+    # Compute the legitimate channel range for this xcore
+    channels_per_core = num_channels/(num_xengs_boards*num_cores_per_x)
+    print 'channels_per_core:', channels_per_core
+
+    core_range_start = core * channels_per_core
+    core_range_end = core_range_start + (channels_per_core - 1)
+    print 'core_range_start:', core_range_start
+    print 'core_range_end:', core_range_end
+
+    # embed()
+
+    for idx in range(len(data)):
+        
+        # Test 1: Does the channel number injected in the data field match the freq channel reported by the XEng core?
+        if (freq[idx] == data[idx]) & valid[idx]:
+            xcore.append((fengid[idx],freq[idx],data[idx],valid[idx]))
+        else:
+            print 'Feng',fengid[idx] ,'Match error in channel:', freq[idx], 'and', data[idx]
+            passed = False
+
+        # Test 2: Is the channel in the correct core?
+        if (freq[idx] < core_range_start) | (freq[idx] > core_range_end):
+            passed = False
+            print 'Freq Channel under test out of range. Channel is:', freq[idx]
+
+        # Test 3: Is the channel in the correct core?
+        if (data[idx] < core_range_start) | (data[idx] > core_range_end):
+            passed = False
+            print 'Channel (inject) under test out of range. Channel is:', data[idx]
+
+    # for f in range(num_fengs):
+    #     for idx in range(len(fengid)):
+    #         if fengid[idx] == f:
+    #             if (freq[idx] == data[idx]) & valid[idx]:
+    #                 # print 'fengid[idx] is:', fengid[idx], 'and f is:', f
+    #                 xcore.append((fengid[idx],freq[idx],data[idx],valid[idx]))
+    #             else:
+    #                 print 'Feng',fengid[idx] ,'Match error in channel:', freq[idx], 'and', data[idx]
+    #                 passed = False
     
     if passed:
         print 'Xeng:', xeng, 'with core:', core, 'Passed'
     else:
         print 'Xeng:', xeng, 'with core:', core, 'Falied'
 
-    return xcore
+    return (xcore, passed )
 
 #==============================================================================
 # Start Correlator
@@ -198,6 +235,10 @@ def check_xeng_core_data(xeng, core, fengid, freq, data, valid):
 
 feng_full_test_results = []
 xeng_full_test_results = []
+core0_error_count = 0
+core1_error_count = 0
+core2_error_count = 0
+core3_error_count = 0
 
 if create_fref == False:
     # Read in reference XEng channel allocations
@@ -208,7 +249,11 @@ if create_fref == False:
 #while True:
 for run_number in range(number_of_runs):
     print 'Run Number:', run_number
-    print 'Number of errors:', len(feng_full_test_results)
+    print 'core0_error_count:', core0_error_count
+    print 'core1_error_count:', core1_error_count
+    print 'core2_error_count:', core2_error_count
+    print 'core3_error_count:', core3_error_count
+    time.sleep(1)
 
     if start_correlator:
         c=corr2.fxcorrelator.FxCorrelator('bob',config_source=config_file)
@@ -248,7 +293,6 @@ for run_number in range(number_of_runs):
             if tvg_enable:
                 f.registers.ct_control0.write(tvg_en2=1)
 
-
             #==============================================================================
             #  ARM Snapshots
             #==============================================================================
@@ -270,10 +314,10 @@ for run_number in range(number_of_runs):
             x.registers.fengid_match.write(sel=3)
 
             # Inside Cores
-            x.registers.sys0_snap_reord_dv_sel.write(sel=6)
-            x.registers.sys1_snap_reord_dv_sel.write(sel=6)
-            x.registers.sys2_snap_reord_dv_sel.write(sel=6)
-            x.registers.sys3_snap_reord_dv_sel.write(sel=6)
+            x.registers.sys0_snap_reord_dv_sel.write(sel=0)
+            x.registers.sys1_snap_reord_dv_sel.write(sel=0)
+            x.registers.sys2_snap_reord_dv_sel.write(sel=0)
+            x.registers.sys3_snap_reord_dv_sel.write(sel=0)
 
 
             #==============================================================================
@@ -387,6 +431,52 @@ for run_number in range(number_of_runs):
         xeng_cores = []
         for xeng in range(num_xengs_boards):
             x = c.xhosts[xeng]
+
+            #==============================================================================
+            #  XEng SPEAD and HMC flags
+            #==============================================================================
+            header_err_cnt= x.registers.spead_status0.read()['data']['header_err_cnt']
+            magic_err_cnt = x.registers.spead_status0.read()['data']['magic_err_cnt']
+            pad_err_cnt = x.registers.spead_status0.read()['data']['pad_err_cnt']
+            pkt_len_err_cnt = x.registers.spead_status0.read()['data']['pkt_len_err_cnt']
+            time_err_cnt = x.registers.spead_status0.read()['data']['time_err_cnt']
+            
+            if ((header_err_cnt>0) | (magic_err_cnt>0) | (pad_err_cnt>0) | (pkt_len_err_cnt>0) | (time_err_cnt>0)):
+                print 'SPEAD Flag Error(s)'
+                print 'header_err_cnt:', header_err_cnt
+                print 'magic_err_cnt:', magic_err_cnt
+                print 'pad_err_cnt:', pad_err_cnt
+                print 'pkt_len_err_cnt:', pkt_len_err_cnt
+                print 'time_err_cnt:', time_err_cnt
+                print ' '
+            
+            hmc_err_cnt= x.registers.hmc_pkt_reord_status0.read()['data']['hmc_err_cnt']
+            dest_err_cnt= x.registers.hmc_pkt_reord_status0.read()['data']['dest_err_cnt']
+            
+            lnk2_nrdy_err_cnt = x.registers.hmc_pkt_reord_status1.read()['data']['lnk2_nrdy_err_cnt']
+            lnk3_nrdy_err_cnt = x.registers.hmc_pkt_reord_status1.read()['data']['lnk3_nrdy_err_cnt']
+
+            miss_err_cnt = x.registers.hmc_pkt_reord_status2.read()['data']['miss_err_cnt']
+            ts_err_cnt = x.registers.hmc_pkt_reord_status2.read()['data']['ts_err_cnt']
+
+            discard_cnt = x.registers.hmc_pkt_reord_status3.read()['data']['discard_cnt']
+            mcnt_timeout_cnt = x.registers.hmc_pkt_reord_status3.read()['data']['mcnt_timeout_cnt']
+
+            if ((hmc_err_cnt>0) | (dest_err_cnt>0) | (lnk2_nrdy_err_cnt>0) | (lnk3_nrdy_err_cnt>0) | (miss_err_cnt>0) | (ts_err_cnt>0) | (discard_cnt>0) | (mcnt_timeout_cnt>0)):
+                print 'HMC Flag Error(s)'
+                print 'hmc_err_cnt:', hmc_err_cnt
+                print 'dest_err_cnt:', dest_err_cnt
+                print 'lnk2_nrdy_err_cnt:', lnk2_nrdy_err_cnt
+                print 'lnk3_nrdy_err_cnt:', lnk3_nrdy_err_cnt
+                print 'miss_err_cnt:', miss_err_cnt
+                print 'ts_err_cnt:', ts_err_cnt
+                print 'discard_cnt:', discard_cnt
+                print 'mcnt_timeout_cnt:', mcnt_timeout_cnt
+                print ' '
+
+            #==============================================================================
+            #  XEng Core Data
+            #==============================================================================
             print("Checking CT Data in XEng:",xeng)
 
             #==============================================================================
@@ -462,7 +552,7 @@ for run_number in range(number_of_runs):
             sys3_reord_dv = sys3_reord_snap['dv']
 
             #==============================================================================
-            #  Process Data
+            #  Check XEng Core Data
             #==============================================================================
             core = 0
             xcore0 = check_xeng_core_data(xeng, core, sys0_reord_fengid, sys0_reord_freq, sys0_reord_data, sys0_reord_valid)
@@ -473,8 +563,28 @@ for run_number in range(number_of_runs):
             core = 3
             xcore3 = check_xeng_core_data(xeng, core, sys3_reord_fengid, sys3_reord_freq, sys3_reord_data, sys3_reord_valid)
             
-            xeng_cores.append((xcore0, xcore1, xcore2, xcore3))
+            if xcore0[1] == False:
+                xeng_full_test_results.append(('XEng:'+str(xeng),'Run:'+str(run_number),xcore0))
+                core0_error_count = core0_error_count + 1
 
+            if xcore1[1] == False:
+                xeng_full_test_results.append(('XEng:'+str(xeng),'Run:'+str(run_number),xcore1))
+                core1_error_count = core1_error_count + 1
+
+            if xcore2[1] == False:
+                xeng_full_test_results.append(('XEng:'+str(xeng),'Run:'+str(run_number),xcore2))
+                core2_error_count = core2_error_count + 1
+
+            if xcore3[1] == False:
+                xeng_full_test_results.append(('XEng:'+str(xeng),'Run:'+str(run_number),xcore3))
+                core3_error_count = core3_error_count + 1
+
+            # if ((xcore0[1] | xcore1[1] | xcore2[1] | xcore3[1]) == False):
+            #     xeng_error_count = xeng_error_count + 1
+            #     print 'xeng_error_count:', xeng_error_count
+            #     embed()
+
+            # embed()
             # if create_xref:
             #     # Write the results to file per X-Eng
             #     write_fxeng_channels_to_file((feng,fchannel_per_X))
@@ -504,3 +614,31 @@ print ' '
 print 'Xeng Results:', xeng_full_test_results
 print ' '
 print '##################################################'
+print ' '
+print 'Core Error(s)'
+print '-------------'
+print 'core0_error_count:', core0_error_count
+print 'core1_error_count:', core1_error_count
+print 'core2_error_count:', core2_error_count
+print 'core3_error_count:', core3_error_count
+print ' '
+print 'SPEAD Flag Error(s)'
+print '-------------------'
+print 'header_err_cnt:', header_err_cnt
+print 'magic_err_cnt:', magic_err_cnt
+print 'pad_err_cnt:', pad_err_cnt
+print 'pkt_len_err_cnt:', pkt_len_err_cnt
+print 'time_err_cnt:', time_err_cnt
+print ' '
+print 'HMC Flag Error(s)'
+print '-----------------'
+print 'hmc_err_cnt:', hmc_err_cnt
+print 'dest_err_cnt:', dest_err_cnt
+print 'lnk2_nrdy_err_cnt:', lnk2_nrdy_err_cnt
+print 'lnk3_nrdy_err_cnt:', lnk3_nrdy_err_cnt
+print 'miss_err_cnt:', miss_err_cnt
+print 'ts_err_cnt:', ts_err_cnt
+print 'discard_cnt:', discard_cnt
+print 'mcnt_timeout_cnt:', mcnt_timeout_cnt
+print ' '
+embed()
