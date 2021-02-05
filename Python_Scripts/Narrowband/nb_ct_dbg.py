@@ -29,7 +29,7 @@ num_channels = 32768
 num_fengs = 4
 num_xengs_boards = 1   #4A = 1; 64A = 8
 num_cores_per_x = 4 
-number_of_runs = 2
+number_of_runs = 50
 
 #==============================================================================
 #   Classes and methods
@@ -207,7 +207,7 @@ def check_xeng_core_data(xeng, core, fengid, freq, data, valid):
             passed = False
             print 'Freq Channel under test out of range. Channel is:', freq[idx]
 
-        # Test 3: Is the channel in the correct core?
+        # Test 3: Is the (injected) channel in the correct core?
         if (data[idx] < core_range_start) | (data[idx] > core_range_end):
             passed = False
             print 'Channel (inject) under test out of range. Channel is:', data[idx]
@@ -248,7 +248,9 @@ if create_fref == False:
 
 #while True:
 for run_number in range(number_of_runs):
+    print ' '
     print 'Run Number:', run_number
+    print '-----------'
     print 'core0_error_count:', core0_error_count
     print 'core1_error_count:', core1_error_count
     print 'core2_error_count:', core2_error_count
@@ -391,8 +393,9 @@ for run_number in range(number_of_runs):
             # print('Reading CT2')
             ct2_snap = f.snapshots.hmc_ct_ss_ct2_ss.read(arm=False)['data']
 
-            ct2_f0_re = ct2_snap['f0_re']
-            ct2_f1_re = ct2_snap['f1_re']
+            # ct2_f0_re = ct2_snap['f0_re']
+            # ct2_f1_re = ct2_snap['f1_re']
+            ct2_data = ct2_snap['data0']
             ct2_freq_id = ct2_snap['freq_id']
             ct2_x_idx = ct2_snap['x_idx']
             ct2_x_pkt = ct2_snap['x_pkt']
@@ -402,6 +405,11 @@ for run_number in range(number_of_runs):
 
             # Get all the channels sent to each XEngine
             fchannel_per_X = extract_Fchannel_per_Xeng(ct2_x_idx)
+
+            # Check if the data is non-zero
+            # for idx in range(len(ct2_data)):
+            #     if ct2_data[idx] != ct2_freq_id[idx]:
+            #         print 'FEng freq error mismatch in channel:',ct2_data[idx],'should be:', ct2_freq_id[idx]
 
             if create_fref:
                 # Write the results to file per X-Eng
