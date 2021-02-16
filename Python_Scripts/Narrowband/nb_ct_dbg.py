@@ -23,13 +23,14 @@ create_fref = False
 create_xref = False
 
 dbg_verbose = False
-tvg_enable = True
+feng_post_ct_tvg_enable = True
+feng_pfb_ch_inject_tvg_enable = False
 
 num_channels = 32768
 num_fengs = 4
 num_xengs_boards = 1   #4A = 1; 64A = 8
 num_cores_per_x = 4 
-number_of_runs = 50
+number_of_runs = 100
 
 #==============================================================================
 #   Classes and methods
@@ -149,7 +150,6 @@ def compare_fxeng_data_with_ref_fxeng(feng, fxeng_ref_data, fchannel_per_X):
             print 'Current Core is:', curr_cores
             print 'Ref Core is:', ref_core
 
-
             if len(fxeng_ref_data[ref_core]) != len(fchannel_per_X[curr_cores]):
                 raise Exception('Number of channels in XEngs do not match. Aborting.')
             
@@ -172,7 +172,7 @@ def compare_fxeng_data_with_ref_fxeng(feng, fxeng_ref_data, fchannel_per_X):
                 print 'Found', len(errors),'error(s) in FXCore', ref_core 
     return errors
 
-def check_xeng_core_data(xeng, core, fengid, freq, data, valid):
+def check_xeng_core_data(xeng, core, fengid, freq, data, d0, d1, received, valid):
     print ' '
     print 'Checking XEng core data Xeng:', xeng, 'and core:', core
     print '---------------------------------------------- '
@@ -180,13 +180,14 @@ def check_xeng_core_data(xeng, core, fengid, freq, data, valid):
 
     # Setup runtime parameters
     xcore = []
+    xcore_err = []
     passed = True
 
     # Compute the legitimate channel range for this xcore
     channels_per_core = num_channels/(num_xengs_boards*num_cores_per_x)
     print 'channels_per_core:', channels_per_core
 
-    core_range_start = core * channels_per_core
+    core_range_start = (core * channels_per_core) + (xeng * num_cores_per_x * channels_per_core)
     core_range_end = core_range_start + (channels_per_core - 1)
     print 'core_range_start:', core_range_start
     print 'core_range_end:', core_range_end
@@ -196,21 +197,24 @@ def check_xeng_core_data(xeng, core, fengid, freq, data, valid):
     for idx in range(len(data)):
         
         # Test 1: Does the channel number injected in the data field match the freq channel reported by the XEng core?
-        if (freq[idx] == data[idx]) & valid[idx]:
+        if (freq[idx] == data[idx]) & valid[idx] & received[idx]:
             xcore.append((fengid[idx],freq[idx],data[idx],valid[idx]))
-        else:
-            print 'Feng',fengid[idx] ,'Match error in channel:', freq[idx], 'and', data[idx]
+        elif (freq[idx] != data[idx]) & valid[idx] & received[idx]:
+            print 'Feng',fengid[idx] ,'Match error in channel:', freq[idx], 'and data:', data[idx], 'where d0:', d0[idx], 'and d1:', d1[idx]
             passed = False
+            xcore_err.append(('Mismatch',fengid[idx],freq[idx],data[idx],d0[idx],d1[idx],valid[idx],received[idx]))
 
         # Test 2: Is the channel in the correct core?
-        if (freq[idx] < core_range_start) | (freq[idx] > core_range_end):
+        if (((freq[idx] < core_range_start) | (freq[idx] > core_range_end)) & valid[idx] & received[idx]):
             passed = False
             print 'Freq Channel under test out of range. Channel is:', freq[idx]
+            xcore_err.append(('FC out of Range',fengid[idx],freq[idx],data[idx],d0[idx],d1[idx],valid[idx],received[idx]))
 
         # Test 3: Is the (injected) channel in the correct core?
-        if (data[idx] < core_range_start) | (data[idx] > core_range_end):
+        if (((data[idx] < core_range_start) | (data[idx] > core_range_end)) & valid[idx] & received[idx]):
             passed = False
             print 'Channel (inject) under test out of range. Channel is:', data[idx]
+            xcore_err.append(('CInject out of Range',fengid[idx],freq[idx],data[idx],d0[idx],d1[idx],valid[idx],received[idx]))
 
     # for f in range(num_fengs):
     #     for idx in range(len(fengid)):
@@ -227,7 +231,7 @@ def check_xeng_core_data(xeng, core, fengid, freq, data, valid):
     else:
         print 'Xeng:', xeng, 'with core:', core, 'Falied'
 
-    return (xcore, passed )
+    return (xcore, passed, xcore_err)
 
 #==============================================================================
 # Start Correlator
@@ -249,8 +253,9 @@ if create_fref == False:
 #while True:
 for run_number in range(number_of_runs):
     print ' '
+    print '***************'
     print 'Run Number:', run_number
-    print '-----------'
+    print '***************'
     print 'core0_error_count:', core0_error_count
     print 'core1_error_count:', core1_error_count
     print 'core2_error_count:', core2_error_count
@@ -277,7 +282,7 @@ for run_number in range(number_of_runs):
             # FFT
             f.registers.nb_pfb_fft_trig_sel.write(sel=1)
             f.registers.nb_pfb_fft_trig_thresh.write(threshold=4096*4)
-            print(f.registers.nb_pfb_fft_trig_thresh.read())
+            # print(f.registers.nb_pfb_fft_trig_thresh.read())
 
             # CT
             f.registers.hmc_ct_ct_trig_sel.write(sel=0)
@@ -285,21 +290,30 @@ for run_number in range(number_of_runs):
             f.registers.hmc_ct_freq_trig_thresh.write(threshold=0)
 
             f.registers.hmc_ct_ct2_dv_sel.write(sel=0)
-
+            
             # VACC
             # print 'Setting Acc Length'
             # f0.registers.acc_len1.write(reg=np.power(2,16))
             # f0.registers.acc_scale.write(reg=0.9)
 
             # CT TVG
-            if tvg_enable:
+            if feng_post_ct_tvg_enable:
                 f.registers.ct_control0.write(tvg_en2=1)
+            else:
+                f.registers.ct_control0.write(tvg_en2=0)
+
+            # if feng_pfb_ch_inject_tvg_enable:
+            #     f.registers.pfb_ch_inject.write(en=1)
+            #     f.registers.pack_dv_sel.write(sel=0)
+            # else:
+            #     f.registers.pfb_ch_inject.write(en=0)
 
             #==============================================================================
             #  ARM Snapshots
             #==============================================================================
             #f0.snapshots.snap_acc_ss.arm(man_trig=False, man_valid=False)
             f.snapshots.nb_pfb_snap_fft_ss.arm(man_trig=False, man_valid=False)
+            # f.snapshots.snap_pack_ss.arm(man_trig=False, man_valid=False)
             f.snapshots.hmc_ct_ss_ct1_ss.arm(man_trig=False, man_valid=False)
             f.snapshots.hmc_ct_ss_ct2_ss.arm(man_trig=False, man_valid=False)
 
@@ -321,7 +335,6 @@ for run_number in range(number_of_runs):
             x.registers.sys2_snap_reord_dv_sel.write(sel=0)
             x.registers.sys3_snap_reord_dv_sel.write(sel=0)
 
-
             #==============================================================================
             #  ARM Snapshots
             #==============================================================================
@@ -331,8 +344,6 @@ for run_number in range(number_of_runs):
             x.snapshots.sys1_snap_reord_ss.arm(man_trig=False, man_valid=False)
             x.snapshots.sys2_snap_reord_ss.arm(man_trig=False, man_valid=False)
             x.snapshots.sys3_snap_reord_ss.arm(man_trig=False, man_valid=False)
-
-
 
     #==============================================================================
     #  Reset
@@ -350,8 +361,11 @@ for run_number in range(number_of_runs):
             f = c.fhosts[feng]
 
             print ' '
-            print 'Checking CT Data in FEng:',feng
-            print '---------------------------'
+            print '**************'
+            print 'FEng Board:', feng
+            print '**************'
+            print ' '
+
             #==============================================================================
             #  FFT Debug
             #==============================================================================
@@ -389,6 +403,7 @@ for run_number in range(number_of_runs):
             # ct1_pkt_start = ct1_snap['pkt_start']
             # ct1_dv = ct1_snap['dv']
             # ct1_sync = ct1_snap['sync']
+            # -------------------------------------------------------------------
 
             # print('Reading CT2')
             ct2_snap = f.snapshots.hmc_ct_ss_ct2_ss.read(arm=False)['data']
@@ -405,11 +420,25 @@ for run_number in range(number_of_runs):
 
             # Get all the channels sent to each XEngine
             fchannel_per_X = extract_Fchannel_per_Xeng(ct2_x_idx)
+            # -------------------------------------------------------------------
 
             # Check if the data is non-zero
             # for idx in range(len(ct2_data)):
             #     if ct2_data[idx] != ct2_freq_id[idx]:
             #         print 'FEng freq error mismatch in channel:',ct2_data[idx],'should be:', ct2_freq_id[idx]
+
+
+            # snap_pack = f.snapshots.snap_pack_ss.read(arm=False)['data']
+
+            # snap_pack_d0 = snap_pack['d0']
+            # snap_pack_pktstart = snap_pack['pktstart']
+            # snap_pack_pktfreq = snap_pack['pktfreq']
+            # snap_pack_pktfreq = snap_pack['pktindex']
+            # snap_pack_pktfreq = snap_pack['pktoffset']            
+            # snap_pack_pktfreq = snap_pack['dv']   
+            # snap_pack_pktfreq = snap_pack['sync']   
+            # snap_pack_pktfreq = snap_pack['time']   
+            # -------------------------------------------------------------------
 
             if create_fref:
                 # Write the results to file per X-Eng
@@ -440,6 +469,11 @@ for run_number in range(number_of_runs):
         for xeng in range(num_xengs_boards):
             x = c.xhosts[xeng]
 
+            print ' '
+            print '*************'
+            print 'XEng Board:', xeng
+            print '*************'
+            print ' '
             #==============================================================================
             #  XEng SPEAD and HMC flags
             #==============================================================================
@@ -451,6 +485,7 @@ for run_number in range(number_of_runs):
             
             if ((header_err_cnt>0) | (magic_err_cnt>0) | (pad_err_cnt>0) | (pkt_len_err_cnt>0) | (time_err_cnt>0)):
                 print 'SPEAD Flag Error(s)'
+                print '-------------------'
                 print 'header_err_cnt:', header_err_cnt
                 print 'magic_err_cnt:', magic_err_cnt
                 print 'pad_err_cnt:', pad_err_cnt
@@ -472,6 +507,7 @@ for run_number in range(number_of_runs):
 
             if ((hmc_err_cnt>0) | (dest_err_cnt>0) | (lnk2_nrdy_err_cnt>0) | (lnk3_nrdy_err_cnt>0) | (miss_err_cnt>0) | (ts_err_cnt>0) | (discard_cnt>0) | (mcnt_timeout_cnt>0)):
                 print 'HMC Flag Error(s)'
+                print '-----------------'
                 print 'hmc_err_cnt:', hmc_err_cnt
                 print 'dest_err_cnt:', dest_err_cnt
                 print 'lnk2_nrdy_err_cnt:', lnk2_nrdy_err_cnt
@@ -481,11 +517,6 @@ for run_number in range(number_of_runs):
                 print 'discard_cnt:', discard_cnt
                 print 'mcnt_timeout_cnt:', mcnt_timeout_cnt
                 print ' '
-
-            #==============================================================================
-            #  XEng Core Data
-            #==============================================================================
-            print("Checking CT Data in XEng:",xeng)
 
             #==============================================================================
             #  XEng Unpack
@@ -526,6 +557,9 @@ for run_number in range(number_of_runs):
             sys0_reord_fengid = sys0_reord_snap['fengid']
             sys0_reord_valid = sys0_reord_snap['valid']
             sys0_reord_freq = sys0_reord_snap['freq']
+            sys0_reord_received = sys0_reord_snap['received']            
+            sys0_reord_d0 = sys0_reord_snap['d0']
+            sys0_reord_d1 = sys0_reord_snap['d1']
             sys0_reord_data = sys0_reord_snap['data']
             sys0_reord_dv = sys0_reord_snap['dv']
 
@@ -538,6 +572,9 @@ for run_number in range(number_of_runs):
             sys1_reord_fengid = sys1_reord_snap['fengid']
             sys1_reord_valid = sys1_reord_snap['valid']
             sys1_reord_freq = sys1_reord_snap['freq']
+            sys1_reord_received = sys1_reord_snap['received']            
+            sys1_reord_d0 = sys1_reord_snap['d0']
+            sys1_reord_d1 = sys1_reord_snap['d1']            
             sys1_reord_data = sys1_reord_snap['data']
             sys1_reord_dv = sys1_reord_snap['dv']
             # -------------------
@@ -547,6 +584,9 @@ for run_number in range(number_of_runs):
             sys2_reord_fengid = sys2_reord_snap['fengid']
             sys2_reord_valid = sys2_reord_snap['valid']
             sys2_reord_freq = sys2_reord_snap['freq']
+            sys2_reord_received = sys2_reord_snap['received']            
+            sys2_reord_d0 = sys2_reord_snap['d0']
+            sys2_reord_d1 = sys2_reord_snap['d1']            
             sys2_reord_data = sys2_reord_snap['data']
             sys2_reord_dv = sys2_reord_snap['dv']
             # -------------------
@@ -556,6 +596,9 @@ for run_number in range(number_of_runs):
             sys3_reord_fengid = sys3_reord_snap['fengid']
             sys3_reord_valid = sys3_reord_snap['valid']
             sys3_reord_freq = sys3_reord_snap['freq']
+            sys3_reord_received = sys3_reord_snap['received']            
+            sys3_reord_d0 = sys3_reord_snap['d0']
+            sys3_reord_d1 = sys3_reord_snap['d1']            
             sys3_reord_data = sys3_reord_snap['data']
             sys3_reord_dv = sys3_reord_snap['dv']
 
@@ -563,13 +606,13 @@ for run_number in range(number_of_runs):
             #  Check XEng Core Data
             #==============================================================================
             core = 0
-            xcore0 = check_xeng_core_data(xeng, core, sys0_reord_fengid, sys0_reord_freq, sys0_reord_data, sys0_reord_valid)
+            xcore0 = check_xeng_core_data(xeng, core, sys0_reord_fengid, sys0_reord_freq, sys0_reord_data, sys0_reord_d0, sys0_reord_d1, sys0_reord_received, sys0_reord_valid)
             core = 1
-            xcore1 = check_xeng_core_data(xeng, core, sys1_reord_fengid, sys1_reord_freq, sys1_reord_data, sys1_reord_valid)
+            xcore1 = check_xeng_core_data(xeng, core, sys1_reord_fengid, sys1_reord_freq, sys1_reord_data, sys1_reord_d0, sys1_reord_d1, sys1_reord_received, sys1_reord_valid)
             core = 2
-            xcore2 = check_xeng_core_data(xeng, core, sys2_reord_fengid, sys2_reord_freq, sys2_reord_data, sys2_reord_valid)
+            xcore2 = check_xeng_core_data(xeng, core, sys2_reord_fengid, sys2_reord_freq, sys2_reord_data, sys2_reord_d0, sys2_reord_d1, sys2_reord_received, sys2_reord_valid)
             core = 3
-            xcore3 = check_xeng_core_data(xeng, core, sys3_reord_fengid, sys3_reord_freq, sys3_reord_data, sys3_reord_valid)
+            xcore3 = check_xeng_core_data(xeng, core, sys3_reord_fengid, sys3_reord_freq, sys3_reord_data, sys3_reord_d0, sys3_reord_d1, sys3_reord_received, sys3_reord_valid)
             
             if xcore0[1] == False:
                 xeng_full_test_results.append(('XEng:'+str(xeng),'Run:'+str(run_number),xcore0))
@@ -623,30 +666,34 @@ print 'Xeng Results:', xeng_full_test_results
 print ' '
 print '##################################################'
 print ' '
-print 'Core Error(s)'
-print '-------------'
-print 'core0_error_count:', core0_error_count
-print 'core1_error_count:', core1_error_count
-print 'core2_error_count:', core2_error_count
-print 'core3_error_count:', core3_error_count
-print ' '
-print 'SPEAD Flag Error(s)'
-print '-------------------'
-print 'header_err_cnt:', header_err_cnt
-print 'magic_err_cnt:', magic_err_cnt
-print 'pad_err_cnt:', pad_err_cnt
-print 'pkt_len_err_cnt:', pkt_len_err_cnt
-print 'time_err_cnt:', time_err_cnt
-print ' '
-print 'HMC Flag Error(s)'
-print '-----------------'
-print 'hmc_err_cnt:', hmc_err_cnt
-print 'dest_err_cnt:', dest_err_cnt
-print 'lnk2_nrdy_err_cnt:', lnk2_nrdy_err_cnt
-print 'lnk3_nrdy_err_cnt:', lnk3_nrdy_err_cnt
-print 'miss_err_cnt:', miss_err_cnt
-print 'ts_err_cnt:', ts_err_cnt
-print 'discard_cnt:', discard_cnt
-print 'mcnt_timeout_cnt:', mcnt_timeout_cnt
-print ' '
+print '##################################################'
+print ' TEST COMPLETE!'
+print '##################################################'
+if x_debug:
+    print 'Core Error(s)'
+    print '-------------'
+    print 'core0_error_count:', core0_error_count
+    print 'core1_error_count:', core1_error_count
+    print 'core2_error_count:', core2_error_count
+    print 'core3_error_count:', core3_error_count
+    print ' '
+    print 'SPEAD Flag Error(s)'
+    print '-------------------'
+    print 'header_err_cnt:', header_err_cnt
+    print 'magic_err_cnt:', magic_err_cnt
+    print 'pad_err_cnt:', pad_err_cnt
+    print 'pkt_len_err_cnt:', pkt_len_err_cnt
+    print 'time_err_cnt:', time_err_cnt
+    print ' '
+    print 'HMC Flag Error(s)'
+    print '-----------------'
+    print 'hmc_err_cnt:', hmc_err_cnt
+    print 'dest_err_cnt:', dest_err_cnt
+    print 'lnk2_nrdy_err_cnt:', lnk2_nrdy_err_cnt
+    print 'lnk3_nrdy_err_cnt:', lnk3_nrdy_err_cnt
+    print 'miss_err_cnt:', miss_err_cnt
+    print 'ts_err_cnt:', ts_err_cnt
+    print 'discard_cnt:', discard_cnt
+    print 'mcnt_timeout_cnt:', mcnt_timeout_cnt
+    print ' '
 embed()
