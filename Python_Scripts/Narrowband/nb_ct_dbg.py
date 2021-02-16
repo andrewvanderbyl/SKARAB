@@ -17,6 +17,7 @@ config_file = '/etc/corr/avdbyl_nb_107_32k.ini'
 f_debug = True
 x_debug = True
 start_correlator = False
+issue_reset = True
 
 halt_test_on_fail = False
 create_fref = False
@@ -26,11 +27,12 @@ dbg_verbose = False
 feng_post_ct_tvg_enable = True
 feng_pfb_ch_inject_tvg_enable = False
 
+reset_wait = 1
 num_channels = 32768
 num_fengs = 4
 num_xengs_boards = 1   #4A = 1; 64A = 8
 num_cores_per_x = 4 
-number_of_runs = 100
+number_of_runs = 1
 
 #==============================================================================
 #   Classes and methods
@@ -164,12 +166,21 @@ def compare_fxeng_data_with_ref_fxeng(feng, fxeng_ref_data, fchannel_per_X):
                     mismatch_str = 'Mismatch in FXCore:', ref_core, 'Found Channel:', fchannel_per_X[curr_cores][i], 'Should be Channel:', fxeng_ref_data[ref_core][i]
                     print mismatch_str
                     err_tmp.append(mismatch_str)
+            
+        if feng_pfb_ch_inject_tvg_enable:
+            for idx in range(len(snap_pack_d0)):
+                if snap_pack_d0[idx] != snap_pack_pktfreq[idx]:
+                    match = False
+                    mismatch_str = 'Mismatch in FXCore on output of CT:', ref_core, 'Found Channel:', snap_pack_d0[idx], 'Should be Channel:', snap_pack_pktfreq[idx]
+                    print mismatch_str
+                    err_tmp.append(mismatch_str)
+            
+        if match:
+            print 'No errors in FXCore:%d' % ref_core 
+        else:
+            errors.append(err_tmp)
+            print 'Found', len(errors),'error(s) in FXCore', ref_core 
 
-            if match:
-                print 'No errors in FXCore:%d' % ref_core 
-            else:
-                errors.append(err_tmp)
-                print 'Found', len(errors),'error(s) in FXCore', ref_core 
     return errors
 
 def check_xeng_core_data(xeng, core, fengid, freq, data, d0, d1, received, valid):
@@ -196,25 +207,49 @@ def check_xeng_core_data(xeng, core, fengid, freq, data, d0, d1, received, valid
 
     for idx in range(len(data)):
         
-        # Test 1: Does the channel number injected in the data field match the freq channel reported by the XEng core?
-        if (freq[idx] == data[idx]) & valid[idx] & received[idx]:
-            xcore.append((fengid[idx],freq[idx],data[idx],valid[idx]))
-        elif (freq[idx] != data[idx]) & valid[idx] & received[idx]:
-            print 'Feng',fengid[idx] ,'Match error in channel:', freq[idx], 'and data:', data[idx], 'where d0:', d0[idx], 'and d1:', d1[idx]
-            passed = False
-            xcore_err.append(('Mismatch',fengid[idx],freq[idx],data[idx],d0[idx],d1[idx],valid[idx],received[idx]))
+        # If injecting the CT freq as the data vector
+        if feng_post_ct_tvg_enable:
+            # Test 1: Does the channel number injected in the data field match the freq channel reported by the XEng core?
+            if (freq[idx] == data[idx]) & valid[idx] & received[idx]:
+                xcore.append((fengid[idx],freq[idx],data[idx],valid[idx]))
+            elif (freq[idx] != data[idx]) & valid[idx] & received[idx]:
+                print 'Feng',fengid[idx] ,'Match error in channel:', freq[idx], 'and data:', data[idx], 'where d0:', d0[idx], 'and d1:', d1[idx]
+                passed = False
+                xcore_err.append(('Mismatch',fengid[idx],freq[idx],data[idx],d0[idx],d1[idx],valid[idx],received[idx]))
 
-        # Test 2: Is the channel in the correct core?
-        if (((freq[idx] < core_range_start) | (freq[idx] > core_range_end)) & valid[idx] & received[idx]):
-            passed = False
-            print 'Freq Channel under test out of range. Channel is:', freq[idx]
-            xcore_err.append(('FC out of Range',fengid[idx],freq[idx],data[idx],d0[idx],d1[idx],valid[idx],received[idx]))
+            # Test 2: Is the channel in the correct core?
+            if (((freq[idx] < core_range_start) | (freq[idx] > core_range_end)) & valid[idx] & received[idx]):
+                passed = False
+                print 'Freq Channel under test out of range. Channel is:', freq[idx]
+                xcore_err.append(('FC out of Range',fengid[idx],freq[idx],data[idx],d0[idx],d1[idx],valid[idx],received[idx]))
 
-        # Test 3: Is the (injected) channel in the correct core?
-        if (((data[idx] < core_range_start) | (data[idx] > core_range_end)) & valid[idx] & received[idx]):
-            passed = False
-            print 'Channel (inject) under test out of range. Channel is:', data[idx]
-            xcore_err.append(('CInject out of Range',fengid[idx],freq[idx],data[idx],d0[idx],d1[idx],valid[idx],received[idx]))
+            # Test 3: Is the (injected) channel in the correct core?
+            if (((data[idx] < core_range_start) | (data[idx] > core_range_end)) & valid[idx] & received[idx]):
+                passed = False
+                print 'Channel (inject) under test out of range. Channel is:', data[idx]
+                xcore_err.append(('CInject out of Range',fengid[idx],freq[idx],data[idx],d0[idx],d1[idx],valid[idx],received[idx]))
+
+        # If injecting the PFB channel number after Quantizer
+        if feng_pfb_ch_inject_tvg_enable:
+            # Test 1: Does the channel number injected in the data field match the freq channel reported by the XEng core?
+            if (freq[idx] == d0[idx]) & valid[idx] & received[idx]:
+                xcore.append((fengid[idx],freq[idx],d0[idx],valid[idx]))
+            elif (freq[idx] != d0[idx]) & valid[idx] & received[idx]:
+                print 'Feng',fengid[idx] ,'Match error in channel:', freq[idx], 'and data:', data[idx], 'where d0:', d0[idx], 'and d1:', d1[idx]
+                passed = False
+                xcore_err.append(('Mismatch',fengid[idx],freq[idx],data[idx],d0[idx],d1[idx],valid[idx],received[idx]))
+
+            # Test 2: Is the channel in the correct core?
+            if (((freq[idx] < core_range_start) | (freq[idx] > core_range_end)) & valid[idx] & received[idx]):
+                passed = False
+                print 'Freq Channel under test out of range. Channel is:', freq[idx]
+                xcore_err.append(('FC out of Range',fengid[idx],freq[idx],data[idx],d0[idx],d1[idx],valid[idx],received[idx]))
+
+            # Test 3: Is the (injected) channel in the correct core?
+            if (((d0[idx] < core_range_start) | (d0[idx] > core_range_end)) & valid[idx] & received[idx]):
+                passed = False
+                print 'Channel (inject) under test out of range. Channel is:', data[idx]
+                xcore_err.append(('CInject out of Range',fengid[idx],freq[idx],data[idx],d0[idx],d1[idx],valid[idx],received[idx]))
 
     # for f in range(num_fengs):
     #     for idx in range(len(fengid)):
@@ -233,6 +268,31 @@ def check_xeng_core_data(xeng, core, fengid, freq, data, d0, d1, received, valid
 
     return (xcore, passed, xcore_err)
 
+def check_xeng_core_vacc_input(xeng, core, d0_re, d0_im, valid):
+    print ' '
+    print 'Checking XEng core vacc input:', xeng, 'and core:', core
+    print '---------------------------------------------- '
+    print ' '
+    d_real = []
+    d_imag = []
+    for idx in range(len(d0_re)):
+        d_real.append((d0_re[idx]&4294901760)>>16)
+        d_imag.append((d0_re[idx]&65535))
+
+    # embed()
+
+def check_xeng_core_vacc_output(xeng, core, d0_re, d0_im, ts, rbdone, valid):
+    print ' '
+    print 'Checking XEng core vacc output:', xeng, 'and core:', core
+    print '---------------------------------------------- '
+    print ' '
+    d_real = []
+    d_imag = []
+    for idx in range(len(d0_re)):
+        d_real.append((d0_re[idx]&4294901760)>>16)
+        d_imag.append((d0_re[idx]&65535))
+
+    # embed()
 #==============================================================================
 # Start Correlator
 #==============================================================================
@@ -302,18 +362,18 @@ for run_number in range(number_of_runs):
             else:
                 f.registers.ct_control0.write(tvg_en2=0)
 
-            # if feng_pfb_ch_inject_tvg_enable:
-            #     f.registers.pfb_ch_inject.write(en=1)
-            #     f.registers.pack_dv_sel.write(sel=0)
-            # else:
-            #     f.registers.pfb_ch_inject.write(en=0)
+            if feng_pfb_ch_inject_tvg_enable:
+                f.registers.pfb_ch_inject.write(en=1)
+                f.registers.pack_dv_sel.write(sel=0)
+                f.snapshots.snap_pack_ss.arm(man_trig=False, man_valid=False)
+            else:
+                f.registers.pfb_ch_inject.write(en=0)
 
             #==============================================================================
             #  ARM Snapshots
             #==============================================================================
             #f0.snapshots.snap_acc_ss.arm(man_trig=False, man_valid=False)
             f.snapshots.nb_pfb_snap_fft_ss.arm(man_trig=False, man_valid=False)
-            # f.snapshots.snap_pack_ss.arm(man_trig=False, man_valid=False)
             f.snapshots.hmc_ct_ss_ct1_ss.arm(man_trig=False, man_valid=False)
             f.snapshots.hmc_ct_ss_ct2_ss.arm(man_trig=False, man_valid=False)
 
@@ -335,6 +395,16 @@ for run_number in range(number_of_runs):
             x.registers.sys2_snap_reord_dv_sel.write(sel=0)
             x.registers.sys3_snap_reord_dv_sel.write(sel=0)
 
+            x.registers.sys0_snap_acc_in_sel.write(sel=1)
+            # x.registers.sys1_snap_acc_in_sel.write(sel=0)
+            # x.registers.sys2_snap_acc_in_sel.write(sel=0)
+            # x.registers.sys3_snap_acc_in_sel.write(sel=0)
+            
+            x.registers.sys0_snap_vacc_out_sel.write(sel=1)
+            # x.registers.sys1_snap_vacc_out_sel.write(sel=0)
+            # x.registers.sys2_snap_vacc_out_sel.write(sel=0)
+            # x.registers.sys3_snap_vacc_out_sel.write(sel=0)
+            
             #==============================================================================
             #  ARM Snapshots
             #==============================================================================
@@ -348,10 +418,17 @@ for run_number in range(number_of_runs):
     #==============================================================================
     #  Reset
     #==============================================================================
-    print 'Issuing Reset'      
-    c.fops.sys_reset()
-    print ' ' 
-    print 'Reset Done'      
+    if issue_reset:
+        print 'Issuing Reset'
+        c.fops.sys_reset()
+        print ' '
+        print 'Reset Done'
+        print ' '
+
+        for s in range(reset_wait):
+            time.sleep(1)
+            print 'Waiting after reset:',s,'out of:',reset_wait,'seconds'
+      
 
     if f_debug:
         print '##################'
@@ -423,21 +500,28 @@ for run_number in range(number_of_runs):
             # -------------------------------------------------------------------
 
             # Check if the data is non-zero
-            # for idx in range(len(ct2_data)):
-            #     if ct2_data[idx] != ct2_freq_id[idx]:
-            #         print 'FEng freq error mismatch in channel:',ct2_data[idx],'should be:', ct2_freq_id[idx]
+            # if feng_post_ct_tvg_enable:
+            #     for idx in range(len(ct2_data)):
+            #         if ct2_data[idx] != ct2_freq_id[idx]:
+            #             print 'FEng freq error mismatch in channel:',ct2_data[idx],'should be:', ct2_freq_id[idx]
 
+            # if feng_pfb_ch_inject_tvg_enable:
+            #     for idx in range(len(ct2_data)):
+            #         if ct2_data[idx] != ct2_freq_id[idx]:
+            #             print 'FEng freq error mismatch in channel:',ct2_data[idx],'should be:', ct2_freq_id[idx]
 
-            # snap_pack = f.snapshots.snap_pack_ss.read(arm=False)['data']
+            if feng_pfb_ch_inject_tvg_enable:
+                snap_pack = f.snapshots.snap_pack_ss.read(arm=False)['data']
 
-            # snap_pack_d0 = snap_pack['d0']
-            # snap_pack_pktstart = snap_pack['pktstart']
-            # snap_pack_pktfreq = snap_pack['pktfreq']
-            # snap_pack_pktfreq = snap_pack['pktindex']
-            # snap_pack_pktfreq = snap_pack['pktoffset']            
-            # snap_pack_pktfreq = snap_pack['dv']   
-            # snap_pack_pktfreq = snap_pack['sync']   
-            # snap_pack_pktfreq = snap_pack['time']   
+                snap_pack_d0 = snap_pack['d0']
+                snap_pack_pktstart = snap_pack['pktstart']
+                snap_pack_pktfreq = snap_pack['pktfreq']
+                snap_pack_pktindex = snap_pack['pktindex']
+                snap_pack_pktoffset = snap_pack['pktoffset']            
+                snap_pack_dv = snap_pack['dv']   
+                snap_pack_sync = snap_pack['sync']   
+                snap_pack_time = snap_pack['time']   
+
             # -------------------------------------------------------------------
 
             if create_fref:
@@ -563,6 +647,21 @@ for run_number in range(number_of_runs):
             sys0_reord_data = sys0_reord_snap['data']
             sys0_reord_dv = sys0_reord_snap['dv']
 
+
+            sys0_snap_acc = x.snapshots.sys0_snap_acc_in_ss.read()['data']
+            sys0_snap_acc_d_re = sys0_snap_acc['d_re']
+            sys0_snap_acc_d_im = sys0_snap_acc['d_im']            
+            sys0_snap_acc_ts = sys0_snap_acc['timestamp']
+            sys0_snap_acc_dv = sys0_snap_acc['valid']
+
+            sys0_snap_vacc_out = x.snapshots.sys0_snap_vacc_out_ss.read()['data']
+            sys0_snap_vacc_d_re = sys0_snap_vacc_out['d_re']
+            sys0_snap_vacc_d_im = sys0_snap_vacc_out['d_im']            
+            sys0_snap_vacc_ts = sys0_snap_vacc_out['timestamp']
+            sys0_snap_vacc_rbdone = sys0_snap_vacc_out['rbdone']
+            sys0_snap_vacc_dv = sys0_snap_vacc_out['valid']
+
+
             # Create tuple with all sys0 snapshot data
             # sys0_reord = (xeng, core, sys0_reord_fengid, sys0_reord_freq, sys0_reord_data, sys0_reord_valid, sys0_reord_dv)
             # -------------------
@@ -607,6 +706,9 @@ for run_number in range(number_of_runs):
             #==============================================================================
             core = 0
             xcore0 = check_xeng_core_data(xeng, core, sys0_reord_fengid, sys0_reord_freq, sys0_reord_data, sys0_reord_d0, sys0_reord_d1, sys0_reord_received, sys0_reord_valid)
+            # check_xeng_core_vacc_input(xeng, core, sys0_snap_acc_d_re, sys0_snap_acc_d_im, sys0_snap_acc_dv)
+            # check_xeng_core_vacc_output(xeng, core, sys0_snap_vacc_d_re, sys0_snap_vacc_d_im, sys0_snap_vacc_ts, sys0_snap_vacc_rbdone, sys0_snap_vacc_dv)
+
             core = 1
             xcore1 = check_xeng_core_data(xeng, core, sys1_reord_fengid, sys1_reord_freq, sys1_reord_data, sys1_reord_d0, sys1_reord_d1, sys1_reord_received, sys1_reord_valid)
             core = 2
