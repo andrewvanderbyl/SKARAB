@@ -14,8 +14,8 @@ for i=sync_pos:length(data_in_real.Data)
    end
 end
 
-out_re = out_re(extract_length:extract_length+extract_length);
-out_im = out_im(extract_length:extract_length+extract_length);
+out_re = out_re(1:extract_length);
+out_im = out_im(1:extract_length);
 
 figure(1)
 hold on;

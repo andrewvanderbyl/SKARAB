@@ -14,8 +14,9 @@ for i=sync_pos:length(data_in_real.Data)
    end
 end
 
-out_re = out_re(extract_length:extract_length+extract_length);
-out_im = out_im(extract_length:extract_length+extract_length);
+% Extract the second spectrum
+out_re = out_re(extract_length+1:2*extract_length);
+out_im = out_im(extract_length+1:2*extract_length);
 
 % look for zero values and replace with a dither value before taking log.
 % This is to prevent a -Inf being computed which effects plotting.
