@@ -1,27 +1,27 @@
-ddc_out_re = double(zeros(length(ddc_pol0_re.Data),1));
-ddc_out_im = double(zeros(length(ddc_pol0_im.Data),1));
+function [out_re, out_im] = extract_data_async(data_in_real, data_in_im, data_sync, data_valid, extract_length)
+
+out_re = double(zeros(length(data_in_real.Data),1));
+out_im = double(zeros(length(data_in_im.Data),1));
+
+% Find sync position
+sync_pos = find(data_sync.data==1);
 k = 1;
-for i=1:length(ddc_pol0_re.Data)
-   if ddc_dvalid.Data(i,1)==1
-       ddc_out_re(k,1) = ddc_pol0_re.Data(i,1);
-       ddc_out_im(k,1) = ddc_pol0_im.Data(i,1);
+for i=sync_pos:length(data_in_real.Data)
+   if data_valid.Data(i,1)==1
+       out_re(k,1) = data_in_real.Data(i,1);
+       out_im(k,1) = data_in_im.Data(i,1);
        k = k + 1;
    end
 end
 
+out_re = out_re(extract_length:extract_length+extract_length);
+out_im = out_im(extract_length:extract_length+extract_length);
+
 figure(1)
 hold on;
-plot(ddc_out_re)
-plot(ddc_out_im)
-
-ddc_ext_re =  ddc_out_re(100:100+4095);
-ddc_ext_im =  ddc_out_im(100:100+4095);
-ddc_ext_cmplx =  ddc_ext_re+1i*ddc_ext_im;
-
-fft_ddc = fft(ddc_ext_cmplx);
-
-figure(2)
-semilogy(abs(fft_ddc))
+plot(out_re)
+plot(out_im)
+hold off;
 
 
 % mix_re = double(zeros(length(ddc_re0.Data),1));
