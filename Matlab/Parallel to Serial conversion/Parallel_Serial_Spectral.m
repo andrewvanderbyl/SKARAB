@@ -1,4 +1,4 @@
-function [Spec,Sync,Dvalid] = Parallel_Serial_Spectral(Input_0,Input_1,Input_2,Input_3,Sync_in,dvalid_in)
+function [spectral_out,Sync,Dvalid] = Parallel_Serial_Spectral(Input_0,Input_1,Input_2,Input_3,Sync_in,dvalid_in, extract_length)
 % Perform Parallel to serial conversion
 k = 0;
 
@@ -16,7 +16,7 @@ if (strcmp(Input_class,'timeseries'))
        Spec(k+3,1) = Input_2.Data(i,1);
        Spec(k+4,1) = Input_3.Data(i,1);  
        
-%        Sync(k+1,1) = Sync_in.Data(i,1);
+       Sync(k+1,1) = Sync_in.Data(i,1);
        
        if dvalid_in.Data(i,1)
            Dvalid((k+1):((k+4)),1) = ones(4,1);    
@@ -68,8 +68,6 @@ elseif (strcmp(Input_class,'double'))
             Dvalid((k+1):((k+4)),1) = zeros(4,1); 
         end    
     end
-        
-
     
 %     for i=1:length(Input_0)
 %        Spec(k+1,1) = Input_0(i);
@@ -89,5 +87,9 @@ elseif (strcmp(Input_class,'double'))
 %     end
 end
 
+sync_pos = find(Sync == 1);
+
+% Add 4 to the sync_pos as there are 4 samples per fpga clock tick
+spectral_out = Spec((sync_pos+4):((sync_pos+4)+extract_length-1));
 
 
