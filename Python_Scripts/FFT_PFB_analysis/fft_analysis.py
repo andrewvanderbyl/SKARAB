@@ -1,69 +1,37 @@
+# use:  python fft_analysis.py --cw 0.5 --cw_freq 100e6 --acc 1 --eq 100 --mix_freq 100e6 --program
+# use:  python fft_analysis.py --cw 0.5 --cw_freq 100e6 --acc 1 --eq 100 --mix_freq 100e6
+
 import time,corr2,casperfpga,sys,struct,pylab
 import numpy as np
-import matplotlib.pyplot as plt
 import argparse
 from IPython import embed
-
+import fft_plotting
+import set_registers
+import snapshots
 
 host = 'skarab02080A-01'
-#host = 'skarab020406-01'
-#host = 'skarab020309-01'
 
-prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_only_wb_2022-08-09_1247.fpg"
-#prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_wb_2022-08-02_1953.fpg"
+# WB: CASPER FFT
+# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_only_wb_2022-08-10_0052.fpg"
+# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_wb_2022-08-09_2044.fpg"
 
-# fft_shift = 65535
+# NB: Xilinx FFT
+prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-08-16_1548.fpg"
+# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_nb_2022-08-15_0127.fpg"
 
 #==============================================================================
 #   Classes and methods
 #==============================================================================
      
-def program_fpga(f, prog_file):
-        print 'Programming FPGA:', prog_file 
-        f.upload_to_ram_and_program(prog_file)
-        f.get_system_information(prog_file)   
-
-def set_fft_shift(f, shift):
-	print 'Setting FFT Shift:', shift
-	f.registers.fft_shift.write(fft_shift=shift)
-
-def set_cw_generator(f,scale=0.7,freq=53.5e6):
-	print 'Setting CW Scale:', scale
-	print 'Setting CW Freq:', freq
-	reg_freq=((freq)*2**27)/1712e6
-	f.registers.freq_cwg_input.write(frequency=reg_freq)
-	f.registers.cwg_scale.write(scale=scale)
-
-def set_wng_generator(f,scale=2**(-10)):
-	print 'Setting WNG Scale:', scale
-	f.registers.scale_wng.write(scale=scale)
-
-def set_eq(f,eq=10):
-	print 'Setting EQ:', eq
-	f.registers.eq.write(eq=eq)
-
-def set_vacc(f, acc_scale=1, acc_len=1):
-	f.registers.acc_scale.write(reg=acc_scale)
-	f.registers.acc_len.write(reg=acc_len)
-
-def arm_vacc_snapshots(f, man_trig=False, man_valid=False):
-	print 'Arming Vacc Snapshots'
-	f.snapshots.ss_vacc0_ss.arm(man_trig=man_trig, man_valid=man_valid)
-	f.snapshots.ss_vacc1_ss.arm(man_trig=man_trig, man_valid=man_valid)
-	f.snapshots.ss_vacc2_ss.arm(man_trig=man_trig, man_valid=man_valid)
-	f.snapshots.ss_vacc3_ss.arm(man_trig=man_trig, man_valid=man_valid)
-
-def arm_quant_snapshots(f, man_trig=False, man_valid=False):
-	print 'Arming Quant Snapshots'
-	f.snapshots.ss_quant_ss.arm(man_trig=man_trig, man_valid=man_valid)
-
-def arm_adc_snapshots(f, man_trig=False, man_valid=False):
-	print 'Arming ADC Snapshots'
-	f.snapshots.snap_adc_ss.arm(man_trig=man_trig, man_valid=man_valid)
-
-def arm_fft_snapshots(f, man_trig=False, man_valid=False):
-	print 'Arming FFT Snapshots'
-	f.snapshots.ss_fft_ss.arm(man_trig=man_trig, man_valid=man_valid)
+def program_fpga(f, args, prog_file):
+	if args.program:
+		print 'Programming FPGA:', prog_file
+		# program_fpga(f, prog_file)
+		f.upload_to_ram_and_program(prog_file)
+		f.get_system_information(prog_file)
+	else:
+		print 'Getting system information using', prog_file
+		f.get_system_information(prog_file)
 
 def system_reset(f):
 	print 'Issue sync'
@@ -73,130 +41,98 @@ def manual_sync(f):
 	print 'Issue sync'
 	f.registers.man_sync.write(sync='pulse')
 
-def _ss_reconstruct(snapshots):
-	recon = []
-
-	for i in range(len(snapshots[0])):
-		for ss in snapshots:
-			recon.append(ss[i])
-	return recon
-
-def _quantss_reconstruct(snapshot):
-	recon = []
-
-	for i in range(len(snapshot['data']['r0'])):
-		temp = (snapshot['data']['r0'][i]+1j*snapshot['data']['i0'][i],
-			snapshot['data']['r1'][i]+1j*snapshot['data']['i1'][i],
-			snapshot['data']['r2'][i]+1j*snapshot['data']['i2'][i],
-			snapshot['data']['r3'][i]+1j*snapshot['data']['i3'][i])	
-		for entry in temp:
-			recon.append(entry)
-
-	# embed()
-	return recon
-
-def read_vacc_snapshots(f, arm=False):
-	print 'Reading Snapshots'
-	
-	ss0 = f.snapshots.ss_vacc0_ss.read(arm=arm)
-	ss1 = f.snapshots.ss_vacc1_ss.read(arm=arm)
-	ss2 = f.snapshots.ss_vacc2_ss.read(arm=arm)
-	ss3 = f.snapshots.ss_vacc3_ss.read(arm=arm)
-	#print 'ss0: ',np.max(ss0['data']['data'])
-	#print 'ss1: ',np.max(ss1['data']['data'])
-	#print 'ss2: ',np.max(ss2['data']['data'])
-	#print 'ss3: ',np.max(ss3['data']['data'])
-
-	#print np.argmax(ss0['data']['data'])
-	#print np.argmax(ss1['data']['data'])
-	#print np.argmax(ss2['data']['data'])
-	#print np.argmax(ss3['data']['data'])
-	
-	# Reconstruct FFT form SS
-	return _ss_reconstruct([ss0['data']['data'],ss1['data']['data'],ss2['data']['data'],ss3['data']['data']])
-
-
-def read_quant_snapshots(f, arm=False):
-	print 'Reading Quant Snapshots'
-	return _quantss_reconstruct(f.snapshots.ss_quant_ss.read(arm=arm))
-
-def read_fft_snapshots(f, arm=False):
-	print 'Reading FFT Snapshot'
-	return _quantss_reconstruct(f.snapshots.ss_fft_ss.read(arm=arm))
-
-
-def read_adc_snapshots(f, arm=False):
-	print 'Reading ADC Snapshots'
-	recon = []
-
-	adc = f.snapshots.snap_adc_ss.read(arm=arm)
-	
-	# embed()
-	for i in range(len(adc['data']['p0_d0'])):
-		temp =(	adc['data']['p0_d0'][i],
-				adc['data']['p0_d1'][i],
-				adc['data']['p0_d2'][i],
-				adc['data']['p0_d3'][i],
-				adc['data']['p0_d4'][i],
-				adc['data']['p0_d5'][i],
-				adc['data']['p0_d6'][i],
-				adc['data']['p0_d7'][i])
-		for entry in temp:
-			recon.append(entry)
-
-	hist, bins = np.histogram(recon, 31)
-	# plt.figure(1)
-	# plt.plot(recon)
-
-	# plt.figure(2)
-	# plt.plot(hist)
-
-	# plt.show()
-
-
-def plot_vacc_data(data):
-	plt.figure(1)
-	plt.plot(data)
-	plt.figure(2)
-	plt.plot(20*np.log10(np.maximum(data,1e-3)/np.max(data)))
-	plt.show()
-
-def plot_spectral_data(data):
-	data = np.abs(np.square(data))
-	plt.figure(1)
-	plt.plot(np.abs(data))
-	plt.figure(2)
-	plt.plot(20*np.log10(np.maximum(data,1e-3)/np.max(data)))
-	plt.show()
-
 def data_analysis(data):
 	print 'Max value: ',np.max(data)
 	print 'Max value position: ',np.argmax(data)
-	plot_vacc_data(data)
+	fft_plotting.plot_vacc_data(data)
 
 def run_fft_tests(f, args):
+	# Is this the FFT or PFB version?
+	if prog_file.find('pfb') >= 0:
+		print 'PFB in design'
+		pfb = True
+	else:
+		print 'Only FFT in design'
+		pfb = False
+
+	# Is this the CASPER FFT or Xilinx FFT version?
+	if prog_file.find('wb') >= 0:
+		print 'Wideband design under test'
+		wideband = True
+
+	else: # NB (Xilinx FFT)
+		print 'Narrowband design under test'
+		wideband = False
+		set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
+
 	# Set parameters
-	set_fft_shift(f, shift=args.fft_shift)
-	set_eq(f, eq=args.eq)
-	set_wng_generator(f, scale=args.wgn)
-	set_cw_generator(f, scale=args.cw, freq=args.cw_freq)
-	set_vacc(f, acc_len=args.acc)
-	arm_adc_snapshots(f)
-	arm_fft_snapshots(f)
-	arm_quant_snapshots(f)
-	arm_vacc_snapshots(f)
+	set_registers.set_fft_shift(f, shift=args.fft_shift)
+	set_registers.set_eq(f, eq=args.eq)
+	set_registers.set_wng_generator(f, scale=args.wgn)
+	set_registers.set_cw_generator(f, scale=args.cw, freq=args.cw_freq)
+	set_registers.set_vacc(f, acc_len=args.acc)
+
+	# Arm snapshots
+	snapshots.arm_adc_snapshots(f)
+
+	if pfb:
+		if wideband:
+			snapshots.arm_pfb_wb_snapshots(f)
+		else:			
+			snapshots.arm_pfb_nb_snapshots(f)
+	else:
+		if wideband:
+			snapshots.arm_fft_wb_snapshots(f)
+		else:
+			snapshots.arm_fft_nb_snapshots(f)
+
+	snapshots.arm_quant_snapshots(f)
+	snapshots.arm_vacc_snapshots(f)
+
+	# Sleep
 	time.sleep(0.5)
+
+	# Issue manual sync
 	manual_sync(f)
-	adc_data = read_adc_snapshots(f)
-	fft_data = read_fft_snapshots(f)
-	# plot_spectral_data(fft_data)
 
-	quant_data = read_quant_snapshots(f)
-	plot_spectral_data(quant_data)
+	# List to hold results
+	data = []
 
-	vacc_data = read_vacc_snapshots(f)
-	data_analysis(vacc_data)
-	#embed()
+	# Read Snapshot data
+	# adc_data = snapshots.read_adc_snapshots(f)
+	# data.append((snapshots.read_adc_snapshots(f), 'adc'))
+
+	# Read FFT/PFB Snapshots and plot
+	if pfb:
+		if wideband:
+			name = 'CASPER FFT with PFB'
+			# pfb_data = snapshots.read_pfb_wb_snapshots(f)
+			data.append((snapshots.read_pfb_wb_snapshots(f), name))
+			# fft_plotting.plot_results_separate(pfb_data, name)
+		else:
+			name = 'Xilinx FFT with PFB'
+			# pfb_data = snapshots.read_pfb_nb_snapshots(f)
+			data.append((snapshots.read_pfb_nb_snapshots(f), name))
+			# fft_plotting.plot_results_separate(pfb_data, name)
+	else:
+		if wideband:
+			name = 'CASPER FFT without PFB'
+			# fft_data = snapshots.read_fft_wb_snapshots(f)
+			data.append((snapshots.read_fft_wb_snapshots(f), name))
+			# fft_plotting. plot_results_separate(fft_data, name)
+		else:
+			name = 'Xilinx FFT without PFB'
+			# fft_data = snapshots.read_fft_nb_snapshots(f)
+			data.append((snapshots.read_fft_nb_snapshots(f), name))
+			# fft_plotting.plot_results_separate(fft_data, name)
+
+	# quant_data = snapshots.read_quant_snapshots(f)
+	data.append((snapshots.read_quant_snapshots(f), name + ' ' + '(Quant)'))
+	# fft_plotting.plot_results_separate(quant_data, name)
+	embed()
+
+	# vacc_data = snapshots.read_vacc_snapshots(f)
+	# data_analysis(vacc_data)
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -208,18 +144,12 @@ def main():
 	parser.add_argument("--wgn", type=float, default=2**(-10), help="WGN scale")
 	parser.add_argument("--eq", type=int, default=1, help="EQ scale")
 	parser.add_argument("--fft_shift", type=int, default=65535, help="FFT shift")
+	parser.add_argument("--mix_freq", type=float, default=100e6, help="DDS Mixer frequency")
 	args = parser.parse_args()
 	print 'Using SKARAB:', args.skarab
 
 	f = casperfpga.CasperFpga(args.skarab)
-
-	if args.program:
-		print 'Programming FPGA'
-		program_fpga(f, prog_file)		
-	else:
-		print 'Getting system information using', prog_file		
-		f.get_system_information(prog_file)
-
+	program_fpga(f, args, prog_file)
 	run_fft_tests(f, args)
 
 if __name__ == '__main__':
