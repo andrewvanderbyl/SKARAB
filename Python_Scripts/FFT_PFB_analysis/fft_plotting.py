@@ -1,3 +1,4 @@
+from re import I
 import numpy as np
 import matplotlib.pyplot as plt
 from IPython import embed
@@ -33,24 +34,45 @@ def plot_spectral_data(data):
 	plt.plot(10*np.log10(np.maximum(data,1e-4)/np.max(data)))
 	# plt.show()
 
-def plot_results_separate(data, name):
-    sfdr = _compute_sfdr(db(np.abs(data)))
-    db_text_y_pos = -12
+# def plot_results_separate(data):
+    # sfdr = _compute_sfdr(db(np.abs(data)))
+    # db_text_y_pos = -12
+    # plt.style.use("ggplot")
+    # markers = [sfdr[1], sfdr[2]]
+    # plt.title(name)
+    # plt.ylabel("dB")
+    # plt.xlabel("Channel")
+    # plt.plot(db(np.abs(data)), label='FFT', marker="D", markevery=markers, markerfacecolor='green', markersize=9)
+
+    # plt.show()
+
+def plot_results_separate(data, args, taps=4, savefigs=False):
     plt.style.use("ggplot")
-    markers = [sfdr[1], sfdr[2]]
-    plt.title(name)
-    plt.ylabel("dB")
-    plt.xlabel("Channel")
-    plt.plot(db(np.abs(data)), label='FFT', marker="D", markevery=markers, markerfacecolor='green', markersize=9)
 
-    plt.show()
+    for i, (spectrum, name) in enumerate(data):
+        fig, axs = plt.subplots(1, 1, sharex=True, sharey=True)
+        sfdr = _compute_sfdr(db(np.abs(spectrum)))
+        markers = [sfdr[1], sfdr[2]]
+        db_text_y_pos = round(np.max(db(np.abs(spectrum))),2)
+        # embed()
+        axs.set_ylabel("dB")
+        axs.set_xlabel("Channel")
+        axs.plot(db(np.abs(spectrum)), label=name, marker="D", markevery=markers, markerfacecolor='green', markersize=9)
+        # embed()
+        if sfdr[1] < len(spectrum)/2:
+            # axs.text(24e3, db_text_y_pos, 'SFDR ($\u25C6$): {round(sfdr[0],3)}dB', color='green', style='italic')
+            axs.text(24e3, db_text_y_pos, 'SFDR:'+ '\u25C6' + str(round(sfdr[0],3))+'dB', color='green', style='italic')
+        else:
+            # axs.text(0, db_text_y_pos, 'SFDR ($\u25C6$): {round(sfdr[0],3)}dB', color='green', style='italic')
+            axs.text(0, db_text_y_pos, 'SFDR:'+ '\u25C6' + str(round(sfdr[0],3))+'dB', color='green', style='italic')
+        axs.legend()
 
-    # if savefigs:
-    #     if pfb:
-    #         pfb = "pfb"
-    #         filename = f"{name}_{pfb}{taps}_{batches}.png"
-    #     else:
-    #         filename = f"{name}_{batches}.png"
-    #     plt.savefig(filename, bbox_inches='tight')
-    # if savefigs==False:
-    #     plt.show()
+        # if savefigs:
+        #     if pfb:
+        #         pfb = "pfb"
+        #         filename = f"{name}_{pfb}{taps}_{args.acc}.png"
+        #     else:
+        #         filename = f"{name}_{args.acc}.png"
+        #     plt.savefig(filename, bbox_inches='tight')
+    if savefigs==False:
+        plt.show()

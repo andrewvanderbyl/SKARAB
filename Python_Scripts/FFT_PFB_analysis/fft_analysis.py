@@ -1,5 +1,10 @@
-# use:  python fft_analysis.py --cw 0.5 --cw_freq 100e6 --acc 1 --eq 100 --mix_freq 100e6 --program
-# use:  python fft_analysis.py --cw 0.5 --cw_freq 100e6 --acc 1 --eq 100 --mix_freq 100e6
+# Use: Casper FFT  
+# python fft_analysis.py --cw 0.9 --cw_freq 100e6 --acc 1 --eq 10 --fft_shift 65535 --program
+# python fft_analysis.py --cw 0.9 --cw_freq 100e6 --acc 1 --eq 10 --fft_shift 65535
+
+# Use: Xilinx FFT
+# python fft_analysis.py --cw 0.9 --cw_freq 100e6 --acc 1 --eq 10 --mix_freq 100e6 --fft_shift 21930 --program
+# python fft_analysis.py --cw 0.9 --cw_freq 100e6 --acc 1 --eq 10 --mix_freq 100e6 --fft_shift 21930
 
 import time,corr2,casperfpga,sys,struct,pylab
 import numpy as np
@@ -16,8 +21,8 @@ host = 'skarab02080A-01'
 # prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_wb_2022-08-09_2044.fpg"
 
 # NB: Xilinx FFT
-prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-08-16_1548.fpg"
-# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_nb_2022-08-15_0127.fpg"
+prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-08-19_1306.fpg"
+# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_nb_2022-08-17_0139.fpg"
 
 #==============================================================================
 #   Classes and methods
@@ -87,6 +92,7 @@ def run_fft_tests(f, args):
 			snapshots.arm_fft_nb_snapshots(f)
 
 	snapshots.arm_quant_snapshots(f)
+	snapshots.arm_vacc_in_snapshots(f)
 	snapshots.arm_vacc_snapshots(f)
 
 	# Sleep
@@ -128,11 +134,19 @@ def run_fft_tests(f, args):
 
 	# quant_data = snapshots.read_quant_snapshots(f)
 	data.append((snapshots.read_quant_snapshots(f), name + ' ' + '(Quant)'))
-	# fft_plotting.plot_results_separate(quant_data, name)
-	embed()
+	# fft_plotting.plot_results_separate(quant_data, args)
+	# fft_plotting.plot_results_separate(data, args)
+	data.append((snapshots.read_vacc_in_snapshots(f), name + ' ' + '(VACC In)'))
 
 	# vacc_data = snapshots.read_vacc_snapshots(f)
 	# data_analysis(vacc_data)
+	data.append((snapshots.read_vacc_snapshots(f), name + ' ' + '(VACC)'))
+	
+	if args.plot:
+		fft_plotting.plot_results_separate(data, args)
+
+	if args.embed:
+		embed()
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -145,6 +159,8 @@ def main():
 	parser.add_argument("--eq", type=int, default=1, help="EQ scale")
 	parser.add_argument("--fft_shift", type=int, default=65535, help="FFT shift")
 	parser.add_argument("--mix_freq", type=float, default=100e6, help="DDS Mixer frequency")
+	parser.add_argument("--embed", action="store_true", default=False, help="Enable Ipython embed")
+	parser.add_argument("--plot", action="store_true", default=True, help="Enable plotting")
 	args = parser.parse_args()
 	print 'Using SKARAB:', args.skarab
 
