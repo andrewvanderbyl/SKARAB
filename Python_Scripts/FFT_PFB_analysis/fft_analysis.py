@@ -3,8 +3,8 @@
 # python fft_analysis.py --cw 0.9 --cw_freq 100e6 --acc 1 --eq 10 --fft_shift 65535
 
 # Use: Xilinx FFT
-# python fft_analysis.py --cw 0.9 --cw_freq 100e6 --acc 1 --eq 10 --mix_freq 100e6 --fft_shift 21930 --program
-# python fft_analysis.py --cw 0.9 --cw_freq 100e6 --acc 1 --eq 10 --mix_freq 100e6 --fft_shift 21930
+# python fft_analysis.py --cw 0.9 --cw_freq 100e6 --wgn 0.2 --acc 1024 --eq 56 --mix_freq 100e6 --fft_shift 21845 --program
+# python fft_analysis.py --cw 0.9 --cw_freq 100e6 --wgn 0.2 --acc 1024 --eq 56 --mix_freq 100e6 --fft_shift 21845 
 
 import time,corr2,casperfpga,sys,struct,pylab
 import numpy as np
@@ -21,8 +21,8 @@ host = 'skarab02080A-01'
 # prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_wb_2022-08-09_2044.fpg"
 
 # NB: Xilinx FFT
-prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-08-19_1306.fpg"
-# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_nb_2022-08-17_0139.fpg"
+prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-08-19_1634.fpg"
+# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_nb_2022-08-22_1052.fpg"
 
 #==============================================================================
 #   Classes and methods

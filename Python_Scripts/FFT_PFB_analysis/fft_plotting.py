@@ -1,11 +1,12 @@
 from re import I
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
 from IPython import embed
 
 
 def _compute_sfdr(db_total):
-    ignore_zone = 3 
+    ignore_zone = 75 
     peak = np.max(db_total)
     peak_channel = np.argmax(db_total)
 
@@ -54,17 +55,15 @@ def plot_results_separate(data, args, taps=4, savefigs=False):
         sfdr = _compute_sfdr(db(np.abs(spectrum)))
         markers = [sfdr[1], sfdr[2]]
         db_text_y_pos = round(np.max(db(np.abs(spectrum))),2)
-        # embed()
         axs.set_ylabel("dB")
         axs.set_xlabel("Channel")
-        axs.plot(db(np.abs(spectrum)), label=name, marker="D", markevery=markers, markerfacecolor='green', markersize=9)
-        # embed()
+        axs.plot(db(np.abs(spectrum)), label=name, marker="D", markevery=markers, markerfacecolor='green', markersize=7)
         if sfdr[1] < len(spectrum)/2:
             # axs.text(24e3, db_text_y_pos, 'SFDR ($\u25C6$): {round(sfdr[0],3)}dB', color='green', style='italic')
-            axs.text(24e3, db_text_y_pos, 'SFDR:'+ '\u25C6' + str(round(sfdr[0],3))+'dB', color='green', style='italic')
+            axs.text(4e4, db_text_y_pos, 'SFDR:'+ u"\u25C6" + str(round(sfdr[0],3))+'dB', color='green', style='italic')
         else:
             # axs.text(0, db_text_y_pos, 'SFDR ($\u25C6$): {round(sfdr[0],3)}dB', color='green', style='italic')
-            axs.text(0, db_text_y_pos, 'SFDR:'+ '\u25C6' + str(round(sfdr[0],3))+'dB', color='green', style='italic')
+            axs.text(0, db_text_y_pos, 'SFDR:'+ u"\u25C6" + str(round(sfdr[0],3))+'dB', color='green', style='italic')
         axs.legend()
 
         # if savefigs:
