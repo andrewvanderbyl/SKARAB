@@ -58,13 +58,14 @@ def plot_results_separate(data, args, taps=4, savefigs=False):
         axs.set_ylabel("dB")
         axs.set_xlabel("Channel")
         axs.plot(db(np.abs(spectrum)), label=name, marker="D", markevery=markers, markerfacecolor='green', markersize=7)
-        if sfdr[1] < len(spectrum)/2:
-            # axs.text(24e3, db_text_y_pos, 'SFDR ($\u25C6$): {round(sfdr[0],3)}dB', color='green', style='italic')
-            axs.text(4e4, db_text_y_pos, 'SFDR:'+ u"\u25C6" + str(round(sfdr[0],3))+'dB', color='green', style='italic')
-        else:
-            # axs.text(0, db_text_y_pos, 'SFDR ($\u25C6$): {round(sfdr[0],3)}dB', color='green', style='italic')
-            axs.text(0, db_text_y_pos, 'SFDR:'+ u"\u25C6" + str(round(sfdr[0],3))+'dB', color='green', style='italic')
-        axs.legend()
+        # if sfdr[1] <= len(spectrum)/2:
+        #     # axs.text(24e3, db_text_y_pos, 'SFDR ($\u25C6$): {round(sfdr[0],3)}dB', color='green', style='italic')
+        #     axs.text(0e4, db_text_y_pos, 'SFDR:'+ u"\u25C6" + str(round(sfdr[0],3))+'dB', color='green', style='italic')
+        # else:
+        #     # axs.text(0, db_text_y_pos, 'SFDR ($\u25C6$): {round(sfdr[0],3)}dB', color='green', style='italic')
+        #     axs.text(0, db_text_y_pos, 'SFDR:'+ u"\u25C6" + str(round(sfdr[0],3))+'dB', color='green', style='italic')
+        axs.text(0, db_text_y_pos, 'SFDR:'+ u"\u25C6" + str(round(sfdr[0],3))+'dB', color='green', style='italic')
+        axs.legend(loc='upper right')
 
         # if savefigs:
         #     if pfb:

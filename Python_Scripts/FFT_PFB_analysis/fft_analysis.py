@@ -3,8 +3,8 @@
 # python fft_analysis.py --cw 0.9 --cw_freq 100e6 --acc 1 --eq 10 --fft_shift 65535
 
 # Use: Xilinx FFT
-# python fft_analysis.py --cw 0.9 --cw_freq 100e6 --wgn 0.2 --acc 1024 --eq 56 --mix_freq 100e6 --fft_shift 21845 --program
-# python fft_analysis.py --cw 0.9 --cw_freq 100e6 --wgn 0.2 --acc 1024 --eq 56 --mix_freq 100e6 --fft_shift 21845 
+# python fft_analysis.py --cw 0.99 --cw_freq 100e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 100e6 --fft_shift 21845 --program
+# python fft_analysis.py --cw 0.99 --cw_freq 100e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 100e6 --fft_shift 21845 
 
 import time,corr2,casperfpga,sys,struct,pylab
 import numpy as np
@@ -17,11 +17,11 @@ import snapshots
 host = 'skarab02080A-01'
 
 # WB: CASPER FFT
-# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_only_wb_2022-08-10_0052.fpg"
+prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_wb_2022-08-22_1645.fpg"
 # prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_wb_2022-08-09_2044.fpg"
 
 # NB: Xilinx FFT
-prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-08-19_1634.fpg"
+# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-08-19_1634.fpg"
 # prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_nb_2022-08-22_1052.fpg"
 
 #==============================================================================
@@ -112,35 +112,22 @@ def run_fft_tests(f, args):
 	if pfb:
 		if wideband:
 			name = 'CASPER FFT with PFB'
-			# pfb_data = snapshots.read_pfb_wb_snapshots(f)
 			data.append((snapshots.read_pfb_wb_snapshots(f), name))
-			# fft_plotting.plot_results_separate(pfb_data, name)
 		else:
-			name = 'Xilinx FFT with PFB'
-			# pfb_data = snapshots.read_pfb_nb_snapshots(f)
+			name = 'Xil FFT with PFB'
 			data.append((snapshots.read_pfb_nb_snapshots(f), name))
-			# fft_plotting.plot_results_separate(pfb_data, name)
 	else:
 		if wideband:
 			name = 'CASPER FFT without PFB'
-			# fft_data = snapshots.read_fft_wb_snapshots(f)
 			data.append((snapshots.read_fft_wb_snapshots(f), name))
-			# fft_plotting. plot_results_separate(fft_data, name)
 		else:
-			name = 'Xilinx FFT without PFB'
-			# fft_data = snapshots.read_fft_nb_snapshots(f)
+			name = 'Xil FFT w/o PFB'
 			data.append((snapshots.read_fft_nb_snapshots(f), name))
-			# fft_plotting.plot_results_separate(fft_data, name)
 
-	# quant_data = snapshots.read_quant_snapshots(f)
 	data.append((snapshots.read_quant_snapshots(f), name + ' ' + '(Quant)'))
-	# fft_plotting.plot_results_separate(quant_data, args)
-	# fft_plotting.plot_results_separate(data, args)
-	data.append((snapshots.read_vacc_in_snapshots(f), name + ' ' + '(VACC In)'))
+	# data.append((snapshots.read_vacc_in_snapshots(f), name + ' ' + '(VACC In)'))
 
-	# vacc_data = snapshots.read_vacc_snapshots(f)
-	# data_analysis(vacc_data)
-	data.append((snapshots.read_vacc_snapshots(f), name + ' ' + '(VACC)'))
+	data.append((snapshots.read_vacc_snapshots(f), name + ' ' + '(Acc:'+str(args.acc)+')'))
 	
 	if args.plot:
 		fft_plotting.plot_results_separate(data, args)
