@@ -1,4 +1,4 @@
-function [Serial_Data, Sync, Dvalid] = Parallel_Serial(Sync_in,dvalid_in,Input_0,Input_1,Input_2,Input_3,Input_4,Input_5,Input_6,Input_7)
+function [Serial_Data, Sync, Dvalid] = Parallel_Serial_sync(Sync_in,dvalid_in,Input_0,Input_1,Input_2,Input_3,Input_4,Input_5,Input_6,Input_7)
 % Perform Parallel to serial conversion
 k = 0;
 
