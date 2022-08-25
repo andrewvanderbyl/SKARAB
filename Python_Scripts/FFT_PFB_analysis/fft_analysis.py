@@ -1,10 +1,12 @@
 # Use: Casper FFT  
-# python fft_analysis.py --cw 0.9 --cw_freq 100e6 --acc 1 --eq 10 --fft_shift 65535 --program
-# python fft_analysis.py --cw 0.9 --cw_freq 100e6 --acc 1 --eq 10 --fft_shift 65535
+# No PFB
+# python fft_analysis.py --cw 0.85 --cw_freq 26.776123e6 --wgn 0.105 --acc 1024 --eq 15 --fft_shift 65535 --plot --program
+# PFB
+# python fft_analysis.py --cw 0.85 --cw_freq 26.776123e6 --wgn 0.08 --acc 1024 --eq 80 --fft_shift 65535 --plot --program
 
 # Use: Xilinx FFT
-# python fft_analysis.py --cw 0.99 --cw_freq 100e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 100e6 --fft_shift 21845 --program
-# python fft_analysis.py --cw 0.99 --cw_freq 100e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 100e6 --fft_shift 21845 
+# python fft_analysis.py --cw 0.99 --cw_freq 26.776123e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 267.761e6 --fft_shift 21845 --program
+# python fft_analysis.py --cw 0.99 --cw_freq 26.776123e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 267.761e6 --fft_shift 21845 
 
 import time,corr2,casperfpga,sys,struct,pylab
 import numpy as np
@@ -17,8 +19,9 @@ import snapshots
 host = 'skarab02080A-01'
 
 # WB: CASPER FFT
-prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_wb_2022-08-22_1645.fpg"
-# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_wb_2022-08-09_2044.fpg"
+# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_wb_2022-08-25_0922.fpg"
+# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_only_wb_2022-08-10_0052.fpg"
+prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_wb_2022-08-25_1300.fpg"
 
 # NB: Xilinx FFT
 # prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-08-19_1634.fpg"
@@ -31,7 +34,6 @@ prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_wb_2022-08-22_1645.fpg"
 def program_fpga(f, args, prog_file):
 	if args.program:
 		print 'Programming FPGA:', prog_file
-		# program_fpga(f, prog_file)
 		f.upload_to_ram_and_program(prog_file)
 		f.get_system_information(prog_file)
 	else:
@@ -92,7 +94,7 @@ def run_fft_tests(f, args):
 			snapshots.arm_fft_nb_snapshots(f)
 
 	snapshots.arm_quant_snapshots(f)
-	snapshots.arm_vacc_in_snapshots(f)
+	# snapshots.arm_vacc_in_snapshots(f)
 	snapshots.arm_vacc_snapshots(f)
 
 	# Sleep
@@ -147,12 +149,13 @@ def main():
 	parser.add_argument("--fft_shift", type=int, default=65535, help="FFT shift")
 	parser.add_argument("--mix_freq", type=float, default=100e6, help="DDS Mixer frequency")
 	parser.add_argument("--embed", action="store_true", default=False, help="Enable Ipython embed")
-	parser.add_argument("--plot", action="store_true", default=True, help="Enable plotting")
+	parser.add_argument("--plot", action="store_true", default=False, help="Enable plotting")
 	args = parser.parse_args()
 	print 'Using SKARAB:', args.skarab
 
 	f = casperfpga.CasperFpga(args.skarab)
 	program_fpga(f, args, prog_file)
+
 	run_fft_tests(f, args)
 
 if __name__ == '__main__':

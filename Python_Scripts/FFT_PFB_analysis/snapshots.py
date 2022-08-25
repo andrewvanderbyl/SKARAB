@@ -1,5 +1,6 @@
 import numpy as np
 from IPython import embed
+import matplotlib.pyplot as plt
 
 # ---- Reconstruct ----
 def _ss_reconstruct(snapshots):
@@ -52,6 +53,7 @@ def arm_quant_snapshots(f, man_trig=False, man_valid=False):
 def arm_vacc_in_snapshots(f, man_trig=False, man_valid=False):
 	print 'Arming VACC In Snapshot'
 	f.snapshots.ss_vacc_in_ss.arm(man_trig=man_trig, man_valid=man_valid)
+
 
 def arm_vacc_snapshots(f, man_trig=False, man_valid=False):
 	print 'Arming Vacc Snapshots'
@@ -144,6 +146,16 @@ def read_vacc_snapshots(f, arm=False):
 	ss1_trig = ss1['data']['trig']
 	ss2_trig = ss2['data']['trig']
 	ss3_trig = ss3['data']['trig']
+
+	# plt.figure(1)
+	# plt.plot(ss0_dv)
+	# plt.plot(ss0_trig)
+	# plt.figure(2)
+	# plt.plot(ss1_dv)
+	# plt.plot(ss1_trig)
+
+
+	# plt.show()
 
 	# Reconstruct FFT form SS
 	return _ss_reconstruct([ss0['data']['data'],ss1['data']['data'],ss2['data']['data'],ss3['data']['data']])
