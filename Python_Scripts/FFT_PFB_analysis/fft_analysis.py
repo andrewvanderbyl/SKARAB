@@ -1,12 +1,11 @@
 # Use: Casper FFT  
 # No PFB
 # python fft_analysis.py --cw 0.85 --cw_freq 26.776123e6 --wgn 0.105 --acc 1024 --eq 15 --fft_shift 65535 --plot --program
-# PFB
-# python fft_analysis.py --cw 0.85 --cw_freq 26.776123e6 --wgn 0.08 --acc 1024 --eq 80 --fft_shift 65535 --plot --program
+# python fft_analysis.py --cw 0.85 --cw_freq 26.776123e6 --wgn 0.08 --acc 1024 --eq 80 --fft_shift 65535 --plot
 
 # Use: Xilinx FFT
-# python fft_analysis.py --cw 0.99 --cw_freq 26.776123e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 267.761e6 --fft_shift 21845 --program
-# python fft_analysis.py --cw 0.99 --cw_freq 26.776123e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 267.761e6 --fft_shift 21845 
+# python fft_analysis.py --cw 0.99 --cw_freq 267.76123e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 267.76123e6 --fft_shift 21845 --program
+# python fft_analysis.py --cw 0.99 --cw_freq 267.76123e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 267.76123e6 --fft_shift 21845 
 
 import time,corr2,casperfpga,sys,struct,pylab
 import numpy as np
@@ -21,10 +20,11 @@ host = 'skarab02080A-01'
 # WB: CASPER FFT
 # prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_wb_2022-08-25_0922.fpg"
 # prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_only_wb_2022-08-10_0052.fpg"
-prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_wb_2022-08-25_1300.fpg"
+# prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_wb_2022-08-25_1300.fpg"
 
 # NB: Xilinx FFT
 # prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-08-19_1634.fpg"
+prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-09-26_1827.fpg"
 # prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_nb_2022-08-22_1052.fpg"
 
 #==============================================================================
@@ -53,8 +53,29 @@ def data_analysis(data):
 	print 'Max value position: ',np.argmax(data)
 	fft_plotting.plot_vacc_data(data)
 
-def run_fft_tests(f, args):
-	# Is this the FFT or PFB version?
+# def check_pfb_mode():
+# 	# Is this the FFT or PFB version?
+# 	if prog_file.find('pfb') >= 0:
+# 		print 'PFB in design'
+# 		pfb = True
+# 	else:
+# 		print 'Only FFT in design'
+# 		pfb = False	
+# 	return pfb
+
+# def check_fft_mode():
+# 	# Is this the CASPER FFT or Xilinx FFT version?
+# 	if prog_file.find('wb') >= 0:
+# 		print 'Wideband design under test'
+# 		wideband = True
+
+# 	else: # NB (Xilinx FFT)
+# 		print 'Narrowband design under test'
+# 		wideband = False
+# 	return wideband
+
+def setup(f,args):
+	# # Is this the FFT or PFB version?
 	if prog_file.find('pfb') >= 0:
 		print 'PFB in design'
 		pfb = True
@@ -73,11 +94,15 @@ def run_fft_tests(f, args):
 		set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
 
 	# Set parameters
+	if wideband:
+		set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
+	
 	set_registers.set_fft_shift(f, shift=args.fft_shift)
 	set_registers.set_eq(f, eq=args.eq)
 	set_registers.set_wng_generator(f, scale=args.wgn)
 	set_registers.set_cw_generator(f, scale=args.cw, freq=args.cw_freq)
 	set_registers.set_vacc(f, acc_len=args.acc)
+	f.registers.control.write(cnt_rst='pulse')
 
 	# Arm snapshots
 	snapshots.arm_adc_snapshots(f)
@@ -96,6 +121,66 @@ def run_fft_tests(f, args):
 	snapshots.arm_quant_snapshots(f)
 	# snapshots.arm_vacc_in_snapshots(f)
 	snapshots.arm_vacc_snapshots(f)
+	return wideband, pfb
+
+def run_fft_shift_analysis(f, args):
+	print 'FFT Shift Analysis'
+	# pfb = check_pfb_mode()
+	# wideband = check_fft_mode()
+	# wideband, pfb = setup(f,args)
+
+
+def run(f, args):
+	# pfb = check_pfb_mode()
+	# wideband = check_fft_mode()
+
+	# # Is this the FFT or PFB version?
+	# if prog_file.find('pfb') >= 0:
+	# 	print 'PFB in design'
+	# 	pfb = True
+	# else:
+	# 	print 'Only FFT in design'
+	# 	pfb = False
+
+	# # Is this the CASPER FFT or Xilinx FFT version?
+	# if prog_file.find('wb') >= 0:
+	# 	print 'Wideband design under test'
+	# 	wideband = True
+
+	# else: # NB (Xilinx FFT)
+	# 	print 'Narrowband design under test'
+	# 	wideband = False
+	# 	set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
+
+	# # Set parameters
+	# if wideband:
+	# 	set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
+	
+	# set_registers.set_fft_shift(f, shift=args.fft_shift)
+	# set_registers.set_eq(f, eq=args.eq)
+	# set_registers.set_wng_generator(f, scale=args.wgn)
+	# set_registers.set_cw_generator(f, scale=args.cw, freq=args.cw_freq)
+	# set_registers.set_vacc(f, acc_len=args.acc)
+	# f.registers.control.write(cnt_rst='pulse')
+
+	# # Arm snapshots
+	# snapshots.arm_adc_snapshots(f)
+
+	# if pfb:
+	# 	if wideband:
+	# 		snapshots.arm_pfb_wb_snapshots(f)
+	# 	else:			
+	# 		snapshots.arm_pfb_nb_snapshots(f)
+	# else:
+	# 	if wideband:
+	# 		snapshots.arm_fft_wb_snapshots(f)
+	# 	else:
+	# 		snapshots.arm_fft_nb_snapshots(f)
+
+	# snapshots.arm_quant_snapshots(f)
+	# # snapshots.arm_vacc_in_snapshots(f)
+	# snapshots.arm_vacc_snapshots(f)
+	wideband, pfb = setup(f,args)
 
 	# Sleep
 	time.sleep(0.5)
@@ -124,18 +209,23 @@ def run_fft_tests(f, args):
 			data.append((snapshots.read_fft_wb_snapshots(f), name))
 		else:
 			name = 'Xil FFT w/o PFB'
-			data.append((snapshots.read_fft_nb_snapshots(f), name))
+			#data.append((snapshots.read_fft_nb_snapshots(f), name))
 
-	data.append((snapshots.read_quant_snapshots(f), name + ' ' + '(Quant)'))
+	# data.append((snapshots.read_quant_snapshots(f), name + ' ' + '(Quant)'))
 	# data.append((snapshots.read_vacc_in_snapshots(f), name + ' ' + '(VACC In)'))
 
 	data.append((snapshots.read_vacc_snapshots(f), name + ' ' + '(Acc:'+str(args.acc)+')'))
-	
-	if args.plot:
-		fft_plotting.plot_results_separate(data, args)
+	print f.registers.pfb_of_cnt.read()
 
-	if args.embed:
-		embed()
+	if args.shift_analysis:
+		run_fft_shift_analysis(f, args)
+	else:
+		# run_fft_tests(f, args)
+		if args.plot:
+			fft_plotting.plot_results_separate(data, args)
+
+		if args.embed:
+			embed()
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -150,17 +240,19 @@ def main():
 	parser.add_argument("--mix_freq", type=float, default=100e6, help="DDS Mixer frequency")
 	parser.add_argument("--embed", action="store_true", default=False, help="Enable Ipython embed")
 	parser.add_argument("--plot", action="store_true", default=False, help="Enable plotting")
+	parser.add_argument("--shift_analysis", action="store_true", default=False, help="Cycle through a range of FFT shift and CW levels")
 	args = parser.parse_args()
 	print 'Using SKARAB:', args.skarab
 
 	f = casperfpga.CasperFpga(args.skarab)
 	program_fpga(f, args, prog_file)
 
-	run_fft_tests(f, args)
+	run(f,args)
+
+	# if args.shift_analysis:
+	# 	run_fft_shift_analysis(f, args)
+	# else:
+	# 	run_fft_tests(f, args)
 
 if __name__ == '__main__':
 	main()
-
-
-
-

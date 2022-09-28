@@ -55,7 +55,7 @@ def plot_results_separate(data, args, taps=4, savefigs=False):
         sfdr = _compute_sfdr(db(np.abs(spectrum)))
         markers = [sfdr[1], sfdr[2]]
         db_text_x_pos = 24e3
-        db_text_y_pos = round(np.max(db(np.abs(spectrum))),2)-5
+        db_text_y_pos = round(np.max(db(np.abs(spectrum))),2)-10
         axs.set_ylabel("dB")
         axs.set_xlabel("Channel")
         axs.plot(db(np.abs(spectrum)), label=name, marker="D", markevery=markers, markerfacecolor='green', markersize=7)
