@@ -7,6 +7,9 @@
 # python fft_analysis.py --cw 0.99 --cw_freq 267.76123e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 267.76123e6 --fft_shift 21845 --program
 # python fft_analysis.py --cw 0.99 --cw_freq 267.76123e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 267.76123e6 --fft_shift 21845 
 
+# Shift Analysis
+# python fft_analysis.py --cw 1.0 --cw_freq 267.76123e6 --wgn 0.0 --acc 1 --eq 10 --mix_freq 267.76123e6 --fft_shift 16383 --plot --shift_analysis
+
 import time,corr2,casperfpga,sys,struct,pylab
 import numpy as np
 import argparse
@@ -52,27 +55,6 @@ def data_analysis(data):
 	print 'Max value: ',np.max(data)
 	print 'Max value position: ',np.argmax(data)
 	fft_plotting.plot_vacc_data(data)
-
-# def check_pfb_mode():
-# 	# Is this the FFT or PFB version?
-# 	if prog_file.find('pfb') >= 0:
-# 		print 'PFB in design'
-# 		pfb = True
-# 	else:
-# 		print 'Only FFT in design'
-# 		pfb = False	
-# 	return pfb
-
-# def check_fft_mode():
-# 	# Is this the CASPER FFT or Xilinx FFT version?
-# 	if prog_file.find('wb') >= 0:
-# 		print 'Wideband design under test'
-# 		wideband = True
-
-# 	else: # NB (Xilinx FFT)
-# 		print 'Narrowband design under test'
-# 		wideband = False
-# 	return wideband
 
 def setup(f,args):
 	# # Is this the FFT or PFB version?
@@ -123,63 +105,79 @@ def setup(f,args):
 	snapshots.arm_vacc_snapshots(f)
 	return wideband, pfb
 
-def run_fft_shift_analysis(f, args):
-	print 'FFT Shift Analysis'
-	# pfb = check_pfb_mode()
-	# wideband = check_fft_mode()
-	# wideband, pfb = setup(f,args)
+def DecimalToBinary(num):
+	return (bin(num)[2:])
 
+def NumStages(binary):
+	stages = 0
+	for b in binary:
+		if int(b) == 1:
+			stages += 1
+	return stages
+
+def calc_shift():
+	# shift_pairs = ['01','10','10','01','10','10','01','10'] # Default 26006
+	# shift_pairs = ['01','10','10','10','10','10','10','10']  # Full shift
+	sp_1 = ['01','10','10','10','10','10','10','10']  # 27306 (21846)
+	sp_2 = ['01','10','10','01','10','10','01','10']  # 27046 (26006)
+	sp_3 = ['01','10','10','10','10','01','10','10']  # 27290 (22870)
+	sp_4 = ['01','10','10','10','01','10','10','10']  # 27242 (22102)
+	shift_pairs = [sp_1, sp_2, sp_3, sp_4]
+
+	# shift_bin = ''
+	for pair in shift_pairs:
+		shift_bin = ''
+		for sp in pair:
+			shift_bin+=sp
+		shift_rev = shift_bin[::-1]
+		shift_int = int(shift_rev,2)
+		print 'Desired', int(shift_bin,2), 'which is flipped and input to reg:',shift_int
+	# return shift_int
+
+def run_fft_shift_analysis(f, args, adc_data, data):
+	calc_shift()
+	print ''
+	print 'FFT Shift Analysis'
+	print '------------------'
+	print 'Requested CW amplitude:', args.cw
+	print 'FFT Overflow (counter):',  f.registers.pfb_of_cnt.read()['data']['cnt']
+
+	print 'CW peak(max)', np.max(adc_data)
+	print 'CW peak(min)', np.min(adc_data)
+
+	cw_pwr = np.sum(np.square(np.abs(adc_data)))/len(adc_data)
+	print 'CW power', cw_pwr
+	print 'CW mean', np.sum(adc_data)/len(adc_data)
+	
+
+	shift = args.fft_shift
+	# binary = DecimalToBinary(shift)
+
+	# stages = NumStages(binary)
+	# print 'Stages:', stages
+
+	for i, (spectrum, name) in enumerate(data):
+		peak = np.max(np.abs(spectrum))
+		peak_abs = np.abs(peak)
+		peak_pwr = np.square(peak_abs)
+		peak_channel = np.argmax(np.abs(spectrum))
+		pwr_spectrum = np.sum(np.square(np.abs(spectrum)))/len(spectrum)
+		print 'Peak channel (cmplx):', spectrum[peak_channel]
+		print ' '
+		print 'Peak value:', peak
+		print 'Peak Abs value:', peak_abs
+		print 'Peak Pwr:', peak_pwr
+		print 'Pwr Spec:', pwr_spectrum
+		print 'ratio:', cw_pwr/pwr_spectrum
+		print ' '
+		print 'Peak channel:', peak_channel
+
+		#print 'Actual shift:', np.power(2,stages)
+		#print 'Expected value:', args.cw/np.power(2,stages)
+			
 
 def run(f, args):
-	# pfb = check_pfb_mode()
-	# wideband = check_fft_mode()
-
-	# # Is this the FFT or PFB version?
-	# if prog_file.find('pfb') >= 0:
-	# 	print 'PFB in design'
-	# 	pfb = True
-	# else:
-	# 	print 'Only FFT in design'
-	# 	pfb = False
-
-	# # Is this the CASPER FFT or Xilinx FFT version?
-	# if prog_file.find('wb') >= 0:
-	# 	print 'Wideband design under test'
-	# 	wideband = True
-
-	# else: # NB (Xilinx FFT)
-	# 	print 'Narrowband design under test'
-	# 	wideband = False
-	# 	set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
-
-	# # Set parameters
-	# if wideband:
-	# 	set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
-	
-	# set_registers.set_fft_shift(f, shift=args.fft_shift)
-	# set_registers.set_eq(f, eq=args.eq)
-	# set_registers.set_wng_generator(f, scale=args.wgn)
-	# set_registers.set_cw_generator(f, scale=args.cw, freq=args.cw_freq)
-	# set_registers.set_vacc(f, acc_len=args.acc)
-	# f.registers.control.write(cnt_rst='pulse')
-
-	# # Arm snapshots
-	# snapshots.arm_adc_snapshots(f)
-
-	# if pfb:
-	# 	if wideband:
-	# 		snapshots.arm_pfb_wb_snapshots(f)
-	# 	else:			
-	# 		snapshots.arm_pfb_nb_snapshots(f)
-	# else:
-	# 	if wideband:
-	# 		snapshots.arm_fft_wb_snapshots(f)
-	# 	else:
-	# 		snapshots.arm_fft_nb_snapshots(f)
-
-	# snapshots.arm_quant_snapshots(f)
-	# # snapshots.arm_vacc_in_snapshots(f)
-	# snapshots.arm_vacc_snapshots(f)
+	# Setup and return modes
 	wideband, pfb = setup(f,args)
 
 	# Sleep
@@ -192,7 +190,7 @@ def run(f, args):
 	data = []
 
 	# Read Snapshot data
-	# adc_data = snapshots.read_adc_snapshots(f)
+	adc_data = snapshots.read_adc_snapshots(f)
 	# data.append((snapshots.read_adc_snapshots(f), 'adc'))
 
 	# Read FFT/PFB Snapshots and plot
@@ -209,23 +207,21 @@ def run(f, args):
 			data.append((snapshots.read_fft_wb_snapshots(f), name))
 		else:
 			name = 'Xil FFT w/o PFB'
-			#data.append((snapshots.read_fft_nb_snapshots(f), name))
+			data.append((snapshots.read_fft_nb_snapshots(f), name))
 
 	# data.append((snapshots.read_quant_snapshots(f), name + ' ' + '(Quant)'))
 	# data.append((snapshots.read_vacc_in_snapshots(f), name + ' ' + '(VACC In)'))
 
-	data.append((snapshots.read_vacc_snapshots(f), name + ' ' + '(Acc:'+str(args.acc)+')'))
-	print f.registers.pfb_of_cnt.read()
+	# data.append((snapshots.read_vacc_snapshots(f), name + ' ' + '(Acc:'+str(args.acc)+')'))
 
 	if args.shift_analysis:
-		run_fft_shift_analysis(f, args)
-	else:
-		# run_fft_tests(f, args)
-		if args.plot:
-			fft_plotting.plot_results_separate(data, args)
+		run_fft_shift_analysis(f, args, adc_data, data)
+	
+	if args.plot:
+		fft_plotting.plot_results_separate(data, args)
 
-		if args.embed:
-			embed()
+	if args.embed:
+		embed()
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -236,7 +232,7 @@ def main():
 	parser.add_argument("--cw_freq", type=float, default=53.5e6, help="CW frequency")
 	parser.add_argument("--wgn", type=float, default=2**(-10), help="WGN scale")
 	parser.add_argument("--eq", type=int, default=1, help="EQ scale")
-	parser.add_argument("--fft_shift", type=int, default=65535, help="FFT shift")
+	parser.add_argument("--fft_shift", type=int, default=32767, help="FFT shift")
 	parser.add_argument("--mix_freq", type=float, default=100e6, help="DDS Mixer frequency")
 	parser.add_argument("--embed", action="store_true", default=False, help="Enable Ipython embed")
 	parser.add_argument("--plot", action="store_true", default=False, help="Enable plotting")
@@ -248,11 +244,6 @@ def main():
 	program_fpga(f, args, prog_file)
 
 	run(f,args)
-
-	# if args.shift_analysis:
-	# 	run_fft_shift_analysis(f, args)
-	# else:
-	# 	run_fft_tests(f, args)
 
 if __name__ == '__main__':
 	main()

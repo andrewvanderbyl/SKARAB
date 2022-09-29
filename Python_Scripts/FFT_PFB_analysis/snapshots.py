@@ -83,6 +83,7 @@ def read_adc_snapshots(f, arm=False):
 			recon.append(entry)
 
 	hist, bins = np.histogram(recon, 31)
+	return recon
 
 def read_fft_wb_snapshots(f, arm=False):
 	print 'Reading FFT WB Snapshot'
