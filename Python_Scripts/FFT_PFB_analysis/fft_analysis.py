@@ -17,6 +17,7 @@ from IPython import embed
 import fft_plotting
 import set_registers
 import snapshots
+import matplotlib.pyplot as plt
 
 host = 'skarab02080A-01'
 
@@ -56,7 +57,16 @@ def data_analysis(data):
 	print 'Max value position: ',np.argmax(data)
 	fft_plotting.plot_vacc_data(data)
 
-def setup(f,args):
+def setup(f, args, cw_scale, shift):
+	set_registers.set_cw_generator(f, scale=cw_scale, freq=args.cw_freq)
+	set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
+	set_registers.set_fft_shift(f, shift=shift)
+
+	# Arm snapshots
+	snapshots.arm_adc_snapshots(f)
+	snapshots.arm_fft_nb_snapshots(f)
+
+def setup_with_args(f,args):
 	# # Is this the FFT or PFB version?
 	if prog_file.find('pfb') >= 0:
 		print 'PFB in design'
@@ -119,69 +129,112 @@ def calc_shift():
 	# shift_pairs = ['01','10','10','01','10','10','01','10'] # Default 26006
 	# shift_pairs = ['01','10','10','10','10','10','10','10']  # Full shift
 	sp_1 = ['01','10','10','10','10','10','10','10']  # 27306 (21846)
-	sp_2 = ['01','10','10','01','10','10','01','10']  # 27046 (26006)
+	sp_2 = ['01','10','10','10','10','10','01','10']  # 27302 (25942)
 	sp_3 = ['01','10','10','10','10','01','10','10']  # 27290 (22870)
 	sp_4 = ['01','10','10','10','01','10','10','10']  # 27242 (22102)
-	shift_pairs = [sp_1, sp_2, sp_3, sp_4]
+	sp_5 = ['01','10','10','01','10','10','10','10']  # 27050 (21910)
+	sp_6 = ['01','10','01','10','10','10','10','10']  # 26282 (21862)
+	sp_7 = ['01','01','10','10','10','10','10','10']  # 23210 (21850)
+	sp_8 = ['01','10','10','01','10','10','01','10']  # 27046 (26006)
+	shift_pairs = [sp_1, sp_2, sp_3, sp_4, sp_5, sp_6, sp_7, sp_8]
 
 	# shift_bin = ''
+	shifts = []
 	for pair in shift_pairs:
 		shift_bin = ''
+		num_stages = 0
 		for sp in pair:
+			num_stages += int(sp,2)
 			shift_bin+=sp
 		shift_rev = shift_bin[::-1]
 		shift_int = int(shift_rev,2)
+		shifts.append([num_stages, shift_int, shift_bin])
 		print 'Desired', int(shift_bin,2), 'which is flipped and input to reg:',shift_int
-	# return shift_int
 
-def run_fft_shift_analysis(f, args, adc_data, data):
-	calc_shift()
+	return shifts
+
+def run_xil_fft_shift_analysis(f, args):
 	print ''
 	print 'FFT Shift Analysis'
 	print '------------------'
-	print 'Requested CW amplitude:', args.cw
-	print 'FFT Overflow (counter):',  f.registers.pfb_of_cnt.read()['data']['cnt']
 
-	print 'CW peak(max)', np.max(adc_data)
-	print 'CW peak(min)', np.min(adc_data)
-
-	cw_pwr = np.sum(np.square(np.abs(adc_data)))/len(adc_data)
-	print 'CW power', cw_pwr
-	print 'CW mean', np.sum(adc_data)/len(adc_data)
+	# Generate shift values
+	shifts = calc_shift()
+	cw_scales = [0.5]
 	
+	for cw_scale in cw_scales:
+		for stages, shift, shift_bin in shifts:
+			# set_registers.set_cw_generator(f, scale=cw, freq=args.cw_freq)
+			# set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
+			# set_registers.set_fft_shift(f, shift=shift)
 
-	shift = args.fft_shift
-	# binary = DecimalToBinary(shift)
+			setup(f, args, cw_scale, shift)
 
-	# stages = NumStages(binary)
-	# print 'Stages:', stages
+			# Sleep
+			time.sleep(0.05)
 
-	for i, (spectrum, name) in enumerate(data):
-		peak = np.max(np.abs(spectrum))
-		peak_abs = np.abs(peak)
-		peak_pwr = np.square(peak_abs)
-		peak_channel = np.argmax(np.abs(spectrum))
-		pwr_spectrum = np.sum(np.square(np.abs(spectrum)))/len(spectrum)
-		print 'Peak channel (cmplx):', spectrum[peak_channel]
-		print ' '
-		print 'Peak value:', peak
-		print 'Peak Abs value:', peak_abs
-		print 'Peak Pwr:', peak_pwr
-		print 'Pwr Spec:', pwr_spectrum
-		print 'ratio:', cw_pwr/pwr_spectrum
-		print ' '
-		print 'Peak channel:', peak_channel
+			# Issue manual sync
+			manual_sync(f)
 
-		#print 'Actual shift:', np.power(2,stages)
-		#print 'Expected value:', args.cw/np.power(2,stages)
-			
+			# Read Snapshot data
+			adc_data = snapshots.read_adc_snapshots(f)
+
+			data = []
+			name = 'Xil FFT w/o PFB'
+			data.append((snapshots.read_fft_nb_snapshots(f), name))
+			# embed()
+			# fft_cw = np.fft.fftr(adc_data)
+
+			cw_pwr = np.sum(np.square(np.abs(adc_data)))/len(adc_data)
+			print ' '
+			print '---CW Data---'
+			print 'Requested CW amplitude:', cw_scale
+			print 'CW peak(max)', np.max(adc_data)
+			print 'CW peak(min)', np.min(adc_data)
+			print 'CW power', cw_pwr
+			print 'CW mean', np.sum(adc_data)/len(adc_data)
+			print ' '
+
+			overflow_count = f.registers.pfb_of_cnt.read()['data']['cnt']
+			if overflow_count > 0:
+				print 'FFT Overflow (counter): (***OVERFLOW***)', overflow_count
+			else:
+				print 'FFT Overflow (counter):', overflow_count
+			print ' '
+
+			for i, (spectrum, name) in enumerate(data):
+				peak = np.max(np.abs(spectrum))
+				peak_abs = np.abs(peak)
+				peak_pwr = np.square(peak_abs)
+				peak_channel = np.argmax(np.abs(spectrum))
+				pwr_spectrum = np.sum(np.square(np.abs(spectrum)))/len(spectrum)
+				print '--Channel Data---'
+				print 'Peak channel:', peak_channel
+				print 'Peak channel value (cmplx):', spectrum[peak_channel]
+				print 'Peak value:', peak
+				print 'Peak Abs value:', peak_abs
+				print 'Peak Pwr:', peak_pwr
+				print 'Pwr Spec:', pwr_spectrum
+				print ' '
+
+				print '---Shift---'
+				print 'Requested Shift:', shift
+				print 'Shift (Bin)', shift_bin 
+				print 'Expected stages shifted:', stages
+				print 'Input/Output ratio:', cw_pwr/pwr_spectrum
+				print ' '
+
+				#print 'Actual shift:', np.power(2,stages)
+				#print 'Expected value:', args.cw/np.power(2,stages)
+			print '***---***---***---***---***---***'
+			print ' '
 
 def run(f, args):
 	# Setup and return modes
-	wideband, pfb = setup(f,args)
+	wideband, pfb = setup_with_args(f,args)
 
 	# Sleep
-	time.sleep(0.5)
+	time.sleep(0.1)
 
 	# Issue manual sync
 	manual_sync(f)
@@ -214,8 +267,8 @@ def run(f, args):
 
 	# data.append((snapshots.read_vacc_snapshots(f), name + ' ' + '(Acc:'+str(args.acc)+')'))
 
-	if args.shift_analysis:
-		run_fft_shift_analysis(f, args, adc_data, data)
+	if args.xil_shift_analysis:
+		run_xil_fft_shift_analysis(f, args)
 	
 	if args.plot:
 		fft_plotting.plot_results_separate(data, args)
@@ -236,7 +289,7 @@ def main():
 	parser.add_argument("--mix_freq", type=float, default=100e6, help="DDS Mixer frequency")
 	parser.add_argument("--embed", action="store_true", default=False, help="Enable Ipython embed")
 	parser.add_argument("--plot", action="store_true", default=False, help="Enable plotting")
-	parser.add_argument("--shift_analysis", action="store_true", default=False, help="Cycle through a range of FFT shift and CW levels")
+	parser.add_argument("--xil_shift_analysis", action="store_true", default=False, help="Cycle through a range of FFT shift and CW levels")
 	args = parser.parse_args()
 	print 'Using SKARAB:', args.skarab
 
