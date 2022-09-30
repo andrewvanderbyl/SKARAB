@@ -8,7 +8,7 @@
 # python fft_analysis.py --cw 0.99 --cw_freq 267.76123e6 --wgn 0.07 --acc 1024 --eq 100 --mix_freq 267.76123e6 --fft_shift 21845 
 
 # Shift Analysis
-# python fft_analysis.py --cw 1.0 --cw_freq 267.76123e6 --wgn 0.0 --acc 1 --eq 10 --mix_freq 267.76123e6 --fft_shift 16383 --plot --shift_analysis
+# python fft_analysis.py --cw 0.5 --cw_freq 267.76123e6 --wgn 0.0 --acc 1 --eq 10 --mix_freq 267.76123e6 --plot --xil_shift_analysis --program
 
 import time,corr2,casperfpga,sys,struct,pylab
 import numpy as np
@@ -28,7 +28,7 @@ host = 'skarab02080A-01'
 
 # NB: Xilinx FFT
 # prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-08-19_1634.fpg"
-prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-09-26_1827.fpg"
+prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_fft_nb_2022-09-30_1400.fpg"
 # prog_file = "/home/avanderbyl/fpgs/dds_cwg_32k_pfb_nb_2022-08-22_1052.fpg"
 
 #==============================================================================
@@ -57,13 +57,18 @@ def data_analysis(data):
 	print 'Max value position: ',np.argmax(data)
 	fft_plotting.plot_vacc_data(data)
 
-def setup(f, args, cw_scale, shift):
+def db_power(x):
+    # np.maximum just to prevent errors about log(0)
+    return 10 * np.log10(np.maximum(1e-3, x))
+
+def change_setup(f, args, cw_scale, shift):
 	set_registers.set_cw_generator(f, scale=cw_scale, freq=args.cw_freq)
 	set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
 	set_registers.set_fft_shift(f, shift=shift)
 
 	# Arm snapshots
 	snapshots.arm_adc_snapshots(f)
+	snapshots.arm_ddc_snapshots(f)
 	snapshots.arm_fft_nb_snapshots(f)
 
 def setup_with_args(f,args):
@@ -98,6 +103,7 @@ def setup_with_args(f,args):
 
 	# Arm snapshots
 	snapshots.arm_adc_snapshots(f)
+	snapshots.arm_ddc_snapshots(f)
 
 	if pfb:
 		if wideband:
@@ -136,6 +142,9 @@ def calc_shift():
 	sp_6 = ['01','10','01','10','10','10','10','10']  # 26282 (21862)
 	sp_7 = ['01','01','10','10','10','10','10','10']  # 23210 (21850)
 	sp_8 = ['01','10','10','01','10','10','01','10']  # 27046 (26006)
+	sp_9 = ['01','10','10','01','10','01','01','10']  # 27030 (27030)
+	# shift_pairs = [sp_1]
+	# shift_pairs = [sp_1, sp_2, sp_7, sp_8]
 	shift_pairs = [sp_1, sp_2, sp_3, sp_4, sp_5, sp_6, sp_7, sp_8]
 
 	# shift_bin = ''
@@ -161,14 +170,14 @@ def run_xil_fft_shift_analysis(f, args):
 	# Generate shift values
 	shifts = calc_shift()
 	cw_scales = [0.5]
-	
+
 	for cw_scale in cw_scales:
 		for stages, shift, shift_bin in shifts:
 			# set_registers.set_cw_generator(f, scale=cw, freq=args.cw_freq)
 			# set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
 			# set_registers.set_fft_shift(f, shift=shift)
 
-			setup(f, args, cw_scale, shift)
+			change_setup(f, args, cw_scale, shift)
 
 			# Sleep
 			time.sleep(0.05)
@@ -178,22 +187,53 @@ def run_xil_fft_shift_analysis(f, args):
 
 			# Read Snapshot data
 			adc_data = snapshots.read_adc_snapshots(f)
+			ddc_data = snapshots.read_ddc_snapshots(f)
+
+			print ' '
+			print '---CW Data---'
+			print 'Requested CW amplitude:', cw_scale
+			print 'CW peak(max):', np.max(adc_data)
+			print 'CW peak(min):', np.min(adc_data)
+			cw_pwr = np.sum(np.square(np.abs(adc_data)))/len(adc_data)
+			print 'CW power:', cw_pwr
+			print 'CW mean:', np.sum(adc_data)/len(adc_data)
+			print ' '
+				
+			print ' '
+			print '---DDC Data---'
+			# print 'DDC peak(max)', np.max(ddc_data)
+			# print 'DDC peak(min)', np.min(ddc_data)
+
+			fft_ddc = np.fft.fftn(ddc_data)
+			fft_peak = np.max(np.abs(fft_ddc))
+			# fft_peak_pwr = db_power(np.square(fft_peak))
+
+			fft_peak_channel = np.argmax(np.abs(fft_ddc))
+			# fft_pwr_spectrum = np.sum(np.square(np.abs(fft_ddc)))
+			
+
+
+			print 'fft_peak:', fft_peak
+			# print fft_peak_abs
+			# print 'fft_peak_pwr (dB):', fft_peak_pwr
+			# print fft_peak_channel
+			# print fft_pwr_spectrum
+			# plt.figure(1)
+			# plt.plot(fft_ddc)
+			# plt.show()
+			# embed()
+
+
+
+			# ddc_pwr_db = db(np.sum(np.square(np.abs(ddc_data)))/len(ddc_data))
+
+			# print 'DDC power (dB)', ddc_pwr_db
+			print 'DDC mean', np.sum(ddc_data)/len(ddc_data)
+			print ' '
 
 			data = []
 			name = 'Xil FFT w/o PFB'
 			data.append((snapshots.read_fft_nb_snapshots(f), name))
-			# embed()
-			# fft_cw = np.fft.fftr(adc_data)
-
-			cw_pwr = np.sum(np.square(np.abs(adc_data)))/len(adc_data)
-			print ' '
-			print '---CW Data---'
-			print 'Requested CW amplitude:', cw_scale
-			print 'CW peak(max)', np.max(adc_data)
-			print 'CW peak(min)', np.min(adc_data)
-			print 'CW power', cw_pwr
-			print 'CW mean', np.sum(adc_data)/len(adc_data)
-			print ' '
 
 			overflow_count = f.registers.pfb_of_cnt.read()['data']['cnt']
 			if overflow_count > 0:
@@ -203,29 +243,27 @@ def run_xil_fft_shift_analysis(f, args):
 			print ' '
 
 			for i, (spectrum, name) in enumerate(data):
-				peak = np.max(np.abs(spectrum))
-				peak_abs = np.abs(peak)
-				peak_pwr = np.square(peak_abs)
-				peak_channel = np.argmax(np.abs(spectrum))
-				pwr_spectrum = np.sum(np.square(np.abs(spectrum)))/len(spectrum)
-				print '--Channel Data---'
-				print 'Peak channel:', peak_channel
-				print 'Peak channel value (cmplx):', spectrum[peak_channel]
-				print 'Peak value:', peak
-				print 'Peak Abs value:', peak_abs
-				print 'Peak Pwr:', peak_pwr
-				print 'Pwr Spec:', pwr_spectrum
+				xil_peak = np.max(np.abs(spectrum))
+				xil_peak_pwr = db_power(np.square(xil_peak))
+				xil_peak_channel = np.argmax(np.abs(spectrum))
+				xil_pwr_spectrum = np.sum(np.square(np.abs(spectrum)))
+				
+				print '--Xil Channel Data---'
+				print 'Xil Peak channel:', xil_peak_channel
+				print 'Xil Peak channel value (cmplx):', spectrum[xil_peak_channel]
+				print 'Xil Peak value:', xil_peak
+				print 'Xil Peak Pwr (dB):', xil_peak_pwr
+				# print 'Xil Pwr Spec:', xil_pwr_spectrum
 				print ' '
 
 				print '---Shift---'
 				print 'Requested Shift:', shift
 				print 'Shift (Bin)', shift_bin 
 				print 'Expected stages shifted:', stages
-				print 'Input/Output ratio:', cw_pwr/pwr_spectrum
+				print 'Expected Input/Output ratio:', np.power(2,stages)
+				print 'Actual Input/Output ratio :', fft_peak/xil_peak
 				print ' '
 
-				#print 'Actual shift:', np.power(2,stages)
-				#print 'Expected value:', args.cw/np.power(2,stages)
 			print '***---***---***---***---***---***'
 			print ' '
 

@@ -29,6 +29,10 @@ def arm_adc_snapshots(f, man_trig=False, man_valid=False):
 	print 'Arming ADC Snapshot'
 	f.snapshots.snap_adc_ss.arm(man_trig=man_trig, man_valid=man_valid)
 
+def arm_ddc_snapshots(f, man_trig=False, man_valid=False):
+	print 'Arming DDC Snapshot'
+	f.snapshots.ss_ddc_ss.arm(man_trig=man_trig, man_valid=man_valid)
+
 def arm_fft_wb_snapshots(f, man_trig=False, man_valid=False):
 	print 'Arming FFT WB Snapshots'
 	f.snapshots.ss_fft_ss.arm(man_trig=man_trig, man_valid=man_valid)
@@ -84,6 +88,14 @@ def read_adc_snapshots(f, arm=False):
 
 	hist, bins = np.histogram(recon, 31)
 	return recon
+
+def read_ddc_snapshots(f, arm=False):
+	print 'Reading DDC Snapshots'
+	recon = []
+
+	snapshot = f.snapshots.ss_ddc_ss.read(arm=arm)
+	return np.array(snapshot['data']['p0_real'])+np.array(snapshot['data']['p0_imag'])*1j	
+
 
 def read_fft_wb_snapshots(f, arm=False):
 	print 'Reading FFT WB Snapshot'
