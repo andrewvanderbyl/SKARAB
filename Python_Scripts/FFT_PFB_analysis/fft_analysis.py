@@ -59,7 +59,7 @@ def data_analysis(data):
 
 def db_power(x):
     # np.maximum just to prevent errors about log(0)
-    return 10 * np.log10(np.maximum(1e-3, x))
+	return 10 * np.log10(np.maximum(1e-3, x))
 
 def change_setup(f, args, cw_scale, shift):
 	set_registers.set_cw_generator(f, scale=cw_scale, freq=args.cw_freq)
@@ -143,9 +143,8 @@ def calc_shift():
 	sp_7 = ['01','01','10','10','10','10','10','10']  # 23210 (21850)
 	sp_8 = ['01','10','10','01','10','10','01','10']  # 27046 (26006)
 	sp_9 = ['01','10','10','01','10','01','01','10']  # 27030 (27030)
-	# shift_pairs = [sp_1]
-	# shift_pairs = [sp_1, sp_2, sp_7, sp_8]
-	shift_pairs = [sp_1, sp_2, sp_3, sp_4, sp_5, sp_6, sp_7, sp_8]
+	# shift_pairs = [sp_1, sp_2, sp_3, sp_4, sp_5, sp_6, sp_7, sp_8, sp_9]
+	shift_pairs = [sp_1, sp_2, sp_8, sp_9]
 
 	# shift_bin = ''
 	shifts = []
@@ -159,7 +158,6 @@ def calc_shift():
 		shift_int = int(shift_rev,2)
 		shifts.append([num_stages, shift_int, shift_bin])
 		print 'Desired', int(shift_bin,2), 'which is flipped and input to reg:',shift_int
-
 	return shifts
 
 def run_xil_fft_shift_analysis(f, args):
@@ -171,8 +169,10 @@ def run_xil_fft_shift_analysis(f, args):
 	shifts = calc_shift()
 	cw_scales = [0.5]
 
+	analysis_data = []
 	for cw_scale in cw_scales:
 		for stages, shift, shift_bin in shifts:
+			overflow = 0
 			# set_registers.set_cw_generator(f, scale=cw, freq=args.cw_freq)
 			# set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
 			# set_registers.set_fft_shift(f, shift=shift)
@@ -180,7 +180,7 @@ def run_xil_fft_shift_analysis(f, args):
 			change_setup(f, args, cw_scale, shift)
 
 			# Sleep
-			time.sleep(0.05)
+			time.sleep(0.01)
 
 			# Issue manual sync
 			manual_sync(f)
@@ -211,20 +211,12 @@ def run_xil_fft_shift_analysis(f, args):
 			fft_peak_channel = np.argmax(np.abs(fft_ddc))
 			# fft_pwr_spectrum = np.sum(np.square(np.abs(fft_ddc)))
 			
-
-
 			print 'fft_peak:', fft_peak
 			# print fft_peak_abs
 			# print 'fft_peak_pwr (dB):', fft_peak_pwr
 			# print fft_peak_channel
 			# print fft_pwr_spectrum
-			# plt.figure(1)
-			# plt.plot(fft_ddc)
-			# plt.show()
-			# embed()
-
-
-
+		
 			# ddc_pwr_db = db(np.sum(np.square(np.abs(ddc_data)))/len(ddc_data))
 
 			# print 'DDC power (dB)', ddc_pwr_db
@@ -238,8 +230,10 @@ def run_xil_fft_shift_analysis(f, args):
 			overflow_count = f.registers.pfb_of_cnt.read()['data']['cnt']
 			if overflow_count > 0:
 				print 'FFT Overflow (counter): (***OVERFLOW***)', overflow_count
+				overflow = 1
 			else:
 				print 'FFT Overflow (counter):', overflow_count
+				overflow = 0
 			print ' '
 
 			for i, (spectrum, name) in enumerate(data):
@@ -257,22 +251,29 @@ def run_xil_fft_shift_analysis(f, args):
 				print ' '
 
 				print '---Shift---'
+				expected_input_output_ratio = np.power(2,stages)
+				actual_input_output_ratio = fft_peak/xil_peak
+
 				print 'Requested Shift:', shift
 				print 'Shift (Bin)', shift_bin 
 				print 'Expected stages shifted:', stages
-				print 'Expected Input/Output ratio:', np.power(2,stages)
-				print 'Actual Input/Output ratio :', fft_peak/xil_peak
+				print 'Expected Input/Output ratio:', expected_input_output_ratio
+				print 'Actual Input/Output ratio :', actual_input_output_ratio
 				print ' '
+				analysis_data.append([cw_scale, stages, shift, overflow, expected_input_output_ratio, actual_input_output_ratio])
+
 
 			print '***---***---***---***---***---***'
 			print ' '
+	
+	fft_plotting.plot_fft_analysis_results(analysis_data)
 
 def run(f, args):
 	# Setup and return modes
 	wideband, pfb = setup_with_args(f,args)
 
 	# Sleep
-	time.sleep(0.1)
+	time.sleep(0.01)
 
 	# Issue manual sync
 	manual_sync(f)
