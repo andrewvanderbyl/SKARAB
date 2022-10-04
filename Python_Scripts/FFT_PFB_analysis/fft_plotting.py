@@ -73,13 +73,37 @@ def plot_results_separate(data, args, taps=4, savefigs=False):
         plt.show()
 
 def plot_fft_analysis_results(data):
-    overflow = [] 
-    expected_input_output_ratio = []
-    actual_input_output_ratio = []
-    for entry in data:
-        overflow.append(entry[3])
-        expected_input_output_ratio.append(entry[4])
-        actual_input_output_ratio.append(entry[5])
+    plt.style.use("ggplot")
+    for cw_scale, wgn_scale, entry in data:
+        overflow = [] 
+        expected_input_output_ratio = []
+        actual_input_output_ratio = []
+        for item in entry:
+            overflow.append(item[2])
+            expected_input_output_ratio.append(item[3])
+            actual_input_output_ratio.append(item[4])
+
+        fig, ax1 = plt.subplots()
+        ax2 = ax1.twinx()
+        ax1.plot(expected_input_output_ratio, expected_input_output_ratio, color='g', linestyle='dotted')
+        ax1.scatter(expected_input_output_ratio, actual_input_output_ratio, color='b', marker="+")
+        ax2.scatter(expected_input_output_ratio, overflow, color='r', marker="s")
+        expected_input_output_ratio.reverse()
+        ax1.set_xlabel('Expected Shift (Value)')
+        ax1.set_ylabel('Measured Shift (Value)', color='b')
+        ax1.set_xticks(expected_input_output_ratio)
+        ax1.set_yticks(expected_input_output_ratio)
+        ax2.set_ylabel('FFT Oveflow', color='r')
+        ax2.set_yticks([0,1])
+        ax2.set_yticklabels(['False', 'True'])
+        plt.title('FFT Shift - CW Scale:' + '' + str(cw_scale) + ' ' + 'WGN Scale:' + '' + str(wgn_scale))
+    plt.show()
+
+
+
+
+
+
     # plt.figure(1)
     # plt.scatter(expected_input_output_ratio, expected_input_output_ratio)
     # plt.scatter(expected_input_output_ratio, actual_input_output_ratio, marker ="+",)
@@ -93,23 +117,3 @@ def plot_fft_analysis_results(data):
     # ax.set_ylabel('')
     # ax.set_title('scatter plot')
     # plt.show()
-
-    # embed()
-    fig, ax1 = plt.subplots()
-
-    ax2 = ax1.twinx()
-    ax1.plot(expected_input_output_ratio, expected_input_output_ratio, color='g', linestyle='dotted')
-    ax1.scatter(expected_input_output_ratio, actual_input_output_ratio, color='b', marker="+")
-    ax2.scatter(expected_input_output_ratio, overflow, color='r', marker="s")
-    expected_input_output_ratio.reverse()
-    ax1.set_xlabel('FFT Shift')
-    ax1.set_ylabel('Actual Shift', color='b')
-    # ax1.set_xticks([4096, 8192, 16384, 32768])
-    # ax1.set_yticks([4096, 8192, 16384, 32768])
-    ax1.set_xticks(expected_input_output_ratio)
-    ax1.set_yticks(expected_input_output_ratio)
-    # ax1.set_xticklabels(['0','1','2','3'])
-    ax2.set_ylabel('FFT Oveflow', color='r')
-    # ax1.axis["bottom"].major_ticklabels.set_visible(True)
-    # ax2.set_yticks(['True','False'])
-    plt.show()

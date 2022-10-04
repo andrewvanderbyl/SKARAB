@@ -61,9 +61,10 @@ def db_power(x):
     # np.maximum just to prevent errors about log(0)
 	return 10 * np.log10(np.maximum(1e-3, x))
 
-def change_setup(f, args, cw_scale, shift):
+def change_setup(f, args, cw_scale, wgn_scale, shift):
 	set_registers.set_cw_generator(f, scale=cw_scale, freq=args.cw_freq)
 	set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
+	set_registers.set_wng_generator(f, scale=wgn_scale)
 	set_registers.set_fft_shift(f, shift=shift)
 
 	# Arm snapshots
@@ -167,17 +168,24 @@ def run_xil_fft_shift_analysis(f, args):
 
 	# Generate shift values
 	shifts = calc_shift()
-	cw_scales = [0.5]
+	# cw_scales = [0.1, 0.25, 0.5, 0.75, 0.99]
+	# wgn_scales = [0.01, 0.01, 0.01, 0.01, 0.01]
+
+	cw_scales = [0.1]
+	wgn_scales = [0.01]
 
 	analysis_data = []
-	for cw_scale in cw_scales:
+	for cw_scale, wgn_scale in zip(cw_scales, wgn_scales):
+		temp_data = []
+		set_registers.reset_counters(f)
+
 		for stages, shift, shift_bin in shifts:
 			overflow = 0
 			# set_registers.set_cw_generator(f, scale=cw, freq=args.cw_freq)
 			# set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
 			# set_registers.set_fft_shift(f, shift=shift)
 
-			change_setup(f, args, cw_scale, shift)
+			change_setup(f, args, cw_scale, wgn_scale, shift)
 
 			# Sleep
 			time.sleep(0.01)
@@ -188,6 +196,10 @@ def run_xil_fft_shift_analysis(f, args):
 			# Read Snapshot data
 			adc_data = snapshots.read_adc_snapshots(f)
 			ddc_data = snapshots.read_ddc_snapshots(f)
+
+			# plt.figure(1)
+			# plt.plot(adc_data)
+			# plt.show()
 
 			print ' '
 			print '---CW Data---'
@@ -260,60 +272,63 @@ def run_xil_fft_shift_analysis(f, args):
 				print 'Expected Input/Output ratio:', expected_input_output_ratio
 				print 'Actual Input/Output ratio :', actual_input_output_ratio
 				print ' '
-				analysis_data.append([cw_scale, stages, shift, overflow, expected_input_output_ratio, actual_input_output_ratio])
+				temp_data.append([stages, shift, overflow, expected_input_output_ratio, actual_input_output_ratio])
 
 
 			print '***---***---***---***---***---***'
 			print ' '
-	
+		analysis_data.append([cw_scale, wgn_scale, temp_data])
 	fft_plotting.plot_fft_analysis_results(analysis_data)
 
 def run(f, args):
-	# Setup and return modes
-	wideband, pfb = setup_with_args(f,args)
-
-	# Sleep
-	time.sleep(0.01)
-
-	# Issue manual sync
-	manual_sync(f)
-
-	# List to hold results
-	data = []
-
-	# Read Snapshot data
-	adc_data = snapshots.read_adc_snapshots(f)
-	# data.append((snapshots.read_adc_snapshots(f), 'adc'))
-
-	# Read FFT/PFB Snapshots and plot
-	if pfb:
-		if wideband:
-			name = 'CASPER FFT with PFB'
-			data.append((snapshots.read_pfb_wb_snapshots(f), name))
-		else:
-			name = 'Xil FFT with PFB'
-			data.append((snapshots.read_pfb_nb_snapshots(f), name))
-	else:
-		if wideband:
-			name = 'CASPER FFT without PFB'
-			data.append((snapshots.read_fft_wb_snapshots(f), name))
-		else:
-			name = 'Xil FFT w/o PFB'
-			data.append((snapshots.read_fft_nb_snapshots(f), name))
-
-	# data.append((snapshots.read_quant_snapshots(f), name + ' ' + '(Quant)'))
-	# data.append((snapshots.read_vacc_in_snapshots(f), name + ' ' + '(VACC In)'))
-
-	# data.append((snapshots.read_vacc_snapshots(f), name + ' ' + '(Acc:'+str(args.acc)+')'))
 
 	if args.xil_shift_analysis:
 		run_xil_fft_shift_analysis(f, args)
-	
-	if args.plot:
-		fft_plotting.plot_results_separate(data, args)
+	else:	
+		# Setup and return modes
+		wideband, pfb = setup_with_args(f,args)
 
-	if args.embed:
-		embed()
+		# Sleep
+		time.sleep(0.01)
+
+		# Issue manual sync
+		manual_sync(f)
+
+		# List to hold results
+		data = []
+
+		# Read Snapshot data
+		adc_data = snapshots.read_adc_snapshots(f)
+		# data.append((snapshots.read_adc_snapshots(f), 'adc'))
+
+		# Read FFT/PFB Snapshots and plot
+		if pfb:
+			if wideband:
+				name = 'CASPER FFT with PFB'
+				data.append((snapshots.read_pfb_wb_snapshots(f), name))
+			else:
+				name = 'Xil FFT with PFB'
+				data.append((snapshots.read_pfb_nb_snapshots(f), name))
+		else:
+			if wideband:
+				name = 'CASPER FFT without PFB'
+				data.append((snapshots.read_fft_wb_snapshots(f), name))
+			else:
+				name = 'Xil FFT w/o PFB'
+				data.append((snapshots.read_fft_nb_snapshots(f), name))
+
+		# data.append((snapshots.read_quant_snapshots(f), name + ' ' + '(Quant)'))
+		# data.append((snapshots.read_vacc_in_snapshots(f), name + ' ' + '(VACC In)'))
+
+		# data.append((snapshots.read_vacc_snapshots(f), name + ' ' + '(Acc:'+str(args.acc)+')'))
+
+
+		
+		if args.plot:
+			fft_plotting.plot_results_separate(data, args)
+
+		if args.embed:
+			embed()
 
 def main():
 	parser = argparse.ArgumentParser()

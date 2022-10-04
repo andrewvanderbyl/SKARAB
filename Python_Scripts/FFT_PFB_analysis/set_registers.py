@@ -1,4 +1,5 @@
 import time,corr2,casperfpga,sys,struct,pylab
+from IPython import embed
 
 def set_fft_shift(f, shift):
 	print 'Setting FFT Shift:', shift
@@ -27,3 +28,6 @@ def set_mixer_freq(f,mix_freq):
 def set_vacc(f, acc_scale=1, acc_len=1):
 	f.registers.acc_scale.write(reg=acc_scale)
 	f.registers.acc_len.write(reg=acc_len)
+
+def reset_counters(f):
+	f.registers.control.write(cnt_rst='pulse')
