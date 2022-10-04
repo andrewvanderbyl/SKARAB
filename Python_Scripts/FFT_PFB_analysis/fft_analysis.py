@@ -137,15 +137,20 @@ def calc_shift():
 	# shift_pairs = ['01','10','10','10','10','10','10','10']  # Full shift
 	sp_1 = ['01','10','10','10','10','10','10','10']  # 27306 (21846)
 	sp_2 = ['01','10','10','10','10','10','01','10']  # 27302 (25942)
-	sp_3 = ['01','10','10','10','10','01','10','10']  # 27290 (22870)
-	sp_4 = ['01','10','10','10','01','10','10','10']  # 27242 (22102)
-	sp_5 = ['01','10','10','01','10','10','10','10']  # 27050 (21910)
-	sp_6 = ['01','10','01','10','10','10','10','10']  # 26282 (21862)
-	sp_7 = ['01','01','10','10','10','10','10','10']  # 23210 (21850)
+	# sp_3 = ['01','10','10','10','10','01','10','10']  # 27290 (22870)
+	# sp_4 = ['01','10','10','10','01','10','10','10']  # 27242 (22102)
+	# sp_5 = ['01','10','10','01','10','10','10','10']  # 27050 (21910)
+	# sp_6 = ['01','10','01','10','10','10','10','10']  # 26282 (21862)
+	# sp_7 = ['01','01','10','10','10','10','10','10']  # 23210 (21850)
 	sp_8 = ['01','10','10','01','10','10','01','10']  # 27046 (26006)
 	sp_9 = ['01','10','10','01','10','01','01','10']  # 27030 (27030)
-	# shift_pairs = [sp_1, sp_2, sp_3, sp_4, sp_5, sp_6, sp_7, sp_8, sp_9]
-	shift_pairs = [sp_1, sp_2, sp_8, sp_9]
+	sp_10 = ['10','10','10','10','10','10','10','10']  # () #illegal
+	sp_11 = ['01','10','10','10','10','10','11','11']  # () #illegal
+
+	shift_pairs = [sp_1, sp_2, sp_8, sp_9, sp_10, sp_11]
+	# shift_pairs = [sp_1, sp_2, sp_3, sp_4, sp_5, sp_6, sp_7, sp_8, sp_9, sp_10, sp_11]
+	# shift_pairs = [sp_1, sp_2, sp_8, sp_9]
+	# shift_pairs = [sp_1, sp_2, sp_8, sp_9, sp_10]
 
 	# shift_bin = ''
 	shifts = []
@@ -171,10 +176,11 @@ def run_xil_fft_shift_analysis(f, args):
 	# cw_scales = [0.1, 0.25, 0.5, 0.75, 0.99]
 	# wgn_scales = [0.01, 0.01, 0.01, 0.01, 0.01]
 
-	cw_scales = [0.1]
-	wgn_scales = [0.01]
-
+	cw_scales = [0.25, 0.5]
+	wgn_scales = [0.01, 0.01]
+	# data = []
 	analysis_data = []
+	
 	for cw_scale, wgn_scale in zip(cw_scales, wgn_scales):
 		temp_data = []
 		set_registers.reset_counters(f)
@@ -236,7 +242,7 @@ def run_xil_fft_shift_analysis(f, args):
 			print ' '
 
 			data = []
-			name = 'Xil FFT w/o PFB'
+			name = 'CW:'+cw_scale + ' ' + '-' + 'FFT Shift:' + '' + str(shift)
 			data.append((snapshots.read_fft_nb_snapshots(f), name))
 
 			overflow_count = f.registers.pfb_of_cnt.read()['data']['cnt']
@@ -278,7 +284,11 @@ def run_xil_fft_shift_analysis(f, args):
 			print '***---***---***---***---***---***'
 			print ' '
 		analysis_data.append([cw_scale, wgn_scale, temp_data])
-	fft_plotting.plot_fft_analysis_results(analysis_data)
+	fft_plotting.plot_fft_analysis_results(analysis_data, args.savefigs)
+
+	if args.plot:
+		# embed()
+		fft_plotting.plot_results_separate(data, args)
 
 def run(f, args):
 
@@ -322,8 +332,6 @@ def run(f, args):
 
 		# data.append((snapshots.read_vacc_snapshots(f), name + ' ' + '(Acc:'+str(args.acc)+')'))
 
-
-		
 		if args.plot:
 			fft_plotting.plot_results_separate(data, args)
 
@@ -343,6 +351,7 @@ def main():
 	parser.add_argument("--mix_freq", type=float, default=100e6, help="DDS Mixer frequency")
 	parser.add_argument("--embed", action="store_true", default=False, help="Enable Ipython embed")
 	parser.add_argument("--plot", action="store_true", default=False, help="Enable plotting")
+	parser.add_argument("--savefigs", action="store_true", default=False, help="Save generated figures")
 	parser.add_argument("--xil_shift_analysis", action="store_true", default=False, help="Cycle through a range of FFT shift and CW levels")
 	args = parser.parse_args()
 	print 'Using SKARAB:', args.skarab

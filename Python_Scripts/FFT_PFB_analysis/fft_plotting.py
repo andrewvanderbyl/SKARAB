@@ -72,23 +72,25 @@ def plot_results_separate(data, args, taps=4, savefigs=False):
     if savefigs==False:
         plt.show()
 
-def plot_fft_analysis_results(data):
+def plot_fft_analysis_results(data, savefigs=False):
     plt.style.use("ggplot")
     for cw_scale, wgn_scale, entry in data:
+        shift = []
         overflow = [] 
         expected_input_output_ratio = []
         actual_input_output_ratio = []
         for item in entry:
+            shift.append(item[1])
             overflow.append(item[2])
             expected_input_output_ratio.append(item[3])
-            actual_input_output_ratio.append(item[4])
+            actual_input_output_ratio.append(int(item[4]))
 
         fig, ax1 = plt.subplots()
         ax2 = ax1.twinx()
         ax1.plot(expected_input_output_ratio, expected_input_output_ratio, color='g', linestyle='dotted')
         ax1.scatter(expected_input_output_ratio, actual_input_output_ratio, color='b', marker="+")
         ax2.scatter(expected_input_output_ratio, overflow, color='r', marker="s")
-        expected_input_output_ratio.reverse()
+        # expected_input_output_ratio.reverse()
         ax1.set_xlabel('Expected Shift (Value)')
         ax1.set_ylabel('Measured Shift (Value)', color='b')
         ax1.set_xticks(expected_input_output_ratio)
@@ -96,13 +98,21 @@ def plot_fft_analysis_results(data):
         ax2.set_ylabel('FFT Oveflow', color='r')
         ax2.set_yticks([0,1])
         ax2.set_yticklabels(['False', 'True'])
+        for i in range(len(expected_input_output_ratio)):
+            # print i
+            # print shift[i]
+            # print expected_input_output_ratio[i]
+            # print actual_input_output_ratio[i]
+            ax1.annotate(str(shift[i]), xy=(expected_input_output_ratio[i],actual_input_output_ratio[i]))
+
         plt.title('FFT Shift - CW Scale:' + '' + str(cw_scale) + ' ' + 'WGN Scale:' + '' + str(wgn_scale))
-    plt.show()
 
 
-
-
-
+        if savefigs:
+            filename = 'FFTShift_cw_' + str(cw_scale) + '_wgn_' + str(wgn_scale) + '.png'
+            plt.savefig(filename, bbox_inches='tight')
+    if savefigs==False:
+        plt.show()
 
     # plt.figure(1)
     # plt.scatter(expected_input_output_ratio, expected_input_output_ratio)
