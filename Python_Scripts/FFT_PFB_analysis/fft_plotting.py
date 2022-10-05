@@ -49,7 +49,6 @@ def plot_spectral_data(data):
 
 def plot_results_separate(data, args, taps=4, savefigs=False):
     plt.style.use("ggplot")
-
     for i, (spectrum, name) in enumerate(data):
         fig, axs = plt.subplots(1, 1, sharex=True, sharey=True)
         sfdr = _compute_sfdr(db(np.abs(spectrum)))
@@ -62,6 +61,10 @@ def plot_results_separate(data, args, taps=4, savefigs=False):
         axs.text(db_text_x_pos, db_text_y_pos, 'SFDR:'+ u"\u25C6" + str(round(sfdr[0],3))+'dB', color='green', style='italic')
         axs.legend(loc='upper right')
 
+        if args.savefigs:
+            filename = 'Spectrum_' + name + '.png'
+            plt.savefig(filename, bbox_inches='tight', dpi = 100)
+
         # if savefigs:
         #     if pfb:
         #         pfb = "pfb"
@@ -69,7 +72,7 @@ def plot_results_separate(data, args, taps=4, savefigs=False):
         #     else:
         #         filename = f"{name}_{args.acc}.png"
         #     plt.savefig(filename, bbox_inches='tight')
-    if savefigs==False:
+    if args.savefigs==False:
         plt.show()
 
 def plot_fft_analysis_results(data, savefigs=False):
@@ -90,7 +93,6 @@ def plot_fft_analysis_results(data, savefigs=False):
         ax1.plot(expected_input_output_ratio, expected_input_output_ratio, color='g', linestyle='dotted')
         ax1.scatter(expected_input_output_ratio, actual_input_output_ratio, color='b', marker="+")
         ax2.scatter(expected_input_output_ratio, overflow, color='r', marker="s")
-        # expected_input_output_ratio.reverse()
         ax1.set_xlabel('Expected Shift (Value)')
         ax1.set_ylabel('Measured Shift (Value)', color='b')
         ax1.set_xticks(expected_input_output_ratio)
@@ -98,19 +100,21 @@ def plot_fft_analysis_results(data, savefigs=False):
         ax2.set_ylabel('FFT Oveflow', color='r')
         ax2.set_yticks([0,1])
         ax2.set_yticklabels(['False', 'True'])
+
         for i in range(len(expected_input_output_ratio)):
-            # print i
-            # print shift[i]
-            # print expected_input_output_ratio[i]
-            # print actual_input_output_ratio[i]
             ax1.annotate(str(shift[i]), xy=(expected_input_output_ratio[i],actual_input_output_ratio[i]))
 
         plt.title('FFT Shift - CW Scale:' + '' + str(cw_scale) + ' ' + 'WGN Scale:' + '' + str(wgn_scale))
 
-
         if savefigs:
+            mng = plt.get_current_fig_manager()
+            mng.resize(*mng.window.maxsize())
+            
+            figure = plt.gcf() # get current figure
+            figure.set_size_inches(14, 12)
+
             filename = 'FFTShift_cw_' + str(cw_scale) + '_wgn_' + str(wgn_scale) + '.png'
-            plt.savefig(filename, bbox_inches='tight')
+            plt.savefig(filename, bbox_inches='tight', dpi = 100)
     if savefigs==False:
         plt.show()
 

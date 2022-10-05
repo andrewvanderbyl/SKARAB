@@ -152,7 +152,6 @@ def calc_shift():
 	# shift_pairs = [sp_1, sp_2, sp_8, sp_9]
 	# shift_pairs = [sp_1, sp_2, sp_8, sp_9, sp_10]
 
-	# shift_bin = ''
 	shifts = []
 	for pair in shift_pairs:
 		shift_bin = ''
@@ -173,12 +172,12 @@ def run_xil_fft_shift_analysis(f, args):
 
 	# Generate shift values
 	shifts = calc_shift()
-	# cw_scales = [0.1, 0.25, 0.5, 0.75, 0.99]
-	# wgn_scales = [0.01, 0.01, 0.01, 0.01, 0.01]
+	cw_scales = [0.1, 0.25, 0.5, 0.75, 0.99]
+	wgn_scales = [0.05, 0.05, 0.05, 0.05, 0.05]
 
-	cw_scales = [0.25, 0.5]
-	wgn_scales = [0.01, 0.01]
-	# data = []
+	# cw_scales = [0.25]
+	# wgn_scales = [0.1]
+	data = []
 	analysis_data = []
 	
 	for cw_scale, wgn_scale in zip(cw_scales, wgn_scales):
@@ -187,10 +186,6 @@ def run_xil_fft_shift_analysis(f, args):
 
 		for stages, shift, shift_bin in shifts:
 			overflow = 0
-			# set_registers.set_cw_generator(f, scale=cw, freq=args.cw_freq)
-			# set_registers.set_mixer_freq(f, mix_freq=args.mix_freq)
-			# set_registers.set_fft_shift(f, shift=shift)
-
 			change_setup(f, args, cw_scale, wgn_scale, shift)
 
 			# Sleep
@@ -202,10 +197,6 @@ def run_xil_fft_shift_analysis(f, args):
 			# Read Snapshot data
 			adc_data = snapshots.read_adc_snapshots(f)
 			ddc_data = snapshots.read_ddc_snapshots(f)
-
-			# plt.figure(1)
-			# plt.plot(adc_data)
-			# plt.show()
 
 			print ' '
 			print '---CW Data---'
@@ -241,45 +232,48 @@ def run_xil_fft_shift_analysis(f, args):
 			print 'DDC mean', np.sum(ddc_data)/len(ddc_data)
 			print ' '
 
-			data = []
-			name = 'CW:'+cw_scale + ' ' + '-' + 'FFT Shift:' + '' + str(shift)
-			data.append((snapshots.read_fft_nb_snapshots(f), name))
-
 			overflow_count = f.registers.pfb_of_cnt.read()['data']['cnt']
 			if overflow_count > 0:
 				print 'FFT Overflow (counter): (***OVERFLOW***)', overflow_count
 				overflow = 1
+				name = 'CW:'+str(cw_scale) + '-' + 'WGN:'+str(wgn_scale) +'-' + 'Shift:' + str(shift) + '-' +'(stages:'+str(stages)+')'+'-'+'(OF)'
 			else:
 				print 'FFT Overflow (counter):', overflow_count
 				overflow = 0
+				name = 'CW:'+str(cw_scale) + '-' + 'WGN:'+str(wgn_scale) +'-' + 'Shift:' + str(shift) + '-' +'(stages:'+str(stages)+')'
 			print ' '
 
-			for i, (spectrum, name) in enumerate(data):
-				xil_peak = np.max(np.abs(spectrum))
-				xil_peak_pwr = db_power(np.square(xil_peak))
-				xil_peak_channel = np.argmax(np.abs(spectrum))
-				xil_pwr_spectrum = np.sum(np.square(np.abs(spectrum)))
+			# data = []
+
+			# temp_data.append((snapshots.read_fft_nb_snapshots(f), name))
+			spectrum = snapshots.read_fft_nb_snapshots(f) 
+
+			# for i, (spectrum, name) in enumerate(temp_data):
+			xil_peak = np.max(np.abs(spectrum))
+			xil_peak_pwr = db_power(np.square(xil_peak))
+			xil_peak_channel = np.argmax(np.abs(spectrum))
+			xil_pwr_spectrum = np.sum(np.square(np.abs(spectrum)))
 				
-				print '--Xil Channel Data---'
-				print 'Xil Peak channel:', xil_peak_channel
-				print 'Xil Peak channel value (cmplx):', spectrum[xil_peak_channel]
-				print 'Xil Peak value:', xil_peak
-				print 'Xil Peak Pwr (dB):', xil_peak_pwr
-				# print 'Xil Pwr Spec:', xil_pwr_spectrum
-				print ' '
+			print '--Xil Channel Data---'
+			print 'Xil Peak channel:', xil_peak_channel
+			print 'Xil Peak channel value (cmplx):', spectrum[xil_peak_channel]
+			print 'Xil Peak value:', xil_peak
+			print 'Xil Peak Pwr (dB):', xil_peak_pwr
+			# print 'Xil Pwr Spec:', xil_pwr_spectrum
+			print ' '
 
-				print '---Shift---'
-				expected_input_output_ratio = np.power(2,stages)
-				actual_input_output_ratio = fft_peak/xil_peak
+			print '---Shift---'
+			expected_input_output_ratio = np.power(2,stages)
+			actual_input_output_ratio = fft_peak/xil_peak
 
-				print 'Requested Shift:', shift
-				print 'Shift (Bin)', shift_bin 
-				print 'Expected stages shifted:', stages
-				print 'Expected Input/Output ratio:', expected_input_output_ratio
-				print 'Actual Input/Output ratio :', actual_input_output_ratio
-				print ' '
-				temp_data.append([stages, shift, overflow, expected_input_output_ratio, actual_input_output_ratio])
-
+			print 'Requested Shift:', shift
+			print 'Shift (Bin)', shift_bin 
+			print 'Expected stages shifted:', stages
+			print 'Expected Input/Output ratio:', expected_input_output_ratio
+			print 'Actual Input/Output ratio :', actual_input_output_ratio
+			print ' '
+			temp_data.append([stages, shift, overflow, expected_input_output_ratio, actual_input_output_ratio])
+			data.append((spectrum,name))
 
 			print '***---***---***---***---***---***'
 			print ' '
@@ -287,7 +281,6 @@ def run_xil_fft_shift_analysis(f, args):
 	fft_plotting.plot_fft_analysis_results(analysis_data, args.savefigs)
 
 	if args.plot:
-		# embed()
 		fft_plotting.plot_results_separate(data, args)
 
 def run(f, args):
