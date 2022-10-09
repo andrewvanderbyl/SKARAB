@@ -136,44 +136,48 @@ def calc_shift():
 	# shift_pairs = ['01','10','10','01','10','10','01','10'] # Default 26006
 	# shift_pairs = ['01','10','10','10','10','10','10','10']  # Full shift
 
-	sp_1 = ['01','10','10','10','10','10','10','10']  # 27306 (21846)
-	sp_2 = ['01','10','10','10','10','10','01','10']  # 27302 (25942)
-	# sp_3 = ['01','10','10','10','10','01','10','10']  # 27290 (22870)
-	# sp_4 = ['01','10','10','10','01','10','10','10']  # 27242 (22102)
-	# sp_5 = ['01','10','10','01','10','10','10','10']  # 27050 (21910)
-	# sp_6 = ['01','10','01','10','10','10','10','10']  # 26282 (21862)
-	sp_7 = ['01','10','10','10','10','11','11','10']  # 27326 () #illegal
-	sp_8 = ['01','10','10','01','10','10','01','10']  # 27046 (26006)
-	sp_9 = ['01','10','10','01','10','01','01','10']  # 27030 (27030)
-	sp_10 = ['10','10','10','10','10','10','10','10']  # 43690 (21845) #illegal
-	sp_11 = ['01','10','10','10','10','10','11','11']  # ()
-
-	shift_pairs = [sp_1, sp_2, sp_7, sp_8, sp_9, sp_10]
-
 	# sp_1 = ['01','10','10','10','10','10','10','10']  # 27306 (21846)
-	# sp_2 = ['01','10','10','10','10','10','01','11']  # 27302 (25942)
-	# sp_3 = ['01','10','10','10','11','10','11','10']  # 27311 (30038)
-	# sp_4 = ['01','10','11','11','10','10','11','10']  # 27046 (26006)
-	# sp_5 = ['01','10','10','01','11','11','11','11']  # 27030 (27030)
-	# sp_6 = ['10','10','10','10','10','10','10','10']  # 43690 (21845) #illegal
-	# sp_7 = ['01','10','10','11','11','11','11','11']  # ()
+	# sp_2 = ['01','10','10','10','10','10','01','10']  # 27302 (25942)
+	# # sp_3 = ['01','10','10','10','10','01','10','10']  # 27290 (22870)
+	# # sp_4 = ['01','10','10','10','01','10','10','10']  # 27242 (22102)
+	# # sp_5 = ['01','10','10','01','10','10','10','10']  # 27050 (21910)
+	# # sp_6 = ['01','10','01','10','10','10','10','10']  # 26282 (21862)
+	# sp_7 = ['01','10','10','10','10','11','11','10']  # 27326 (32086) #illegal
+	# sp_8 = ['01','10','10','01','10','10','01','10']  # 27046 (26006)
+	# sp_9 = ['01','10','10','01','10','01','01','10']  # 27030 (27030)
+	# sp_10 = ['10','10','10','10','10','10','10','10']  # 43690 (21845) #illegal
+	# # sp_11 = ['01','10','10','10','10','10','11','11']  # ()
 
-	# shift_pairs = [sp_1, sp_2, sp_3, sp_4, sp_5, sp_6, sp_7]
+	# shift_pairs = [sp_1, sp_2, sp_7, sp_8, sp_9, sp_10]
 
+	sp_1 = ['01','10','01','10','01','10','10','01']  # bit shift:12 - 26217 (38502)
+	# sp_1 = ['01','01','01','10','01','10','10','10']  # bit shift:12 - 26217 (38502)
+	sp_2 = ['01','10','10','01','10','10','01','10']  # bit shift:13 - 27046 (26006)
+	sp_3 = ['01','10','10','10','10','10','01','10']  # bit shift:14 - 27302 (25942)
+	sp_4 = ['01','10','10','10','10','10','10','10']  # bit shift:15 - 27306 (21846)
+	sp_5 = ['01','10','10','10','10','10','11','10']  # bit shift:16 - 27310 (30038)
+	sp_6 = ['01','10','10','10','11','10','11','10']  # bit shift:17 - 27374 (30550)
+	sp_7 = ['10','10','10','10','10','10','10','10']  # bit shift:16 - 43690 (21845) #invalid - MSB cannot be '10'
+
+	# shift_pairs = [sp_1, sp_2, sp_3, sp_4, sp_5, sp_6]
+	shift_pairs = [sp_1, sp_2, sp_3, sp_4, sp_5, sp_6, sp_7]
+	# shift_pairs = [sp_1]
 
 	shifts = []
 	for pair in shift_pairs:
 		shift_bin = ''
-		num_stages = 0
+		# num_stages = 0
+		bit_shift = 0
 		for sp in pair:
 			# for i in sp:
-			# 	num_stages += int(i,2)
-			num_stages += int(sp,2)
+				# num_stages += int(i,2)
+			bit_shift += int(sp,2)
 			shift_bin+=sp
+		print 'Bit Shift:', bit_shift
 		shift_rev = shift_bin[::-1]
 		shift_int = int(shift_rev,2)
-		shifts.append([num_stages, shift_int, shift_bin])
-		print 'Desired', int(shift_bin,2), 'which is flipped and input to reg:',shift_int
+		shifts.append([bit_shift, shift_int, shift_bin])
+		print 'Input', int(shift_bin,2), 'which is flipped and input to reg:',shift_int
 	# embed()
 	return shifts
 
@@ -184,11 +188,11 @@ def run_xil_fft_shift_analysis(f, args):
 
 	# Generate shift values
 	shifts = calc_shift()
-	# cw_scales = [0.1, 0.25, 0.5, 0.75, 0.99]
-	# wgn_scales = [0.05, 0.05, 0.05, 0.05, 0.05]
+	cw_scales = [0.1, 0.25, 0.5, 0.75, 0.99]
+	wgn_scales = [0.05, 0.05, 0.05, 0.05, 0.05]
 
-	cw_scales = [0.25]
-	wgn_scales = [0.1]
+	# cw_scales = [0.25]
+	# wgn_scales = [0.05]
 	data = []
 	analysis_data = []
 	
@@ -199,6 +203,7 @@ def run_xil_fft_shift_analysis(f, args):
 		for stages, shift, shift_bin in shifts:
 			overflow = 0
 			change_setup(f, args, cw_scale, wgn_scale, shift)
+			set_registers.reset_counters(f)
 
 			# Sleep
 			time.sleep(0.01)
@@ -244,15 +249,16 @@ def run_xil_fft_shift_analysis(f, args):
 			print 'DDC mean', np.sum(ddc_data)/len(ddc_data)
 			print ' '
 
+
 			overflow_count = f.registers.pfb_of_cnt.read()['data']['cnt']
 			if overflow_count > 0:
 				print 'FFT Overflow (counter): (***OVERFLOW***)', overflow_count
 				overflow = 1
-				name = 'CW:'+str(cw_scale) + '-' + 'WGN:'+str(wgn_scale) +'-' + 'Shift:' + str(shift) + '-' +'(stages:'+str(stages)+')'+'-'+'(OF)'
+				name = 'CW_'+str(cw_scale) + '_' + 'WGN_'+str(wgn_scale) +'_' + 'shift_val_' + str(shift) + '_' +'bitshift_'+str(stages) +'_'+'OF'
 			else:
 				print 'FFT Overflow (counter):', overflow_count
 				overflow = 0
-				name = 'CW:'+str(cw_scale) + '-' + 'WGN:'+str(wgn_scale) +'-' + 'Shift:' + str(shift) + '-' +'(stages:'+str(stages)+')'
+				name = 'CW_'+str(cw_scale) + '_' + 'WGN_'+str(wgn_scale) +'_' + 'shift_val_' + str(shift) + '_' +'bitshift_'+str(stages)
 			print ' '
 
 			# data = []
@@ -335,7 +341,7 @@ def run(f, args):
 		# data.append((snapshots.read_quant_snapshots(f), name + ' ' + '(Quant)'))
 		# data.append((snapshots.read_vacc_in_snapshots(f), name + ' ' + '(VACC In)'))
 
-		# data.append((snapshots.read_vacc_snapshots(f), name + ' ' + '(Acc:'+str(args.acc)+')'))
+		data.append((snapshots.read_vacc_snapshots(f), name + ' ' + '(Acc:'+str(args.acc)+')'))
 
 		if args.plot:
 			fft_plotting.plot_results_separate(data, args)

@@ -90,7 +90,7 @@ def plot_fft_analysis_results(data, savefigs=False):
 
         fig, ax1 = plt.subplots()
         ax2 = ax1.twinx()
-        embed()
+        
         ax1.plot(expected_input_output_ratio, expected_input_output_ratio, color='g', linestyle='dotted')
         ax1.scatter(expected_input_output_ratio, actual_input_output_ratio, color='b', marker="+")
         ax2.scatter(expected_input_output_ratio, overflow, color='r', marker="s")
