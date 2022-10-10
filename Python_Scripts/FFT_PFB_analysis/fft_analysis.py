@@ -160,8 +160,8 @@ def calc_shift():
 	sp_7 = ['10','10','10','10','10','10','10','10']  # bit shift:16 - 43690 (21845) #invalid - MSB cannot be '10'
 
 	# shift_pairs = [sp_1, sp_2, sp_3, sp_4, sp_5, sp_6]
-	shift_pairs = [sp_1, sp_2, sp_3, sp_4, sp_5, sp_6, sp_7]
-	# shift_pairs = [sp_1]
+	# shift_pairs = [sp_1, sp_2, sp_3, sp_4, sp_5, sp_6, sp_7]
+	shift_pairs = [sp_7]
 
 	shifts = []
 	for pair in shift_pairs:
@@ -188,11 +188,11 @@ def run_xil_fft_shift_analysis(f, args):
 
 	# Generate shift values
 	shifts = calc_shift()
-	cw_scales = [0.1, 0.25, 0.5, 0.75, 0.99]
-	wgn_scales = [0.05, 0.05, 0.05, 0.05, 0.05]
+	# cw_scales = [0.1, 0.25, 0.5, 0.75, 0.99]
+	# wgn_scales = [0.05, 0.05, 0.05, 0.05, 0.05]
 
-	# cw_scales = [0.25]
-	# wgn_scales = [0.05]
+	cw_scales = [0.25]
+	wgn_scales = [0.05]
 	data = []
 	analysis_data = []
 	
@@ -308,6 +308,7 @@ def run(f, args):
 	else:	
 		# Setup and return modes
 		wideband, pfb = setup_with_args(f,args)
+		set_registers.reset_counters(f)
 
 		# Sleep
 		time.sleep(0.01)
@@ -321,6 +322,14 @@ def run(f, args):
 		# Read Snapshot data
 		adc_data = snapshots.read_adc_snapshots(f)
 		# data.append((snapshots.read_adc_snapshots(f), 'adc'))
+
+
+		overflow_count = f.registers.pfb_of_cnt.read()['data']['cnt']
+		if overflow_count > 0:
+			print 'FFT Overflow (counter): (***OVERFLOW***)', overflow_count
+		else:
+			print 'FFT Overflow (counter):', overflow_count
+		print ' '
 
 		# Read FFT/PFB Snapshots and plot
 		if pfb:
