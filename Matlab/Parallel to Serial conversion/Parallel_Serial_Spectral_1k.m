@@ -1,4 +1,4 @@
-function [Spec,Sync,Dvalid] = Parallel_Serial_Spectral_4k(Input_0,Input_1,Input_2,Input_3,Sync_in,dvalid_in)
+function [Spec,Sync,Dvalid] = Parallel_Serial_Spectral_1k(Input_0,Input_1,Input_2,Input_3,Sync_in,dvalid_in)
 % Perform Parallel to serial conversion
 k = 0;
 
