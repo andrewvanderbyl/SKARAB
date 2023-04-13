@@ -16,55 +16,92 @@
 % Step 5: Compute the iFFT on the .
 
 clear
+debug = false;
 
-%% Phase 1: Generate signals
-% --- Step 1: Set parameters ---:
+
+%% Setup parameters
+% --- Step 1: Parameters ---:
 fft_length = 4096;
 amplitude = 1;
 fs_freq = 2.8e9;
+M = 4;  %number of polyphase fir paths
+
+
+% --- Baseband signal parameters
+bb_if = 97.5e6;
 bw = 0e6;
-
-% Baseband signal parameters
-bb_if = 97.5e6; % 164.0625e6;
-% bb_signal_freq_bw_low = bb_signal_freq_if - bw; % subtract half BW (80MHz) from center of band
-% bb_signal_freq_bw_high = bb_signal_freq_if + bw; % add half BW (80MHz) from center of band
-
-% --- Step 2: Generate signals ---:
-% Generate baseband signal (complex as to emulate pol0 and pol 1)
 num_cycles = 250000;
 
-bb_signal_bw_low_cmplx = complex_signal_gen(amplitude, fs_freq, (bb_if - bw), num_cycles);
-bb_signal_if_cmplx = complex_signal_gen(amplitude, fs_freq, bb_if, num_cycles);
-bb_signal_bw_high_cmplx = complex_signal_gen(amplitude, fs_freq, (bb_if + bw), num_cycles);
+% -- PFB Profile parameters
+ch_bw = (fs_freq/M)/fft_length;
+selected_bin = round(bb_if/ch_bw)-1;
 
-common_length = length(bb_signal_bw_high_cmplx);
-baseband_signal_cmplx = bb_signal_bw_low_cmplx(1:common_length) + bb_signal_if_cmplx(1:common_length) + bb_signal_bw_high_cmplx;
-baseband_signal = real(baseband_signal_cmplx);
+freq_step_size = ch_bw/10;
+start_freq = bb_if - ch_bw*2;
+end_freq = bb_if + ch_bw*2;
 
-% Compute FFT on complex heterodyned signal and on each polarisation.
-% fft_pol_cmplx = fft(baseband_signal_cmplx, fft_length);
-% fft_pol0 = fft(real(baseband_signal_cmplx), fft_length);
-% fft_pol1 = fft(imag(baseband_signal_cmplx), fft_length);
 
-% Plot spectra
-% figure(1);
-% subplot(3,1,1)
-% stem(abs(fft_pol_cmplx.^2))
-% subplot(3,1,2)
-% stem(abs(fft_pol0.^2))
-% subplot(3,1,3)
-% stem(abs(fft_pol0.^2))
-% stem(abs(fft_pol1.^2))
+%% Options: Run PFB (normally) or create a channel profile
+%option = 'normal';
+option = 'profile';
 
-%% Phase 2: Decompose signal and filter coefficients into M-paths and process each path
-M = 4;
-[polyphase_fir_data] = polyphase_fir(baseband_signal, M);
+if strcmp(option, 'normal')
 
-%% Phase 3: Decompose 1st stage to form 2nd stage PFB for channeliser
-N = fft_length;
-[channelised_data] = polyphase_channeliser(polyphase_fir_data, N);
+    % --- Step 2: Generate signals ---:
+    % --- Generate baseband signal (complex as to emulate pol0 and pol 1)
+    [signal_data] = signal_generator(amplitude, fs_freq, bb_if, bw, num_cycles);   
+
+    % --- Phase 2: Decompose signal and filter coefficients into M-paths and process each path
+    [polyphase_fir_data] = polyphase_fir(signal_data, M);
+
+    % --- Phase 3: Decompose 1st stage to form 2nd stage PFB for channeliser
+    [channelised_data] = polyphase_channeliser(polyphase_fir_data, fft_length, debug);
+    
+elseif strcmp(option, 'profile')
+
+    % --- Step 2: Generate a tone linearly increasing in fixed frequency steps ---:
+    idx = 1;
+    for freq=start_freq:freq_step_size:end_freq
+        freq
+        selected_bin
+        [signal_data] = signal_generator(amplitude, fs_freq, freq, 0e6, num_cycles);   
+        
+        % --- Phase 2: Decompose signal and filter coefficients into M-paths and process each path
+        [polyphase_fir_data] = polyphase_fir(signal_data, M);
+
+        % --- Phase 3: Decompose 1st stage to form 2nd stage PFB for channeliser
+        [channelised_data] = polyphase_channeliser(polyphase_fir_data, fft_length, debug);
+        
+        % --- Log channel (bin) value of interest for current input signal
+        profile(idx) = channelised_data(selected_bin);
+        idx = idx + 1;
+    end
+    figure(1);
+    plot(abs(profile.^2));
+    figure(2)
+    semilogy(abs(profile.^2))
+    
+end
+
+
+
+% --- End ---
 
 %% Signal Generator
+function [signal_data] = signal_generator(amplitude, fs_freq, bb_if, bw, num_cycles)
+
+    bb_signal_bw_low_cmplx = complex_signal_gen(amplitude, fs_freq, (bb_if - bw), num_cycles);
+    bb_signal_if_cmplx = complex_signal_gen(amplitude, fs_freq, bb_if, num_cycles);
+    bb_signal_bw_high_cmplx = complex_signal_gen(amplitude, fs_freq, (bb_if + bw), num_cycles);
+
+    common_length = length(bb_signal_bw_high_cmplx);
+    signal_data_cmplx = bb_signal_bw_low_cmplx(1:common_length) + bb_signal_if_cmplx(1:common_length) + bb_signal_bw_high_cmplx;
+    signal_data = signal_data_cmplx;
+
+end
+
+
+%% Complex Signal Generator
 function [complex_signal] = complex_signal_gen(amplitude, fs, freq, num_cycles)
     num_Samples = fs/freq;
     x1 = 0:(1/num_Samples):1*num_cycles;
@@ -107,7 +144,7 @@ function [polyphase_fir_data] = polyphase_fir(baseband_signal, M)
 end
 
 %% Green PFB: Polyphase Channeliser
-function [channelised_data] = polyphase_channeliser(pfb_stage1_output, N)
+function [channelised_data] = polyphase_channeliser(pfb_stage1_output, N, debug)
     % Import coefficients
     load window_coeffs.mat
 
@@ -133,12 +170,13 @@ function [channelised_data] = polyphase_channeliser(pfb_stage1_output, N)
         end
         
         channelised_data = fft(h_out);
-        
-        % Display sequence if required
-        display_input_sequence(h_out, 0.05)
-    
-        % Display channelised data if required
-        display_channel_data(channelised_data, 0.05);
+        if debug
+            % Display sequence if required
+            display_input_sequence(h_out, 0.05)
+
+            % Display channelised data if required
+            display_channel_data(channelised_data, 0.05);            
+        end
     end
 
 end
@@ -151,9 +189,12 @@ end
 
 %% Display input sequence
 function display_input_sequence(sequence, pause_period)
-    %clf
+    clf(figure(1))
     figure(1)
-    plot(sequence);
+    hold on;
+    plot(real(sequence));
+    plot(imag(sequence));
+    hold off;
     pause(pause_period);
 end
 
