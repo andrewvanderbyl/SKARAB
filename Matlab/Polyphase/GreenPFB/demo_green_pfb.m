@@ -28,18 +28,20 @@ M = 4;  %number of polyphase fir paths
 
 
 % --- Baseband signal parameters
-bb_if = 97.5e6;
+selected_bin = 571;
+ch_bw = (fs_freq/M)/fft_length;
+bb_if = ch_bw * selected_bin;
 bw = 0e6;
-num_cycles = 250000;
+num_cycles = 200000;
 
 % -- PFB Profile parameters
 ch_bw = (fs_freq/M)/fft_length;
-selected_bin = round(bb_if/ch_bw)-1;
+adjacent_channels_to_span = 1;
+points_per_bin = 15;
 
-freq_step_size = ch_bw/10;
-start_freq = bb_if - ch_bw*2;
-end_freq = bb_if + ch_bw*2;
-
+freq_step_size = ch_bw/points_per_bin;
+start_freq = ch_bw * (selected_bin - adjacent_channels_to_span);
+end_freq = ch_bw * (selected_bin + adjacent_channels_to_span);
 
 %% Options: Run PFB (normally) or create a channel profile
 %option = 'normal';
@@ -63,7 +65,6 @@ elseif strcmp(option, 'profile')
     idx = 1;
     for freq=start_freq:freq_step_size:end_freq
         freq
-        selected_bin
         [signal_data] = signal_generator(amplitude, fs_freq, freq, 0e6, num_cycles);   
         
         % --- Phase 2: Decompose signal and filter coefficients into M-paths and process each path
@@ -73,14 +74,14 @@ elseif strcmp(option, 'profile')
         [channelised_data] = polyphase_channeliser(polyphase_fir_data, fft_length, debug);
         
         % --- Log channel (bin) value of interest for current input signal
-        profile(idx) = channelised_data(selected_bin);
+        profile(idx,:) = channelised_data;
         idx = idx + 1;
     end
     figure(1);
     plot(abs(profile.^2));
     figure(2)
     semilogy(abs(profile.^2))
-    
+    a = 1;
 end
 
 
@@ -144,17 +145,17 @@ function [polyphase_fir_data] = polyphase_fir(baseband_signal, M)
 end
 
 %% Green PFB: Polyphase Channeliser
-function [channelised_data] = polyphase_channeliser(pfb_stage1_output, N, debug)
+function [channelised_data] = polyphase_channeliser(input, N, debug)
     % Import coefficients
     load window_coeffs.mat
 
     % --- Step 6: Split into N-paths ---:
     % hann_window = window('hann', N*32);
-    data_row_length = floor(length(pfb_stage1_output)/N) * N;
+    data_row_length = floor(length(input)/N) * N;
     coeff_row_length = (length(window_coeffs)/N);
 
     % Coeffs
-    [N_path_coeffs] = m_path_split(window_coeffs, N);
+    N_path_coeffs = reshape(window_coeffs, N, length(window_coeffs)/N);
 
     % --- Step 7: Process each path ---:
     reg=zeros(N,coeff_row_length);
@@ -162,7 +163,7 @@ function [channelised_data] = polyphase_channeliser(pfb_stage1_output, N, debug)
     % --- Step 4: Process each path ---:
     for nn=1:N:data_row_length-N
         reg(:,2:coeff_row_length)=reg(:,1:coeff_row_length-1);
-        reg(:,1)=flipud(pfb_stage1_output(nn:nn+(N-1)));
+        reg(:,1)=flipud(input(nn:nn+(N-1)));
 
         h_out = zeros(N,1);
         for mm=1:N
