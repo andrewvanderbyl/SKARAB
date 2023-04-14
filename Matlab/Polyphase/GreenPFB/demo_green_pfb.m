@@ -15,7 +15,7 @@
 % Step 4: Resample filter coefficients for the M-paths.
 % Step 5: Compute the iFFT on the .
 
-%clear
+% clear
 debug = false;
 
 
@@ -26,9 +26,11 @@ amplitude = 1;
 fs_freq = 2.8e9;
 M = 4;  %number of polyphase fir paths
 
+WindowType='hann'; % 'hamming' or 'hann'
+num_taps = 16; % PFB FIR channeliser
 
 % --- Baseband signal parameters
-selected_bin = 571;
+selected_bin = 579;
 ch_bw = (fs_freq/M)/fft_length;
 bb_if = ch_bw * selected_bin;
 bw = 0e6;
@@ -42,7 +44,7 @@ points_per_bin = 15;
 freq_step_size = ch_bw/points_per_bin;
 start_freq = ch_bw * (selected_bin - adjacent_channels_to_span);
 end_freq = ch_bw * (selected_bin + adjacent_channels_to_span);
-total_points = (end_freq - start_freq)/freq_step_size;
+total_points = (end_freq - start_freq)/freq_step_size +1;
 
 %% Options: Run PFB (normally) or create a channel profile
 % option = 'normal';
@@ -58,15 +60,16 @@ if strcmp(option, 'normal')
     [polyphase_fir_data] = polyphase_fir(signal_data, M);
 
     % --- Phase 3: Decompose 1st stage to form 2nd stage PFB for channeliser
-    [channelised_data] = polyphase_channeliser(polyphase_fir_data, fft_length, debug);
+    [channelised_data] = polyphase_channeliser(polyphase_fir_data, fft_length, WindowType, num_taps, debug);
     
 elseif strcmp(option, 'profile')
 
     % --- Step 2: Generate a tone linearly increasing in fixed frequency steps ---:
     idx = 1;
+    profile = zeros(total_points,fft_length);
     for freq=start_freq:freq_step_size:end_freq
-        idx
         tic
+        sprintf('Progress update: Point %i out of %i', idx ,total_points)
         % Generate the required signal
         [signal_data] = signal_generator(amplitude, fs_freq, freq, 0e6, num_cycles);   
         
@@ -74,7 +77,7 @@ elseif strcmp(option, 'profile')
         [polyphase_fir_data] = polyphase_fir(signal_data, M);
 
         % --- Phase 3: Decompose 1st stage to form 2nd stage PFB for channeliser
-        [channelised_data] = polyphase_channeliser(polyphase_fir_data, fft_length, debug);
+        [channelised_data] = polyphase_channeliser(polyphase_fir_data, fft_length, WindowType, num_taps, debug);
         
         % --- Log channel (bin) value of interest for current input signal
         profile(idx,:) = channelised_data;
@@ -82,16 +85,13 @@ elseif strcmp(option, 'profile')
         toc
     end
     figure(1);
-    plot(abs(profile.^2));
+    semilogy(abs(profile.^2));
     figure(2)
-    semilogy(abs(profile.^2))
-    figure(3)
-    hold on;
     semilogy(abs(profile(:,571).^2));
+    hold on;
     semilogy(abs(profile(:,572).^2));
     semilogy(abs(profile(:,573).^2));
     hold off;
-    a = 1;
 end
 
 
@@ -100,7 +100,6 @@ end
 
 %% Signal Generator
 function [signal_data] = signal_generator(amplitude, fs_freq, bb_if, bw, num_cycles)
-
     bb_signal_bw_low_cmplx = complex_signal_gen(amplitude, fs_freq, (bb_if - bw), num_cycles);
     bb_signal_if_cmplx = complex_signal_gen(amplitude, fs_freq, bb_if, num_cycles);
     bb_signal_bw_high_cmplx = complex_signal_gen(amplitude, fs_freq, (bb_if + bw), num_cycles);
@@ -108,7 +107,6 @@ function [signal_data] = signal_generator(amplitude, fs_freq, bb_if, bw, num_cyc
     common_length = length(bb_signal_bw_high_cmplx);
     signal_data_cmplx = bb_signal_bw_low_cmplx(1:common_length) + bb_signal_if_cmplx(1:common_length) + bb_signal_bw_high_cmplx;
     signal_data = signal_data_cmplx;
-
 end
 
 
@@ -120,9 +118,9 @@ function [complex_signal] = complex_signal_gen(amplitude, fs, freq, num_cycles)
 end
 
 %% Generate filter
-function [coeffs] = generate_filter(M,Num_taps)
+function [coeffs] = generate_filter(M, WindowType, Num_taps)
     % Calculate the coefficients b for the prototype lowpass filter, and zero-pad so that it has length M*N.
-    WindowType='hamming'; % Hamming window = Better DFT lowpass
+    %WindowType='hamming'; % Hamming window = Better DFT lowpass
     %WindowType='blackmanharris'; % Hamming window = Better DFT lowpass
 
     fwidth=1;
@@ -150,13 +148,10 @@ function [polyphase_fir_data] = polyphase_fir(baseband_signal, M)
     M_path_coeffs = reshape(stage1_coeffs, M, length(stage1_coeffs)/M);
 
     reg=zeros(M,coeff_row_length);
-    % n_dat = length(baseband_signal_cmplx);
-    % rr=zeros(1,n_dat);
 
     % --- Step 4: Process each path ---:
     idx = 1;
     for nn=1:M:data_row_length-M
-    %     rr=[fliplr(baseband_signal_cmplx(nn:nn+(coeff_row_length-1))) rr(1:n_dat-M)];
         reg(:,2:coeff_row_length)=reg(:,1:coeff_row_length-1);
         reg(:,1)=flipud(baseband_signal(nn:nn+(M-1)));
 
@@ -173,20 +168,16 @@ function [polyphase_fir_data] = polyphase_fir(baseband_signal, M)
 end
 
 %% Green PFB: Polyphase Channeliser
-function [channelised_data] = polyphase_channeliser(input, N, debug)
-    % Import coefficients
-    % load window_coeffs.mat
-    num_taps = 16;
-    [window_coeffs] = generate_filter(N, num_taps);
+function [channelised_data] = polyphase_channeliser(input, N, WindowType, num_taps, debug)
+    % Generate window coefficients
+    [window_coeffs] = generate_filter(N, WindowType, num_taps);
 
     % --- Step 6: Split into N-paths ---:
     data_row_length = floor(length(input)/N) * N;
     [~, num_coeff_per_row] = size(window_coeffs);
-    %coeff_row_length = (length(window_coeffs)/N);
 
     % Coeffs
     N_path_coeffs = window_coeffs;
-    % N_path_coeffs = reshape(window_coeffs, N, length(window_coeffs)/N);
 
     % --- Step 7: Process each path ---:
     reg=zeros(N,num_coeff_per_row);
@@ -210,12 +201,6 @@ function [channelised_data] = polyphase_channeliser(input, N, debug)
             display_channel_data(channelised_data, 0.05);            
         end
     end
-
-end
-
-%% Channel profile
-function create_channel_profile()
-
 
 end
 
