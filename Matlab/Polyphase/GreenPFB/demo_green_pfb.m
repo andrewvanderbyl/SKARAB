@@ -15,8 +15,8 @@
 % Step 4: Resample filter coefficients for the M-paths.
 % Step 5: Compute the iFFT on the .
 
-clear
-debug = true;
+%clear
+debug = false;
 
 
 %% Setup parameters
@@ -36,16 +36,17 @@ num_cycles = 200000;
 
 % -- PFB Profile parameters
 ch_bw = (fs_freq/M)/fft_length;
-adjacent_channels_to_span = 1;
+adjacent_channels_to_span = 3;
 points_per_bin = 15;
 
 freq_step_size = ch_bw/points_per_bin;
 start_freq = ch_bw * (selected_bin - adjacent_channels_to_span);
 end_freq = ch_bw * (selected_bin + adjacent_channels_to_span);
+total_points = (end_freq - start_freq)/freq_step_size;
 
 %% Options: Run PFB (normally) or create a channel profile
-option = 'normal';
-%option = 'profile';
+% option = 'normal';
+option = 'profile';
 
 if strcmp(option, 'normal')
 
@@ -64,7 +65,9 @@ elseif strcmp(option, 'profile')
     % --- Step 2: Generate a tone linearly increasing in fixed frequency steps ---:
     idx = 1;
     for freq=start_freq:freq_step_size:end_freq
-        freq
+        idx
+        tic
+        % Generate the required signal
         [signal_data] = signal_generator(amplitude, fs_freq, freq, 0e6, num_cycles);   
         
         % --- Phase 2: Decompose signal and filter coefficients into M-paths and process each path
@@ -76,17 +79,24 @@ elseif strcmp(option, 'profile')
         % --- Log channel (bin) value of interest for current input signal
         profile(idx,:) = channelised_data;
         idx = idx + 1;
+        toc
     end
     figure(1);
     plot(abs(profile.^2));
     figure(2)
     semilogy(abs(profile.^2))
+    figure(3)
+    hold on;
+    semilogy(abs(profile(:,571).^2));
+    semilogy(abs(profile(:,572).^2));
+    semilogy(abs(profile(:,573).^2));
+    hold off;
     a = 1;
 end
 
 
 
-% --- End ---
+% --- Start of functions ---
 
 %% Signal Generator
 function [signal_data] = signal_generator(amplitude, fs_freq, bb_if, bw, num_cycles)
@@ -166,7 +176,8 @@ end
 function [channelised_data] = polyphase_channeliser(input, N, debug)
     % Import coefficients
     % load window_coeffs.mat
-    [window_coeffs] = generate_filter(N,4);
+    num_taps = 16;
+    [window_coeffs] = generate_filter(N, num_taps);
 
     % --- Step 6: Split into N-paths ---:
     data_row_length = floor(length(input)/N) * N;
@@ -213,8 +224,8 @@ function display_input_sequence(sequence, pause_period)
     clf(figure(1))
     figure(1)
     hold on;
-    plot(real(sequence));
-    plot(imag(sequence));
+    plot(real(sequence(1:20)));
+    plot(imag(sequence(1:20)));
     hold off;
     pause(pause_period);
 end
