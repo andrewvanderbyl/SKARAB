@@ -16,7 +16,7 @@
 % Step 5: Compute the iFFT on the .
 
 clear
-debug = false;
+debug = true;
 
 
 %% Setup parameters
@@ -44,8 +44,8 @@ start_freq = ch_bw * (selected_bin - adjacent_channels_to_span);
 end_freq = ch_bw * (selected_bin + adjacent_channels_to_span);
 
 %% Options: Run PFB (normally) or create a channel profile
-%option = 'normal';
-option = 'profile';
+option = 'normal';
+%option = 'profile';
 
 if strcmp(option, 'normal')
 
@@ -109,6 +109,24 @@ function [complex_signal] = complex_signal_gen(amplitude, fs, freq, num_cycles)
     complex_signal = amplitude*exp(1i*2*pi*x1); 
 end
 
+%% Generate filter
+function [coeffs] = generate_filter(M,Num_taps)
+    % Calculate the coefficients b for the prototype lowpass filter, and zero-pad so that it has length M*N.
+    WindowType='hamming'; % Hamming window = Better DFT lowpass
+    %WindowType='blackmanharris'; % Hamming window = Better DFT lowpass
+
+    fwidth=1;
+    alltaps = M*Num_taps; % length of finite-impulse response prototype filter = KNt = (# Channels)(# Taps)
+    windowval = transpose(window(WindowType, alltaps));
+    b = windowval .* sinc(fwidth*([0:alltaps-1]/(M)-Num_taps/2));
+    b = [b,zeros(1,M*Num_taps-length(b))];
+
+    % Reshape the filter coefficients into a matrix whos rows 
+    % represent the individual polyphase filters to be distributed among the filter bank.
+    coeffs = flipud(reshape(b,M,Num_taps));
+end
+
+
 %% Green PFB: Polyphase FIR
 function [polyphase_fir_data] = polyphase_fir(baseband_signal, M)
     % Import coefficients
@@ -147,22 +165,24 @@ end
 %% Green PFB: Polyphase Channeliser
 function [channelised_data] = polyphase_channeliser(input, N, debug)
     % Import coefficients
-    load window_coeffs.mat
+    % load window_coeffs.mat
+    [window_coeffs] = generate_filter(N,4);
 
     % --- Step 6: Split into N-paths ---:
-    % hann_window = window('hann', N*32);
     data_row_length = floor(length(input)/N) * N;
-    coeff_row_length = (length(window_coeffs)/N);
+    [~, num_coeff_per_row] = size(window_coeffs);
+    %coeff_row_length = (length(window_coeffs)/N);
 
     % Coeffs
-    N_path_coeffs = reshape(window_coeffs, N, length(window_coeffs)/N);
+    N_path_coeffs = window_coeffs;
+    % N_path_coeffs = reshape(window_coeffs, N, length(window_coeffs)/N);
 
     % --- Step 7: Process each path ---:
-    reg=zeros(N,coeff_row_length);
+    reg=zeros(N,num_coeff_per_row);
 
     % --- Step 4: Process each path ---:
     for nn=1:N:data_row_length-N
-        reg(:,2:coeff_row_length)=reg(:,1:coeff_row_length-1);
+        reg(:,2:num_coeff_per_row)=reg(:,1:num_coeff_per_row-1);
         reg(:,1)=flipud(input(nn:nn+(N-1)));
 
         h_out = zeros(N,1);
