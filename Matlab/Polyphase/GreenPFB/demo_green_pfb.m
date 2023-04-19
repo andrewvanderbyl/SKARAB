@@ -26,7 +26,7 @@ amplitude = 1;
 fs_freq = 2.8e9;
 M = 4;  %number of polyphase fir paths
 
-WindowType='hann'; % 'hamming' or 'hann'
+WindowType='hamming'; % 'hamming' or 'hann'
 num_taps = 16; % PFB FIR channeliser
 
 % --- Baseband signal parameters
@@ -47,7 +47,7 @@ end_freq = ch_bw * (selected_bin + adjacent_channels_to_span);
 total_points = (end_freq - start_freq)/freq_step_size +1;
 
 %% Options: Run PFB (normally) or create a channel profile
-% option = 'normal';
+%option = 'normal';
 option = 'profile';
 
 if strcmp(option, 'normal')
@@ -96,7 +96,7 @@ elseif strcmp(option, 'profile')
     y_lbl_str = 'Magnitude Response (dB)';
     x_tick_lbl = (selected_bin-adjacent_channels_to_span):(selected_bin+adjacent_channels_to_span);
     
-    plot(10*log(abs(profile(:,((selected_bin-adjacent_channels_to_span):(selected_bin+adjacent_channels_to_span+1))).^2)));
+    plot(10*log10(abs(profile(:,((selected_bin-adjacent_channels_to_span):(selected_bin+adjacent_channels_to_span+1))).^2)));
     hold on;
     title(title_str)
     xlabel(x_lbl_str);
@@ -231,7 +231,23 @@ end
 %% Display channelised Data
 function display_channel_data(channelised_data, pause_period)
     %clf
+    
+    % Create Title
+    title_str = sprintf('Polyphase Spectrum');
+    % Create xlabel
+    x_lbl_str = 'Frequency bin';
+    % Create ylabel
+    y_lbl_str = 'Magnitude Response (dB)';
+    %x_tick_lbl = (selected_bin-adjacent_channels_to_span):(selected_bin+adjacent_channels_to_span);
+    
     figure(2)
-    semilogy(abs(channelised_data.^2));
+    plot(10*log10(abs(channelised_data.^2)));
+    hold on;
+    title(title_str)
+    xlabel(x_lbl_str);
+    ylabel(y_lbl_str);
+    %set(gca,'xtick',(1:points_per_bin:total_points))
+    %set(gca,'xticklabel',x_tick_lbl)
+    hold off;
     pause(pause_period);
 end
