@@ -30,7 +30,7 @@ WindowType='hann'; % 'hamming' or 'hann'
 num_taps = 16; % PFB FIR channeliser
 
 % --- Baseband signal parameters
-selected_bin = 579;
+selected_bin = 571;
 ch_bw = (fs_freq/M)/fft_length;
 bb_if = ch_bw * selected_bin;
 bw = 0e6;
@@ -84,14 +84,27 @@ elseif strcmp(option, 'profile')
         idx = idx + 1;
         toc
     end
+    
+    total_channels_to_plot = adjacent_channels_to_span*2 + 1;
+
     figure(1);
-    semilogy(abs(profile.^2));
-    figure(2)
-    semilogy(abs(profile(:,571).^2));
+    % Create Title
+    title_str = sprintf('Polyphase Channel Profile: %s Window with %i Taps', WindowType, num_taps);
+    % Create xlabel
+    x_lbl_str = 'Frequency bin (normalized to channel center)';
+    % Create ylabel
+    y_lbl_str = 'Magnitude Response (dB)';
+    x_tick_lbl = (selected_bin-adjacent_channels_to_span):(selected_bin+adjacent_channels_to_span);
+    
+    plot(10*log(abs(profile(:,((selected_bin-adjacent_channels_to_span):(selected_bin+adjacent_channels_to_span+1))).^2)));
     hold on;
-    semilogy(abs(profile(:,572).^2));
-    semilogy(abs(profile(:,573).^2));
+    title(title_str)
+    xlabel(x_lbl_str);
+    ylabel(y_lbl_str);
+    set(gca,'xtick',(1:points_per_bin:total_points))
+    set(gca,'xticklabel',x_tick_lbl)
     hold off;
+
 end
 
 
