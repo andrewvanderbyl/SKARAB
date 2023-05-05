@@ -38,7 +38,7 @@ num_cycles = 200000;
 
 % -- PFB Profile parameters
 ch_bw = (fs_freq/M)/fft_length;
-adjacent_channels_to_span = 3;
+adjacent_channels_to_span = 2;
 points_per_bin = 15;
 
 freq_step_size = ch_bw/points_per_bin;
