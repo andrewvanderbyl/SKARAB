@@ -2,10 +2,12 @@
 % -------------
 % Input:
 % ------
-% ADC to be used: Option - 'real_mode' or 'ddc_mode' 
-% Amplitude: any real number
-% Frequency: any real number up to 1.4GHz(real mode) or 1.5GHz(DDC ADC)
-% Number of cycles: integer nmber in cycles
+% adc_mode: 'real_mode' or 'ddc_mode' 
+% amplitude: any real number
+% sig_freq: any real number up to 1.4GHz(real mode) or 1.5GHz(DDC ADC)
+% num_cycles: integer nmber in cycles
+% output_format: 'serial' or 'split'
+% split_length: 16 (optional if output_format = 'serial')
 
 % Output:
 % ------
@@ -13,11 +15,16 @@
 
 % Use: 
 % ----
-% [pol0, pol1] = adc_emulator('real_mode', 1, 100e6, 100);
+% [pol0, pol1] = adc_emulator('real_mode', 1, 100e6, 100, 'split',16);
+
+% TODO:
+% -----
+% Add quantisation
+% Complete I/Q (ddc version)
 
 % -------------------------------------------------------------
 
-function [pol0, pol1] = adc_emulator(adc_mode, amplitude, sig_freq, num_cycles)
+function [pol0, pol1] = adc_emulator(adc_mode, amplitude, sig_freq, num_cycles, output_format, split_length)
 
     % Enable/Disable debug:
     % ---------------------
@@ -42,6 +49,10 @@ function [pol0, pol1] = adc_emulator(adc_mode, amplitude, sig_freq, num_cycles)
             semilogy(abs(fft(pol0(1:4096))));
         end
 
+        if strcmp(output_format,'split') && split_length > 0
+            [pol0] = sample_split(pol0, split_length);
+            [pol1] = sample_split(pol1, split_length);
+        end
     end
 
     %%
@@ -81,4 +92,16 @@ function [complex_signal] = complex_signal_gen(amplitude, fs, freq, num_cycles)
     num_Samples = fs/freq;
     x1 = 0:(1/num_Samples):1*num_cycles;
     complex_signal = amplitude*exp(1i*2*pi*x1); 
+end
+
+%% Split vector
+function [split_data] = sample_split(input, split_length)
+    % check if the length can accommodate a split of split_length
+    if (mod(length(input),split_length)) == 0
+        split_data = reshape(input, split_length, length(input)/split_length);
+    else
+        mod_result = mod(length(input),split_length);
+        split_data = reshape(input(:,1:end-mod_result), split_length, length(input(:,1:end-mod_result))/split_length);
+        sprintf('split_length needs to be an integer multiple of the initial vector length. Truncating length.')
+    end
 end
