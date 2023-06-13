@@ -22,7 +22,7 @@ debug = true;
 % --- Step 1: Parameters ---:
 fft_length = 4096;
 amplitude = 1;
-sig_freq = 100e6;
+sig_freq = 175e6; %175e6
 adc_mode = 'real_mode';
 adc_output_format = 'split';
 split_length = 16;
@@ -76,12 +76,14 @@ end
 % which means 4 resamplers rae required to operate in parallel. 
 function [polyphase_fir_data] = polyphase_resampler_quad(adc_data, M, debug)
     % Import coefficients for polyphase resampling
-    load stage1_coeffs.mat
+    % load stage1_coeffs.mat
+    load stage1_coeffs_order100_250MHz_330MHz.mat
+    
 
-    [polyphase_resampler_0] = polyphase_fir(adc_data(1:4,:), M, stage1_coeffs); 
-    [polyphase_resampler_1] = polyphase_fir(adc_data(5:8,:), M, stage1_coeffs);
-    [polyphase_resampler_2] = polyphase_fir(adc_data(9:12,:), M, stage1_coeffs);
-    [polyphase_resampler_3] = polyphase_fir(adc_data(13:16,:), M, stage1_coeffs);
+    [polyphase_resampler_0] = polyphase_fir(adc_data(1:4,:), M, Coeffs); 
+    [polyphase_resampler_1] = polyphase_fir(adc_data(5:8,:), M, Coeffs);
+    [polyphase_resampler_2] = polyphase_fir(adc_data(9:12,:), M, Coeffs);
+    [polyphase_resampler_3] = polyphase_fir(adc_data(13:16,:), M, Coeffs);
 
     % Reconstruct the sequence from the P number of resamplers. P is equal
     % to 4 in this case.
@@ -96,8 +98,9 @@ function [polyphase_fir_data] = polyphase_resampler_quad(adc_data, M, debug)
     end
 
     if debug
-        fft_length = 2048;
-        semilogy(abs(fft(polyphase_fir_data(500:500+fft_length,1))))
+        fft_length = 4096;
+        channelised_data = fft(polyphase_fir_data(500:500+fft_length,1));
+        plot_channelised_data(channelised_data,0);
     end
     
 end
@@ -162,7 +165,7 @@ function [channelised_data] = polyphase_channeliser(input, N, WindowType, num_ta
             display_input_sequence(h_out, 0.05)
 
             % Display channelised data if required
-            display_channel_data(channelised_data, 0.05);            
+            plot_channelised_data(channelised_data, 0.05);            
         end
     end
 
@@ -179,10 +182,20 @@ function display_input_sequence(sequence, pause_period)
     pause(pause_period);
 end
 
-%% Display channelised Data
-function display_channel_data(channelised_data, pause_period)
-    %clf
-    figure(2)
-    semilogy(abs(channelised_data.^2));
+%% Plot Channelised Data
+function plot_channelised_data(channelised_data, pause_period)
+    figure(2);
+    % Create Title
+    title_str = sprintf('Channelised Data');
+    % Create xlabel
+    x_lbl_str = 'Frequency bin';
+    % Create ylabel
+    y_lbl_str = 'Magnitude Response (dB)';
+    plot(10*log10(abs(channelised_data.^2)))
+    hold on;
+    title(title_str)
+    xlabel(x_lbl_str);
+    ylabel(y_lbl_str);
+    hold off;
     pause(pause_period);
 end
