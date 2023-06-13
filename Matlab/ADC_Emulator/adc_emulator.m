@@ -1,4 +1,5 @@
 %% ADC Eumlator
+% -------------
 % Input:
 % ------
 % ADC to be used: Option - 'real_mode' or 'ddc_mode' 
@@ -10,65 +11,60 @@
 % ------
 % Pol 0 and Pol1 (either real or I/Q)
 
-%%
-% Select ADC mode:
-% ----------------
-%adc_mode = 'real_mode';
-%or
-%adc_mode = 'ddc_mode';
+% Use: 
+% ----
+% [pol0, pol1] = adc_emulator('real_mode', 1, 100e6, 100);
 
-% Sampled signal parameters:
-% --------------------------
-amplitude = 1;
-sig_freq = 100e6;
-num_cycles = 200;
+% -------------------------------------------------------------
 
-% Enable/Disable debug:
-% ---------------------
-debug = false;
+function [pol0, pol1] = adc_emulator(adc_mode, amplitude, sig_freq, num_cycles)
 
-%%
-if strcmp(adc_mode,'real_mode')
-    % Emulate ADC 2.8GSPS (Bypass mode)
-    fs_freq = 2.8e9;
+    % Enable/Disable debug:
+    % ---------------------
+    debug = false;
 
-    % --- Generate baseband signal (2x real signals - one for pol0 and pol 1)
-    % Note: pol0 and pol1 are each real-valued signals each at fs=2.8Gsps 
-    [~, pol0, pol1] = signal_generator(amplitude, fs_freq,  sig_freq, num_cycles);   
-    
-    if debug
-        % Plotting: Real and Imag
-        figure(1)
-        hold on; plot(pol0); plot(pol1); hold off;
+    %%
+    if strcmp(adc_mode,'real_mode')
+        % Emulate ADC 2.8GSPS (Bypass mode)
+        fs_freq = 2.8e9;
 
-        % Plotting: FFT complex input
-        figure(2)
-        semilogy(abs(fft(pol0(1:4096))));
+        % --- Generate baseband signal (2x real signals - one for pol0 and pol 1)
+        % Note: pol0 and pol1 are each real-valued signals each at fs=2.8Gsps 
+        [~, pol0, pol1] = signal_generator(amplitude, fs_freq,  sig_freq, num_cycles);   
+
+        if debug
+            % Plotting: Real and Imag
+            figure(1)
+            hold on; plot(pol0); plot(pol1); hold off;
+
+            % Plotting: FFT complex input
+            figure(2)
+            semilogy(abs(fft(pol0(1:4096))));
+        end
+
     end
-    
-end
 
-%%
-if strcmp(adc_mode,'ddc_mode')
-    % Emulate ADC 3.0 GSPS (DDC mode)
-    fs_freq = 3.0e9;
+    %%
+    if strcmp(adc_mode,'ddc_mode')
+        % Emulate ADC 3.0 GSPS (DDC mode)
+        fs_freq = 3.0e9;
 
-    % --- Generate baseband signal (2x real signals - one for pol0 and pol 1)
-    [signal_cmplx, ~, ~] = signal_generator(amplitude, fs_freq,  sig_freq, num_cycles);   
+        % --- Generate baseband signal (2x real signals - one for pol0 and pol 1)
+        [signal_cmplx, ~, ~] = signal_generator(amplitude, fs_freq,  sig_freq, num_cycles);   
 
-    if debug
-        % Plotting: FFT complex input
-        semilogy(abs(fft(signal_cmplx(1:4096))));    
+        if debug
+            % Plotting: FFT complex input
+            semilogy(abs(fft(signal_cmplx(1:4096))));    
+        end
+
+
+        % Note: pol0 and pol1 are each real-valued signals each at fs=3.0Gsps. Each 
+        % real valued sequence will now be I/Q modulated to produce a complex stream
+        % for each pol.
+
+        % INCOMPLETE
     end
-  
-    
-    % Note: pol0 and pol1 are each real-valued signals each at fs=3.0Gsps. Each 
-    % real valued sequence will now be I/Q modulated to produce a complex stream
-    % for each pol.
-
-    % INCOMPLETE
 end
-
 %%
 % --- Start of functions ---
 
