@@ -21,8 +21,8 @@ debug = true;
 %% Setup parameters
 % --- Step 1: Parameters ---:
 fft_length = 4096;
-amplitude = 1;
-sig_freq = 175e6; %175e6
+amplitude = 0.99;
+sig_freq = 80e6; %175e6
 adc_mode = 'real_mode';
 adc_output_format = 'split';
 split_length = 16;
@@ -77,7 +77,7 @@ end
 function [polyphase_fir_data] = polyphase_resampler_quad(adc_data, M, debug)
     % Import coefficients for polyphase resampling
     % load stage1_coeffs.mat
-    load stage1_coeffs_order100_250MHz_330MHz.mat
+    load pfresampler_128tap_240MHz_320MHz.mat
     
 
     [polyphase_resampler_0] = polyphase_fir(adc_data(1:4,:), M, Coeffs); 

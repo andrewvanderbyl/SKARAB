@@ -16,7 +16,7 @@
 % Step 5: Compute the iFFT on the .
 
 % clear
-debug = false;
+debug = true;
 
 
 %% Setup parameters
@@ -30,7 +30,7 @@ WindowType='hann'; % 'hamming' or 'hann'
 num_taps = 8; % PFB FIR channeliser
 
 % --- Baseband signal parameters
-selected_bin = 571;
+selected_bin = 1755;
 ch_bw = (fs_freq/M)/fft_length;
 bb_if = ch_bw * selected_bin;
 bw = 0e6;
@@ -47,8 +47,8 @@ end_freq = ch_bw * (selected_bin + adjacent_channels_to_span);
 total_points = (end_freq - start_freq)/freq_step_size +1;
 
 %% Options: Run PFB (normally) or create a channel profile
-% option = 'normal';
-option = 'profile';
+option = 'normal';
+% option = 'profile';
 
 if strcmp(option, 'normal')
 
