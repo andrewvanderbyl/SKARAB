@@ -17,7 +17,7 @@ if (strcmp(Input_class,'timeseries'))
        Serial_Data(k+3,1) = Input_2.Data(i,1);
        Serial_Data(k+4,1) = Input_3.Data(i,1);   
        
-       Sync(k+1,1) = Sync_in.Data(i,1);
+       %Sync(k+1,1) = Sync_in.Data(i,1);
        
        if dvalid_in.Data(i,1)
            Dvalid((k+1):((k+num_inputs)),1) = ones(num_inputs,1);    
